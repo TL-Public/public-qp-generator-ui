@@ -85,8 +85,8 @@
         on:input={autoResize}
         placeholder={placeholder}
         maxlength={maxLength}
-        class="w-full p-3 border-none outline-none resize-none font-sans text-sm leading-relaxed text-slate-700 min-h-[80px] max-h-[200px] overflow-y-auto placeholder-slate-400"
-        rows="3"
+        class="w-full p-2 border-none outline-none resize-none font-sans text-sm leading-relaxed text-slate-700  max-h-[200px] overflow-y-auto placeholder-slate-400"
+        rows="2"
       ></textarea>
       
       <div class="flex justify-between items-center px-3 py-2 bg-slate-50 border-t border-slate-200">
@@ -102,11 +102,11 @@
         </button>
       </div>
       
-      <div class="px-3 py-2 bg-amber-50 border-t border-amber-200">
+      <!-- <div class="px-3 py-2 bg-amber-50 border-t border-amber-200">
         <span class="text-xs text-amber-700">
           💡 Press <kbd class="text-xs bg-white border border-amber-300 rounded px-1 font-mono">Ctrl+Enter</kbd> to save quickly
         </span>
-      </div>
+      </div> -->
     </div>
   {/if}
 </div>

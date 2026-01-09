@@ -532,7 +532,7 @@ let isCompleted = false;
       {:else if currentQuestion}
         <!-- Active Question -->
         <div class="flex-1 p-4 max-w-4xl mx-auto w-full">
-          <div class="bg-white rounded-2xl p-8 shadow-lg border border-slate-200 mb-4">
+          <div class="bg-white rounded-2xl p-4 py-6 shadow-lg border border-slate-200 mb-4">
             <!-- Question Header -->
             <div class="flex justify-between items-start mb-4 flex-wrap gap-4">
               <div class="text-blue-700  rounded-xl text-sm font-semibold">
