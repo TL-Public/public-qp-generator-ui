@@ -253,32 +253,32 @@
 <Card title="Generated Question Papers">
   <!-- Show papers table only when we have actual generated data -->
   {#if displayData?.questionPapers?.length > 0}
-    <div class="overflow-x-auto p-14">
+    <div class="overflow-x-auto ">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Question Paper ID
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Event ID
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Event Name
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Subject Name
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Standard
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Medium
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Questions
             </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
             </th>
           </tr>
@@ -286,29 +286,29 @@
         <tbody class="bg-white divide-y divide-gray-200">
           {#each papers as paper}
             <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+              <td class="px-1 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                 {paper.questionPaperId}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                 {paper.eventId}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                 {paper.eventName}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                 {paper.subjectName}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                 {paper.standard}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                 {paper.medium}
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
                 {paper.questionsCount}
               </td>
     
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <td class="px-1 py-2 whitespace-nowrap text-sm font-medium">
                 <div class="flex items-center space-x-2">
                   <!-- Download Dropdown -->
                   <div class="relative inline-block text-left">

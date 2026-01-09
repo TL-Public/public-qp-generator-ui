@@ -150,34 +150,6 @@
   <div class="ml-64">
     <!-- This div pushes main content to the right of the sidebar -->
   </div>
-{:else}
-  <!-- Public Header (for non-authenticated users) -->
-  <header class="bg-white border-b shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <!-- Logo and Brand -->
-        <div class="flex items-center">
-          <a href="/" class="flex items-center">
-            <div class="text-2xl font-bold text-indigo-600">SmartQP</div>
-          </a>
-        </div>
 
-        <!-- Public Right Section -->
-        <div class="flex items-center space-x-4">
-          <a
-            href="/login"
-            class="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors duration-200 px-3 py-2 rounded-md hover:bg-gray-50"
-          >
-            Login
-          </a>
-          <a
-            href="/register"
-            class="text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200 px-4 py-2 rounded-md"
-          >
-            Register
-          </a>
-        </div>
-      </div>
-    </div>
-  </header>
+  
 {/if}

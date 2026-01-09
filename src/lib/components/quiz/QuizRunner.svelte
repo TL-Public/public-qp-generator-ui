@@ -418,13 +418,13 @@ let isCompleted = false;
 <svelte:window on:keydown={handleKeydown} />
 
 <!-- Full viewport quiz interface with Tailwind CSS -->
-<div class="h-screen w-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-200 font-sans">
+<div class="h-screen w-full flex flex-col bg-gradient-to-br from-slate-50 to-slate-200 font-sans">
   <!-- Compact Header with Timer and Controls -->
   <div class="bg-white border-b-2 border-slate-200 px-6 py-4 shadow-lg">
     <div class="flex items-start justify-between gap-8 max-w-full">
       <!-- Quiz Info -->
       <div class="flex-none min-w-[200px]">
-        <h1 class="text-xl font-semibold text-slate-900 mb-1">
+        <h1 class="text-base font-semibold text-slate-900 mb-1">
           {quiz?.metadata?.exam_name || 'Quiz'}
         </h1>
         <p class="text-sm text-slate-600">
@@ -442,9 +442,9 @@ let isCompleted = false;
         <div class="flex items-center gap-4">
           <h3 class="text-sm font-semibold text-slate-900">Questions</h3>
           <div class="flex items-center gap-1 text-xs">
-            <span class="font-semibold text-emerald-600">{answeredCount}</span>
+            <span class="font-semibold text-emerald-600 text-xs">{answeredCount}</span>
             <span class="text-slate-400">/</span>
-            <span class="font-medium text-slate-600">{questions.length}</span>
+            <span class="font-medium text-slate-600 text-xs">{questions.length}</span>
           </div>
         </div>
         
@@ -452,7 +452,7 @@ let isCompleted = false;
           {#each questions as question, index}
             <button
               on:click={() => goToQuestion(index)}
-              class="w-9 h-9 border-2 rounded-lg font-medium text-xs cursor-pointer transition-all duration-200 flex items-center justify-center relative
+              class="w-6 h-6 border-2 rounded-lg font-medium text-xs cursor-pointer transition-all duration-200 flex items-center justify-center relative
                 {index === currentQuestionIndex 
                   ? 'border-blue-500 bg-blue-100 text-blue-700 shadow-md shadow-blue-200' 
                   : getQuestionStatus(index) === 'answered'
@@ -470,7 +470,7 @@ let isCompleted = false;
       </div>
 
       <!-- Timer and Controls -->
-      <div class="flex items-center gap-4 flex-none">
+      <div class="flex items-center gap-4 flex-none text-">
         <!-- Timer Display -->
         <div class="flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all duration-200
           {timeCritical 
@@ -481,7 +481,7 @@ let isCompleted = false;
           <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span class="font-mono text-lg font-semibold text-slate-900">{timeDisplay}</span>
+          <span class="font-mono text-sm font-semibold text-slate-900">{timeDisplay}</span>
         </div>
 
         <!-- Font Size Control -->
@@ -495,11 +495,11 @@ let isCompleted = false;
           title={isPaused ? 'Resume Quiz' : 'Pause Quiz'}
         >
           {#if isPaused}
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           {:else}
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           {/if}
@@ -531,11 +531,11 @@ let isCompleted = false;
         </div>
       {:else if currentQuestion}
         <!-- Active Question -->
-        <div class="flex-1 p-8 max-w-4xl mx-auto w-full">
-          <div class="bg-white rounded-2xl p-8 shadow-lg border border-slate-200 mb-8">
+        <div class="flex-1 p-4 max-w-4xl mx-auto w-full">
+          <div class="bg-white rounded-2xl p-8 shadow-lg border border-slate-200 mb-4">
             <!-- Question Header -->
-            <div class="flex justify-between items-start mb-6 flex-wrap gap-4">
-              <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold">
+            <div class="flex justify-between items-start mb-4 flex-wrap gap-4">
+              <div class="text-blue-700  rounded-xl text-sm font-semibold">
                 Question {currentQuestion.question_number}
               </div>
               <div class="flex gap-4 flex-wrap">
@@ -568,7 +568,7 @@ let isCompleted = false;
             <!-- Options -->
             <div class="space-y-4">
               {#each currentQuestion.options as option, index (option.id + '-' + (revealedAnswers[currentQuestion.id] || false))}
-                <label class="block border-2 rounded-xl p-4 cursor-pointer transition-all duration-200
+                <label class="block border-2 rounded-xl py-3 px-2 cursor-pointer transition-all duration-200
                   {getOptionStatus(currentQuestion.id, option.id) === 'selected' 
                     ? 'border-blue-500 bg-blue-50'
                     : getOptionStatus(currentQuestion.id, option.id) === 'correct'

@@ -723,7 +723,7 @@ function handleAllocationConfirmed(event) {
   </div>
 
   <!-- Main content -->
-  <div class="flex-1 mx-auto px-6 py-6 w-full max-w-7xl"> 
+  <div class="flex-1 mx-auto  w-full max-w-7xl"> 
     <div class="bg-white rounded-lg shadow">
       
       <div class="px-8 py-4 border-b border-gray-200">

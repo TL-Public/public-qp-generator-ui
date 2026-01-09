@@ -12,9 +12,9 @@
   export let currentStep;
 </script>
 
-<div class="ml-4 relative flex items-center h-full min-h-[500px]">
+<div class="ml-4 relative flex items-center h-full ">
   <!-- Vertical line -->
-  <div class="absolute left-4 inset-y-0 w-0.5 bg-gray-200"></div>
+  <div class="absolute left-3 inset-y-0 border-l border-l-gray-200"></div>
 
   <!-- Steps - Centered vertically -->
   <div class="space-y-6 relative my-auto">
@@ -23,7 +23,7 @@
         <!-- Circle indicator -->
         <div 
           class={`
-            w-9 h-9 rounded-full border-2 flex items-center justify-center
+            w-6 h-6 rounded-full border-2 flex items-center justify-center
             ${step.completed 
               ? 'bg-green-500 border-green-500' 
               : currentStep === step.id 
@@ -32,11 +32,11 @@
           `}
         >
           {#if step.completed}
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
           {:else}
-            <span class={`text-sm font-medium ${
+            <span class={`text-xs font-medium ${
               currentStep === step.id ? 'text-blue-500' : 'text-gray-500'
             }`}>
               {index + 1}

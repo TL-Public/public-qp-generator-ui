@@ -711,7 +711,7 @@ function handleAllocationConfirmed(event) {
 <!-- Template remains the same as before -->
 <div class="flex min-h-screen bg-white">
   <!-- Stepper -->
-  <div class="w-56 flex-shrink-0 p-3 bg-white border-r border-gray-200 sticky top-0 h-screen overflow-y-auto">
+  <div class="w-48 flex-shrink-0 p-2 bg-white border-r border-gray-200 sticky top-0 h-screen overflow-y-auto">
     <VerticalStepper
       steps={[
         { id: 'examDetails', label: 'Exam Details', completed: completedSteps.examDetails },
@@ -726,14 +726,14 @@ function handleAllocationConfirmed(event) {
   </div>
 
   <!-- Main content -->
-  <div class="flex-1 mx-auto px-6 py-6 w-full max-w-7xl"> 
+  <div class="flex-1 mx-auto w-full max-w-7xl"> 
     <div class="bg-white rounded-lg shadow">
       
-      <div class="px-8 py-4 border-b border-gray-200">
+      <!-- <div class="px-8 py-4 border-b border-gray-200">
         <h1 class="text-2xl font-bold text-gray-900">Create exam event</h1>
-      </div>
+      </div> -->
 
-      <div class="p-8">
+      <div class="p-4 px-6">
         {#if currentView === 'config'}
           <form on:submit|preventDefault={handleSubmit}>
             <!-- Exam Details -->

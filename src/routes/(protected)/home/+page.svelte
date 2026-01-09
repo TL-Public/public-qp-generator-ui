@@ -125,7 +125,7 @@
     <div class="bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
             <div class="text-center">
-                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl tracking-tight font-extrabold text-gray-900">
+                <h1 class="text-2xl  tracking-tight font-extrabold text-gray-900">
                     <p class="leading-tight">
                         Welcome back, 
                         <span class="text-blue-600 block sm:inline">
@@ -133,7 +133,7 @@
                         </span>
                     </p>
                 </h1>
-                <p class="mt-3 max-w-md mx-auto text-sm sm:text-base lg:text-lg md:mt-5 xl:text-xl md:max-w-3xl text-gray-500">
+                <p class="mt-3 max-w-md mx-auto  text-lg md:mt-5  md:max-w-3xl text-gray-500">
                     {#if isAdmin}
                         Manage your exams and users with Smart QP
                     {:else}
