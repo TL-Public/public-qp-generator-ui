@@ -122,7 +122,7 @@
 </script>
 
 <Card title="Class & Subject Selection">
-  <div class="grid grid-cols-2 gap-4">
+  <div class="grid grid-cols-3 gap-6">
     <div>
       <!-- ✅ Hardcoded dropdown for class 1 to 12 -->
       <Dropdown 
@@ -132,7 +132,7 @@
         bind:value={examClass}
       />
       {#if !examClass}
-        <p class="text-sm text-red-600">Class is required</p>
+        <p class="text-xs text-red-600">Class is required</p>
       {/if}
     </div>
 
@@ -145,12 +145,11 @@
         disabled={loading.mediums}
       />
       {#if !examMedium}
-        <p class="text-sm text-red-600">Medium is required</p>
+        <p class="text-xs text-red-600">Medium is required</p>
       {/if}
     </div>
-  </div>
 
-  <div class="mt-4">
+    <div class="">
     {#if loading.subjects}
       <div class="text-sm text-gray-500">Loading subjects...</div>
     {:else if error}
@@ -170,14 +169,17 @@
         disabled={loading.subjects || subjectOptions.length === 0}
       />
       {#if !examSubject}
-        <p class="text-sm text-red-600">Subject is required</p>
+        <p class="text-xs text-red-600">Subject is required</p>
       {/if}
       {#if !loading.subjects && subjectOptions.length === 0}
-        <p class="text-sm text-gray-500 mt-1">
+        <p class="text-xs text-gray-500 mt-1">
           No subjects available
         </p>
       {/if}
     {/if}
   </div>
+  </div>
+
+  
 </Card>
 

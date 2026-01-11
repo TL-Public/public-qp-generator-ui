@@ -588,7 +588,7 @@ function handleConfirmAndReview(event){
                       >
                         <path d="M6 6L14 10L6 14V6Z" />
                       </svg>
-                      <span class="font-medium">{chapter.name}</span>
+                      <span class="font-medium text-sm! text-gray-700">{chapter.name}</span>
                     </button>
 
                     <!-- Status indicators -->
@@ -613,7 +613,7 @@ function handleConfirmAndReview(event){
                     {@const selectedItems = getSelectedItemsForChapter(chapter)}
                     {@const totalSelectable = (chapter.topics?.length || 0) + (chapter.topics?.flatMap((t) => t.subtopics || []).length || 0)}
                     <button
-                      class="text-blue-600 hover:underline italic"
+                      class="text-blue-600  hover:underline italic text-sm"
                       on:click|preventDefault={() => openSummaryModal(chapter)}
                     >
                       {selectedItems.length} of {totalSelectable} items selected
@@ -660,7 +660,7 @@ function handleConfirmAndReview(event){
                           {:else}
                             <div class="w-4"></div>
                           {/if}
-                          <span>{topic.name}</span>
+                          <span class="text-sm text-gray-700">{topic.name}</span>
                         </button>
 
                         <!-- Status indicators -->
@@ -680,14 +680,14 @@ function handleConfirmAndReview(event){
                     <td class="px-6 py-4 text-sm text-gray-500">
                       {topic.question_count || 0}
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">
+                    <td class="px-6 py-4 text-sm text-gray-600 ">
                       {#if chapterSelected}
                         <span class="italic text-gray-500">Included</span>
                       {:else if topicSelected}
-                        <span class="italic">Topic selected</span>
+                        <span class="italic text-sm">Topic selected</span>
                       {:else if hasSelectedSubtopics}
                         {@const selectedSubtopics = topic.subtopics?.filter(st => isSubtopicSelected(st.code)) || []}
-                        <span class="italic">
+                        <span class="italic text-sm">
                           {selectedSubtopics.length} subtopic{selectedSubtopics.length !== 1 ? 's' : ''} selected
                         </span>
                       {:else}
@@ -844,13 +844,13 @@ function handleConfirmAndReview(event){
                     {@const selectedItems = getSelectedItemsForChapter(chapter)}
                     {@const totalSelectable = (chapter.topics?.length || 0) + (chapter.topics?.flatMap((t) => t.subtopics || []).length || 0)}
                     <button
-                      class="text-blue-600 hover:underline italic"
+                      class="text-blue-600 hover:underline italic text-sm"
                       on:click|preventDefault={() => openSummaryModal(chapter)}
                     >
                       {selectedItems.length} of {totalSelectable} items selected
                     </button>
                   {:else}
-                    <span class="italic text-gray-400">No selection</span>
+                    <span class="italic text-gray-400 text-sm">No selection</span>
                   {/if}
                 </td>
               </tr>
@@ -982,9 +982,9 @@ function handleConfirmAndReview(event){
     </div>
     
     
-    <div id="questions-section ">
-      <div class="border-t border-black pt-4 mb-4 flex items-center justify-between">
-        <h2 class="text-lg font-medium text-gray-900">Question Paper Content</h2>
+    <div id="questions-section " class="mt-8 border-t border-t-gray-200">
+      <div class=" pt-4 pb-4 flex items-center justify-between">
+        <h2 class="text-base font-medium text-gray-700">Question Paper Content</h2>
         <button
           type="button"
           class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
