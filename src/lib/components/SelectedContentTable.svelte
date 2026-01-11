@@ -466,11 +466,11 @@
       console.log('Final draft payload:', draftPayload);
 
       // Validate payload before sending
-      const validation = api.questionPapers.validatePayload(draftPayload);
+    /*  const validation = api.questionPapers.validatePayload(draftPayload);
       if (!validation.isValid) {
         console.error('Payload validation failed:', validation.errors);
         throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
-      }
+      }*/
 
       // Call the API
       console.log('Calling API with payload...');

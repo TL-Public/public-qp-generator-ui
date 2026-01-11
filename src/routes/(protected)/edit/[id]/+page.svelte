@@ -13,7 +13,7 @@
 
   import VerticalStepper from '$lib/components/VerticalStepper.svelte';
   
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import NestedContentTable from '$lib/components/NestedContentTable.svelte';
   import { mockQuestionsData } from '$lib/utils/mockData.js';
   import { selectedContentStore } from '$lib/stores/selectedContentStore.js';
@@ -73,28 +73,93 @@
 
     try {
       console.log('Fetching exam data for:', examId);
-      const response = await api.viewPapers.getByCode(examId);
+      
+      // Fetch mediums and subjects first to map names to codes
+      const [examResponse, mediumsResponse, subjectsResponse] = await Promise.all([
+        api.viewPapers.getByCode(examId),
+        api.mediums.getAll(),
+        api.subjects.getAll()
+      ]);
 
-      if (response.error) {
-        throw new Error(response.error);
+      if (examResponse.error) {
+        throw new Error(examResponse.error);
       }
 
-      if (!response.data || !response.data.design) {
+      if (!examResponse.data || !examResponse.data.design) {
         throw new Error('Invalid response: missing design data');
       }
 
-      const design = response.data.design;
+      const design = examResponse.data.design;
       console.log('Fetched exam design:', design);
+
+      // Get mediums and subjects data for mapping
+      const mediumsData = mediumsResponse.data?.data || [];
+      const subjectsData = subjectsResponse.data?.data || [];
+      
+      console.log('Mediums data:', mediumsData);
+      console.log('Subjects data:', subjectsData);
 
       // Populate form fields from design data
       examTitle = design.exam_name || '';
       examMode = design.exam_mode ? design.exam_mode.charAt(0).toUpperCase() + design.exam_mode.slice(1) : 'Online';
       examClass = design.standard || '';
       
-      // Handle subject and medium - try codes first, then fall back to names
-      // The design might have subject_code/medium_code or just subject/medium (names)
-      examMedium = design.medium_code || design.medium || '';
-      examSubject = design.subject_code || design.subject || '';
+      // Map medium - try code first, then find code by name
+      let mediumCode = design.medium_code || '';
+      if (!mediumCode && design.medium) {
+        // Find medium code by name
+        const foundMedium = mediumsData.find(m => 
+          m.medium_name?.toLowerCase() === design.medium?.toLowerCase() ||
+          m.medium_name === design.medium
+        );
+        mediumCode = foundMedium?.medium_code || '';
+        console.log('Mapped medium:', { name: design.medium, code: mediumCode });
+      }
+      examMedium = mediumCode;
+      
+      // Map subject - try code first, then find code by name
+      let subjectCode = design.subject_code || '';
+      if (!subjectCode && design.subject) {
+        // Find subject code by name, matching also with standard
+        const foundSubject = subjectsData.find(s => 
+          (s.subject_name?.toLowerCase() === design.subject?.toLowerCase() ||
+           s.subject_name === design.subject) &&
+          (s.standard === design.standard || !design.standard)
+        );
+        subjectCode = foundSubject?.subject_code || '';
+        console.log('Mapped subject:', { name: design.subject, code: subjectCode, standard: design.standard });
+      }
+      // Store the mapped codes
+      const mappedMediumCode = mediumCode;
+      const mappedSubjectCode = subjectCode;
+      
+      console.log('Mapped values:', {
+        examClass,
+        mappedMediumCode,
+        mappedSubjectCode,
+        designMedium: design.medium,
+        designMediumCode: design.medium_code,
+        designSubject: design.subject,
+        designSubjectCode: design.subject_code,
+        availableMediums: mediumsData.length,
+        availableSubjects: subjectsData.length
+      });
+      
+      // Wait for next tick to ensure ClassSubjectSelector component has mounted
+      await tick();
+      
+      // Wait a bit more for the dropdowns to load their options
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Now set the values - this ensures the dropdowns have their options loaded
+      examMedium = mappedMediumCode;
+      examSubject = mappedSubjectCode;
+      
+      console.log('Values set after delay:', {
+        examClass,
+        examMedium,
+        examSubject
+      });
 
       // Populate exam configuration
       totalTime = design.total_time || 40;
