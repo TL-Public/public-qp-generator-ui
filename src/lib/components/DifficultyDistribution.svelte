@@ -104,7 +104,7 @@
           min="0"
           max="100"
           bind:value={easy}
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
+          class="w-full p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
           {disabled}
         />
       {/if}
@@ -125,7 +125,7 @@
           min="0"
           max="100"
           bind:value={medium}
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
+          class="w-full p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
           {disabled}
         />
       {/if}
@@ -137,7 +137,7 @@
       </label>
       {#if isReviewPageEnabled}
         <div class="flex items-center justify-between w-full px-4 py-2.5 bg-red-50 border border-red-100 rounded-lg">
-          <span class="text-sm font-medium text-gray-900">{hard}%</span>
+          <span class="text-sm font-medium text-gray-700">{hard}%</span>
           <span class="h-2 w-2 rounded-full bg-red-400"></span>
         </div>
       {:else}
@@ -146,20 +146,27 @@
           min="0"
           max="100"
           bind:value={hard}
-          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
+          class="w-full p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
           {disabled}
         />
       {/if}
     </div>
   </div>
 
-  <div class="text-center {isValid ? 'text-green-600' : 'text-red-600'}">
-    Total: {easyPercentage + mediumPercentage + hardPercentage}% 
-    {isValid ? 'Valid distribution' : 'Distribution must equal 100%'}
-  </div>
+  
 
   <div>
-    <p class="font-medium font-sans text-gray-700">Distribution preview</p>
+    <p class="text-sm  text-gray-700  mb-1 flex w-full justify-between">
+      
+      <span class="font-medium">
+
+        Distribution preview
+      </span>
+      <span class="text-center text-sm {isValid ? 'text-green-600' : 'text-red-600'}">
+    Total: {easyPercentage + mediumPercentage + hardPercentage}% 
+    {isValid ? 'Valid distribution' : 'Distribution must equal 100%'}
+  </span>
+    </p>
     <canvas bind:this={chartCanvas} class="max-h-12"></canvas>
   </div>
 </div>

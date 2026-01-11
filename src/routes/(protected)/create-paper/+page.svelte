@@ -737,7 +737,7 @@ function handleAllocationConfirmed(event) {
         {#if currentView === 'config'}
           <form on:submit|preventDefault={handleSubmit}>
             <!-- Exam Details -->
-            <div class="space-y-6 w-full">
+            <div class="space-y-4 w-full">
               <ExamDetailsForm 
                 bind:examTitle 
                 bind:examMode
@@ -746,7 +746,7 @@ function handleAllocationConfirmed(event) {
             </div>
 
             <!-- Exam Config -->
-            <div class="space-y-6 mt-8 w-full">
+            <div class="space-y-4 mt-8 w-full">
               <Card title="Exam paper configuration" class="w-full">
                 <ExamConfig
                   bind:totalTime
@@ -759,7 +759,7 @@ function handleAllocationConfirmed(event) {
             </div>
 
             <!-- Difficulty Distribution -->
-            <div class="space-y-6 mt-8 w-full">
+            <div class="space-y-4 mt-8 w-full">
               <Card title="Define Difficulty Level Distribution" class="w-full">
                 <DifficultyDistribution
                   bind:easy
