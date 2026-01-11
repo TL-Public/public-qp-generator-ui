@@ -108,8 +108,8 @@
                       bind:value={selectedFormat}
                       class="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
-                      <option value="json">View as JSON</option>
                       <option value="pdf">Download PDF</option>
+                      <option value="json">View as JSON</option>                      
                     </select>
 
                     <label

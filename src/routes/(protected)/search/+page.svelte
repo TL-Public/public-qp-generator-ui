@@ -8,10 +8,11 @@
   // Search and sort state
   let sortField = 'created_at';
   let sortDirection = 'desc';
+  let showAdvancedSearch = false;
   
   // Pagination state
   let currentPage = 1;
-  let itemsPerPage = 20;
+  let itemsPerPage = 10;
   let jumpToPage = '';
 
   // Status selection state
@@ -48,16 +49,16 @@
   const headers = [
     { key: 'exam_code', label: 'Exam Code' },
     { key: 'exam_name', label: 'Exam Title' },
-    { key: 'subject', label: 'Subject' },
-    { key: 'standard', label: 'Class' },
+    { key: 'subject', label: 'Class & Subject' },
+  /*  { key: 'standard', label: 'Class' },
     { key: 'medium', label: 'Medium' },
-    { key: 'created_at', label: 'Created At' },
+    { key: 'created_at', label: 'Created At' },*/
     { key: 'status', label: 'Status' },
-    { key: 'number_of_sets', label: 'Sets' },
-    { key: 'number_of_versions', label: 'Versions' },
-    { key: 'total_questions', label: 'Questions' },
+    { key: 'number_of_sets', label: 'Sets & Versions' },
+  /*  { key: 'number_of_versions', label: 'Versions' },
+    { key: 'total_questions', label: 'Questions' },*/
     { key: 'exam_type', label: 'Type' },
-    { key: 'exam_mode', label: 'Mode' },
+/*    { key: 'exam_mode', label: 'Mode' },*/
     { key: 'actions', label: 'Actions' },
   ];
 
@@ -257,6 +258,9 @@ function createNestedStructure(chaptersTopics) {
     searchPapers();
   }
 
+  function toggleAdvancedSearch() {
+    showAdvancedSearch = !showAdvancedSearch;
+  }
   // Reset everything (including status)
   function resetAll() {
     selectedStatus = '';
@@ -330,7 +334,7 @@ function createNestedStructure(chaptersTopics) {
   function getColumnWidth(key) {
     const widths = {
       'exam_code': '8%',
-      'exam_name': '15%',
+      'exam_name': '12%',
       'subject': '10%',
       'standard': '6%',
       'medium': '8%',
@@ -515,7 +519,7 @@ function createNestedStructure(chaptersTopics) {
   function formatStatus(status) {
     const statusMap = {
       'draft': 'Draft',
-      'closed': 'Released Papers'  // Alternative name for closed
+      'closed': 'Released'  // Alternative name for closed
     };
     return statusMap[status] || status;
   }
@@ -559,7 +563,7 @@ function createNestedStructure(chaptersTopics) {
             <select 
               id="status-select" 
               bind:value={selectedStatus} 
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 shadow-sm transition-colors duration-200"
+              class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 shadow-sm transition-colors duration-200"
             >
               <option value="" disabled>Choose paper status...</option>
               <option value="draft">📝 Draft Papers</option>
@@ -573,7 +577,7 @@ function createNestedStructure(chaptersTopics) {
             type="button" 
             on:click={submitSelectedStatus}
             disabled={loading || !selectedStatus}
-            class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+            class="px-2 py-1 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
           >
             {#if loading}
               <div class="flex items-center">
@@ -596,10 +600,21 @@ function createNestedStructure(chaptersTopics) {
           {#if hasSelectedStatus}
             <button
               type="button"
-              class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+              class="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
               on:click={resetAll}
             >
               Reset All
+            </button>
+            <button
+              type="button"
+              class="px-2 py-1 text-sm font-medium text-blue-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+              on:click={toggleAdvancedSearch}
+            >
+              {#if showAdvancedSearch}
+                Hide Advanced Search
+              {:else}
+                Show Advanced Search
+              {/if}
             </button>
           {/if}
         </div>
@@ -623,7 +638,7 @@ function createNestedStructure(chaptersTopics) {
     </div>
 
     <!-- Step 2: Search Filters (Only shown after status is selected) -->
-    {#if hasSelectedStatus}
+    {#if showAdvancedSearch}
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
           <div>
@@ -849,7 +864,7 @@ function createNestedStructure(chaptersTopics) {
                           on:click={() => !['actions'].includes(header.key) && toggleSort(header.key)}
                         >
                           <div class="flex items-center space-x-1">
-                            <span>{header.label}</span>
+                            <span class="text-xs">{header.label}</span>
                             {#if !['actions'].includes(header.key)}
                               <span class="text-gray-400">
                                 {sortField === header.key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
@@ -865,7 +880,7 @@ function createNestedStructure(chaptersTopics) {
                       <tr class="hover:bg-gray-50 transition-colors duration-150">
                         {#each headers as header}
                           <td 
-                            class="px-4 py-4 whitespace-nowrap text-sm"
+                            class="px-4 py-4 whitespace-nowrap text-xs"
                             style="width: {getColumnWidth(header.key)};"
                           >
                             {#if header.key === 'exam_name'}
@@ -875,7 +890,8 @@ function createNestedStructure(chaptersTopics) {
                                 title="Click to view paper details: {paper[header.key]}"
                                 on:click={() => handleViewPaper(paper)}
                               >
-                                {paper[header.key]}
+                                <span class="word-wrap">{paper[header.key]} </span> <br/>
+                                <span class="text-xs text-red-600">({paper['total_questions']} Questions)</span>
                               </button>
                             {:else if header.key === 'exam_code'} 
                              <button
@@ -920,12 +936,27 @@ function createNestedStructure(chaptersTopics) {
                               </span>
                             {:else if header.key === 'status'}
                               <!-- Use alternative name for status display -->
-                              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusStyling(paper[header.key])}">
+                              <span class="inline-flex word-wrap items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusStyling(paper[header.key])}">
                                 {formatStatus(paper[header.key])}
                               </span>
+                            {:else if header.key === 'subject'}
+                              <span class="text-xs text-gray-600" title={paper[header.key]}>
+                                {paper['subject']},  {paper['standard']}, {paper['medium']}
+                              </span>
+                            {:else if header.key === 'number_of_sets'}
+                              <div class="text-xs text-gray-600" title={paper[header.key]}>
+                                No Of Sets - {paper['number_of_sets']}
+                              </div>
+                              <div class="text-xs text-gray-600" title={paper[header.key]}>
+                                No Of Versions - {paper['number_of_versions']}
+                              </div>
+                            {:else if header.key === 'exam_type'}
+                              <div class="text-xs text-gray-600" title={paper[header.key]}>
+                                {paper['exam_type']}, {paper['exam_mode']}
+                              </div>
                             {:else}
                               <div class="text-gray-900" title={paper[header.key]}>
-                                {paper[header.key] || 'N/A'}
+                                <span class="word-wrap">{paper[header.key] || 'N/A'}</span>
                               </div>
                             {/if}
                           </td>
