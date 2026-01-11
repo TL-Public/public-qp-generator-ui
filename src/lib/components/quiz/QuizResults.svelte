@@ -244,8 +244,8 @@
   <div class="max-w-6xl mx-auto px-4">
     <!-- Header -->
     <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 mb-2">Quiz Results</h1>
-      <p class="text-gray-600">{safeDisplayText(quiz?.metadata?.exam_name || 'Quiz')}</p>
+      <h1 class="text-lg font-bold text-gray-700 mb-2">Quiz Results</h1>
+      <p class="text-gray-600 text-sm ">{safeDisplayText(quiz?.metadata?.exam_name || 'Quiz')}</p>
       <p class="text-sm text-gray-500">Completed on {formatDate(calculatedResults?.completedAt)}</p>
     </div>
 
@@ -270,19 +270,19 @@
         <!-- Detailed Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="text-center p-4 bg-blue-50 rounded-lg">
-            <div class="text-2xl font-bold text-blue-600">{calculatedResults.totalQuestions}</div>
+            <div class="text-xl font-bold text-blue-600">{calculatedResults.totalQuestions}</div>
             <div class="text-sm text-blue-700">Total Questions</div>
           </div>
           <div class="text-center p-4 bg-green-50 rounded-lg">
-            <div class="text-2xl font-bold text-green-600">{calculatedResults.correct}</div>
+            <div class="text-xl font-bold text-green-600">{calculatedResults.correct}</div>
             <div class="text-sm text-green-700">Correct</div>
           </div>
           <div class="text-center p-4 bg-red-50 rounded-lg">
-            <div class="text-2xl font-bold text-red-600">{calculatedResults.incorrect}</div>
+            <div class="text-xl font-bold text-red-600">{calculatedResults.incorrect}</div>
             <div class="text-sm text-red-700">Incorrect</div>
           </div>
           <div class="text-center p-4 bg-gray-50 rounded-lg">
-            <div class="text-2xl font-bold text-gray-600">{calculatedResults.unanswered}</div>
+            <div class="text-xl font-bold text-gray-600">{calculatedResults.unanswered}</div>
             <div class="text-sm text-gray-700">Unanswered</div>
           </div>
         </div> 
@@ -497,7 +497,7 @@
           <div class="flex flex-wrap gap-3">
             <button
               on:click={handleRestart}
-              class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+              class="primary-btn"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -507,7 +507,7 @@
             
             <button
               on:click={handleBackToSetup}
-              class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
+              class="secondary-btn"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -519,7 +519,7 @@
           <div class="flex flex-wrap gap-3">
             <button
               on:click={downloadResults}
-              class="px-4 py-2 text-gray-600 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 flex items-center"
+              class="secondary-btn"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -529,7 +529,7 @@
             
             <button
               on:click={printResults}
-              class="px-4 py-2 text-gray-600 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 flex items-center"
+              class="secondary-btn"
             >
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />

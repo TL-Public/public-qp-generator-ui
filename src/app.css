@@ -6,12 +6,12 @@
 }
 
 /* Apply scaling to all text elements */
-html[data-font-size] {
+/* html[data-font-size] {
   font-size: calc(16px * var(--font-scale));
-}
+} */
 
 /* Scale all text elements proportionally */
-html[data-font-size] h1 { font-size: calc(2.25rem * var(--font-scale)); }
+/* html[data-font-size] h1 { font-size: calc(2.25rem * var(--font-scale)); }
 html[data-font-size] h2 { font-size: calc(1.875rem * var(--font-scale)); }
 html[data-font-size] h3 { font-size: calc(1.5rem * var(--font-scale)); }
 html[data-font-size] h4 { font-size: calc(1.25rem * var(--font-scale)); }
@@ -21,7 +21,6 @@ html[data-font-size] h6 { font-size: calc(1rem * var(--font-scale)); }
 html[data-font-size] p,
 html[data-font-size] span,
 html[data-font-size] div,
-html[data-font-size] label,
 html[data-font-size] button,
 html[data-font-size] input,
 html[data-font-size] select,
@@ -36,10 +35,10 @@ html[data-font-size] .text-lg { font-size: calc(1.125rem * var(--font-scale)); }
 html[data-font-size] .text-xl { font-size: calc(1.25rem * var(--font-scale)); }
 html[data-font-size] .text-2xl { font-size: calc(1.5rem * var(--font-scale)); }
 html[data-font-size] .text-3xl { font-size: calc(1.875rem * var(--font-scale)); }
-html[data-font-size] .text-4xl { font-size: calc(2.25rem * var(--font-scale)); }
+html[data-font-size] .text-4xl { font-size: calc(2.25rem * var(--font-scale)); } */
 
 /* Ensure quiz runner text scales properly */
-html[data-font-size] .question-text {
+/* html[data-font-size] .question-text {
   font-size: calc(1.125rem * var(--font-scale));
 }
 
@@ -49,10 +48,10 @@ html[data-font-size] .option-text {
 
 html[data-font-size] .quiz-title {
   font-size: calc(1.25rem * var(--font-scale));
-}
+} */
 
 /* Scale paddings and margins slightly for better proportions */
-html[data-font-size="xl"] .question-card,
+/* html[data-font-size="xl"] .question-card,
 html[data-font-size="xxl"] .question-card {
   padding: calc(2rem * 1.1);
 }
@@ -60,4 +59,28 @@ html[data-font-size="xxl"] .question-card {
 html[data-font-size="xs"] .question-card,
 html[data-font-size="small"] .question-card {
   padding: calc(2rem * 0.9);
+} */
+
+
+.input-label{
+  @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+.input-field{
+  @apply w-full border border-gray-300  text-sm rounded-md p-2 focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500;
+}
+
+.primary-btn{
+  @apply px-6 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center;
+}
+.secondary-btn{
+  @apply px-6 py-2 bg-white text-sm  text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 flex items-center;
+}
+
+.large-header{
+  @apply text-xl text-gray-700 font-bold;
+}
+
+.sub-heading{
+  @apply text-gray-700 text-sm;
 }

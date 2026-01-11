@@ -535,7 +535,7 @@ function createNestedStructure(chaptersTopics) {
 </script>
 
 <main class="min-h-screen bg-gray-50">
-  <div class="w-full px-4 sm:px-6 lg:px-8 py-8">
+  <div class="w-full px-4 sm:px-4 lg:px-4 py-4">
     
     <!-- Step 1: Status Selection -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">

@@ -266,10 +266,10 @@
         Back to {isAdmin ? 'Admin Panel' : 'Home'}
       </button>
       
-      <div class="text-center">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Update Password</h1>
-        <p class="text-gray-600">Update your account password</p>
-      </div>
+      <!-- <div class="text-center">
+        <h1 class="large-header">Update Password</h1>
+        <p class="sub-heading">Update your account password</p>
+      </div> -->
     </div>
 
     <!-- Authorization Check -->

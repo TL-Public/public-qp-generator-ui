@@ -147,8 +147,8 @@
   <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-4 border-b border-gray-200">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
       <div>
-        <h2 class="text-lg sm:text-xl font-semibold text-gray-900">User Management</h2>
-        <p class="text-sm text-gray-600 mt-1">
+        <h2 class="large-header">User Management</h2>
+        <p class="sub-heading">
           Manage system users and their permissions
         </p>
       </div>

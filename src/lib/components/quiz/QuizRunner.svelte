@@ -701,7 +701,7 @@ let isCompleted = false;
               <button
                 on:click={previousQuestion}
                 disabled={currentQuestionIndex === 0}
-                class="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                class="flex items-center gap-2 px-6 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -713,7 +713,7 @@ let isCompleted = false;
                 <button
                   on:click={handleSubmitClick}
                   disabled={submitting}
-                  class="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 disabled:opacity-50 font-medium"
+                  class="flex items-center gap-2 px-6 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-200 disabled:opacity-50 font-medium"
                 >
                   {#if submitting}
                     <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -723,7 +723,7 @@ let isCompleted = false;
               {:else}
                 <button
                   on:click={nextQuestion}
-                  class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium"
+                  class="flex items-center gap-2 px-6 py-2 text-sm bg-blue-600 border border-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium"
                 >
                   Next
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

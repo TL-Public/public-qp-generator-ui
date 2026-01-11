@@ -161,9 +161,9 @@
     <div class="bg-gray-50 border-b border-gray-200">
       <div class="grid grid-cols-12 gap-4 px-4 py-3 text-sm font-medium text-gray-700">
         <div class="col-span-1"></div>
-        <div class="col-span-6">NAME</div>
-        <div class="col-span-2 text-center">QUESTIONS</div>
-        <div class="col-span-3 text-center">SELECTION SUMMARY</div>
+        <div class="col-span-6 text-sm">NAME</div>
+        <div class="col-span-2 text-center text-sm">QUESTIONS</div>
+        <div class="col-span-3 text-center text-sm">SELECTION SUMMARY</div>
       </div>
     </div>
     
@@ -213,7 +213,7 @@
             <!-- Chapter Name -->
             <div class="col-span-6">
               <div 
-                class="font-medium text-gray-900 cursor-pointer {(selectionType === 'chapter' || selectionType === 'mixed') ? 'hover:text-blue-600' : ''}"
+                class="font-medium text-gray-700 text-sm cursor-pointer {(selectionType === 'chapter' || selectionType === 'mixed') ? 'hover:text-blue-600' : ''}"
                 on:click|preventDefault={() => {
                   if (selectionType === 'chapter' || selectionType === 'mixed') {
                     toggleChapterSelection(chapterCode);
@@ -232,15 +232,15 @@
             </div>
             
             <!-- Selection Summary -->
-            <div class="col-span-3 text-center text-sm">
+            <div class="col-span-3 text-center text-xs">
               {#if (selectionType === 'topic' || selectionType === 'mixed') && selectedTopics > 0}
-                <span class="text-blue-600 font-medium">
+                <span class="text-blue-600 font-medium text-sm">
                   {selectedTopics} of {totalTopics} topics selected
                 </span>
               {:else if selectionType === 'mixed' && isChapterSelected(chapterCode)}
-                <span class="text-green-600 font-medium">Chapter selected</span>
+                <span class="text-green-600 font-medium text-sm">Chapter selected</span>
               {:else}
-                <span class="text-gray-500 italic">
+                <span class="text-gray-500 italic text-sm">
                   {getSelectionSummary(chapter)}
                 </span>
               {/if}

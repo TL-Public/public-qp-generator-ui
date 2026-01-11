@@ -764,11 +764,11 @@
   }
 </script>
 
-<div class="p-6">
-  <div class="mb-6">
-    <h2 class="text-2xl font-semibold text-gray-900 mb-2">Quiz Setup</h2>
-    <p class="text-gray-600">Configure your quiz by selecting the class, subject, medium, and topics.</p>
-  </div>
+<div class="p-4">
+  <!-- <div class="mb-4">
+    <h2 class="text-base font-semibold text-gray-700 ">Quiz Setup</h2>
+    <p class="text-gray-600 text-sm">Configure your quiz by selecting the class, subject, medium, and topics.</p>
+  </div> -->
 
   {#if isLoading}
     <div class="flex justify-center items-center py-12">
@@ -786,14 +786,14 @@
         {#if subjectCards.length === 0}
           <div class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
             <div class="text-gray-400 text-4xl mb-2">📚</div>
-            <h3 class="text-lg font-medium text-gray-900 mb-1">No Subjects Available</h3>
+            <h3 class="text-base font-medium text-gray-900 mb-1">No Subjects Available</h3>
             <p class="text-sm text-gray-500">No exam papers found for your account.</p>
           </div>
         {:else}
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {#each subjectCards as card}
               <div 
-                class="relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-md {selectedCard?.id === card.id ? `${card.selectedBorderColor} ${card.bgColor}` : `${card.borderColor} bg-white hover:${card.bgColor}`}"
+                class="relative border-2 rounded-lg p-2 cursor-pointer transition-all duration-200 hover:shadow-md {selectedCard?.id === card.id ? `${card.selectedBorderColor} ${card.bgColor}` : `${card.borderColor} bg-white hover:${card.bgColor}`}"
                 on:click={() => selectSubjectCard(card)}
               >
                 <!-- Card Content -->
@@ -801,17 +801,17 @@
                   <div class="flex-1">
                     <!-- Icon and Class -->
                     <div class="flex items-center space-x-3 mb-3">
-                      <span class="text-3xl">{card.icon}</span>
+                      <span class="text-base">{card.icon}</span>
                       <div>
                         <div class="text-xs text-gray-500 uppercase tracking-wide">Class</div>
-                        <div class="text-2xl font-bold text-gray-900">{card.standard}</div>
+                        <div class="text-sm font-bold text-gray-700">{card.standard}</div>
                       </div>
                     </div>
                     
                     <!-- Subject -->
                     <div class="mb-2">
-                      <h4 class="text-lg font-semibold text-gray-900">{card.subject}</h4>
-                      <p class="text-sm text-gray-600 leading-relaxed">{card.description}</p>
+                      <h4 class="text-sm font-semibold text-gray-900">{card.subject}</h4>
+                      <p class="text-xs text-gray-600 leading-relaxed">{card.description}</p>
                     </div>
                   </div>
                   
@@ -842,14 +842,14 @@
       <!-- Medium Selection (only show if card is selected) -->
       {#if selectedCard}
         <div>
-          <label for="medium" class="block text-sm font-medium text-gray-700 mb-2">
+          <label for="medium" class="input-label">
             Medium <span class="text-red-500">*</span>
           </label>
           <select
             id="medium"
             bind:value={selectedMedium}
             on:change={handleMediumChange}
-            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+            class="w-full border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
               {errors.medium ? 'border-red-500' : ''}"
             disabled={loadingMediums}
             required
@@ -902,12 +902,12 @@
       <!-- Quiz Configuration (only show if selections are made) -->
       {#if selectedCard && selectedMedium && selectedCodes.length > 0}
         <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Quiz Configuration</h3>
+          <h3 class="text-base font-medium text-gray-700 mb-4">Quiz Configuration</h3>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Exam Name -->
             <div class="md:col-span-2">
-              <label for="examName" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="examName" class="input-label">
                 Quiz Name
               </label>
               <input
@@ -915,12 +915,12 @@
                 type="text"
                 bind:value={customExamName}
                 placeholder={generateExamName()}
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="input-field"
               />
               <p class="text-xs text-gray-500 mt-1">Leave blank to use auto-generated name</p>
             </div>
             <div class="md:col-span-2">
-              <label for="questionCount" class="block text-sm font-medium text-gray-700 mb-2">
+              <label for="questionCount" class="input-label">
                 Questions to add
               </label>
               <input
@@ -928,7 +928,7 @@
                 type="number"
                 min="1"
                 max="50"
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                class="input-field"
                 placeholder="5"
               />
               <p class="text-xs text-gray-500 mt-1">Insert number of questions</p>
@@ -939,12 +939,12 @@
           <div class="mt-4 p-3 bg-white rounded border border-gray-200">
             <div class="flex items-center justify-between text-sm">
               <div>
-                <span class="font-medium text-gray-700">Selected:</span>
-                <span class="text-blue-600 ml-1">
+                <span class="font-medium text-sm text-gray-700">Selected:</span>
+                <span class="text-blue-600 ml-1 text-sm">
                   Class {selectedCard.standard} • {selectedCard.subject} • {selectedCodes.length} items
                 </span>
               </div>
-              <div class="text-gray-500">
+              <div class="text-gray-700 text-sm">
                 {mediums.find(m => m.medium_code === selectedMedium)?.medium_name || 'Medium'}
               </div>
             </div>
@@ -972,7 +972,7 @@
         <button
           type="submit"
           disabled={loading || generating || !selectedCard || !selectedMedium || selectedCodes.length === 0}
-          class="px-8 py-3 bg-green-600 text-white text-lg font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          class="px-6 py-2 text-sm bg-green-600 text-white  font-medium rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
         >
           {#if generating}
             <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

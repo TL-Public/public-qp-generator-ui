@@ -14,11 +14,11 @@
 
 <main class="min-h-screen bg-gray-50">
   {#if $authStore.isAuthenticated && $authStore.roleCode === '100'}
-    <div class="w-full px-4 sm:px-6 lg:px-8 py-8">
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p class="text-gray-600 mt-2">Manage users and system settings</p>
-      </div>
+    <div class="w-full px-4 sm:px-6 lg:px-4 py-4">
+      <!-- <div class="mb-8">
+        <h1 class="large-header mb-1">Admin Dashboard</h1>
+        <p class="sub-heading">Manage users and system settings</p>
+      </div> -->
       
       <!-- User Management Component -->
       <UserManagement />
