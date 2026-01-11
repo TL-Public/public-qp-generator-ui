@@ -51,9 +51,10 @@
     "@mui/icons-material": "^7.1.2",
     "@mui/material": "^7.1.2",
     "@tailwindcss/vite": "^4.1.10",
-	"@sveltejs/adapter-node": "^5.3.2",
+  	"@sveltejs/adapter-node": "^5.3.2",
     "chart.js": "^4.4.9",
     "tailwindcss": "^4.1.10",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "dotenv": "^16.4.7"
   }
 }
