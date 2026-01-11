@@ -669,7 +669,7 @@
   <!-- Header with Configuration -->
   <div class="bg-gray-50 p-4 rounded-lg">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-medium text-gray-900">Question Configuration & Filtering</h3>
+      <h3 class="text-base font-medium text-gray-700">Question Configuration & Filtering</h3>
     </div>
 
     <!-- AI/Manual Toggle -->
@@ -677,10 +677,10 @@
       <span class="text-sm font-medium text-gray-700">Allocate manually</span>
       <button
         type="button"
-        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 {allocateWithAI ? 'bg-blue-600' : 'bg-gray-300'}"
+        class="relative inline-flex h-4 w-8 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 {allocateWithAI ? 'bg-blue-600' : 'bg-gray-300'}"
         on:click|preventDefault={toggleAllocation}
       >
-        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {allocateWithAI ? 'translate-x-6' : 'translate-x-1'}"></span>
+        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {allocateWithAI ? 'translate-x-4' : 'translate-x'}"></span>
       </button>
       <span class="text-sm font-medium text-gray-700">Allocate with AI</span>
     </div>
@@ -769,24 +769,24 @@
 
   <!-- Allocation Summary -->
   <div class="sticky top-0 bg-white border border-gray-200 rounded-lg p-4">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">Allocation Summary</h3>
+    <h3 class="text-base font-medium text-gray-700 mb-4">Allocation Summary</h3>
     
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
       <div>
-        <span class="text-gray-600">Required:</span>
+        <span class="text-gray-600 text-sm">Required:</span>
         <span class="font-medium ml-1">{allocationSummary.required}</span>
       </div>
       <div>
-        <span class="text-gray-600">Available:</span>
+        <span class="text-gray-600 text-sm">Available:</span>
         <span class="font-medium ml-1">{allocationSummary.available}</span>
       </div>
       {#if !allocateWithAI}
         <div>
-          <span class="text-gray-600">Allocated:</span>
+          <span class="text-gray-600 text-sm">Allocated:</span>
           <span class="font-medium ml-1">{allocationSummary.allocated}</span>
         </div>
         <div>
-          <span class="text-gray-600">Remaining:</span>
+          <span class="text-gray-600 text-sm">Remaining:</span>
           <span class="font-medium ml-1 {allocationSummary.remaining < 0 ? 'text-red-600' : allocationSummary.remaining > 0 ? 'text-amber-600' : 'text-green-600'}">
             {allocationSummary.remaining}
           </span>
@@ -811,9 +811,9 @@
 
   <!-- Hierarchical Selected Content Table -->
   <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-    <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
-      <h3 class="text-lg font-medium text-gray-900">Selected Content</h3>
-    </div>
+    <!-- <div class="px-6 py-3 bg-gray-50 border-b border-gray-200">
+      <h3 class="text-base font-medium text-gray-700">Selected Content</h3>
+    </div> -->
     
     {#if tableRows.length === 0}
       <div class="px-6 py-8 text-center text-gray-500">

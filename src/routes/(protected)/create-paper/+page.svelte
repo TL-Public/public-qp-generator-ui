@@ -711,7 +711,7 @@ function handleAllocationConfirmed(event) {
 <!-- Template remains the same as before -->
 <div class="flex min-h-screen bg-white">
   <!-- Stepper -->
-  <div class="w-48 flex-shrink-0 p-2 bg-white border-r border-gray-200 sticky top-0 h-screen overflow-y-auto">
+  <div class="w-48 flex-shrink-0 p-2 bg-white  sticky top-0 h-screen overflow-y-auto">
     <VerticalStepper
       steps={[
         { id: 'examDetails', label: 'Exam Details', completed: completedSteps.examDetails },
@@ -737,7 +737,7 @@ function handleAllocationConfirmed(event) {
         {#if currentView === 'config'}
           <form on:submit|preventDefault={handleSubmit}>
             <!-- Exam Details -->
-            <div class="space-y-6 w-full">
+            <div class="space-y-4 w-full">
               <ExamDetailsForm 
                 bind:examTitle 
                 bind:examMode
@@ -746,7 +746,7 @@ function handleAllocationConfirmed(event) {
             </div>
 
             <!-- Exam Config -->
-            <div class="space-y-6 mt-8 w-full">
+            <div class="space-y-4 mt-8 w-full">
               <Card title="Exam paper configuration" class="w-full">
                 <ExamConfig
                   bind:totalTime
@@ -759,7 +759,7 @@ function handleAllocationConfirmed(event) {
             </div>
 
             <!-- Difficulty Distribution -->
-            <div class="space-y-6 mt-8 w-full">
+            <div class="space-y-4 mt-8 w-full">
               <Card title="Define Difficulty Level Distribution" class="w-full">
                 <DifficultyDistribution
                   bind:easy

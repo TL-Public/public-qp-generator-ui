@@ -40,7 +40,7 @@
     <div class="space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between border-b pb-4">
-        <h2 class="text-lg font-semibold text-gray-900">Exam Configuration</h2>
+        <h2 class="text-base font-semibold text-gray-700">Exam Configuration</h2>
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
           {examMode}
         </span>
@@ -50,7 +50,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Basic Details -->
         <div class="space-y-4">
-          <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Basic Details</h3>
+          <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wider">Basic Details</h3>
           <div class="space-y-3">
             <div class="flex flex-col">
               <span class="text-sm text-gray-500">Title</span>
@@ -69,7 +69,7 @@
 
         <!-- Time & Questions -->
         <div class="space-y-4">
-          <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Paper Details</h3>
+          <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wider">Paper Details</h3>
           <div class="space-y-3">
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div class="flex flex-col">
@@ -94,7 +94,7 @@
 
         <!-- Version Details -->
         <div class="space-y-4">
-          <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Version Details</h3>
+          <h3 class="text-xs font-medium text-gray-500 uppercase tracking-wider">Version Details</h3>
           <div class="space-y-3">
             <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div class="flex flex-col">

@@ -13,7 +13,7 @@
         value={option}
         bind:group={selected}
       />
-      <span class="ml-2">{option}</span>
+      <span class="ml-2 text-sm text-gray-700">{option}</span>
     </label>
   {/each}
 </div>

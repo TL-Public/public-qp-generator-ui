@@ -21,7 +21,7 @@
 </script>
 
 <div class="space-y-6">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
     <!-- Total Time Field -->
     <div class="relative">
       <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -45,7 +45,7 @@
         type="number"
         bind:value={totalTime}
         min="1"
-      class="mt-1 block w-full px-3 py-2 rounded-md border shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      class="mt-1 text-sm block w-full p-2  border-gray-300 rounded-md  border focus:border-blue-500 focus:ring-blue-500"
       />
     </div>
 
@@ -72,7 +72,7 @@
         type="number"
         bind:value={totalQuestions}
         min="1"
-        class="mt-1 block w-full px-3 py-2 rounded-md border shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        class="mt-1  text-sm  block w-full p-2  border-gray-300 rounded-md  border focus:border-blue-500 focus:ring-blue-500"
       />
     </div>
 
@@ -87,7 +87,7 @@
           min="1"
           max="10"
           bind:value={numberOfSets}
-          class="w-full px-3 py-2 border rounded-md
+          class="w-full p-2  text-sm   border-gray-300 rounded-md  border
             {numberOfSets > 10 || numberOfSets < 1 ? 
               'border-red-300 focus:ring-red-500 focus:border-red-500' : 
               'focus:ring-blue-500 focus:border-blue-500'}"
@@ -100,9 +100,9 @@
           <div class="absolute w-2 h-2 bg-gray-900 transform rotate-45 -left-1 top-2"></div>
         </div>
         {#if numberOfSets > 10}
-          <p class="mt-1 text-sm text-red-600">Maximum 10 sets allowed</p>
+          <p class="mt-1 text-xs text-red-600">Maximum 10 sets allowed</p>
         {:else if numberOfSets < 1}
-          <p class="mt-1 text-sm text-red-600">Minimum 1 set required</p>
+          <p class="mt-1 text-xs text-red-600">Minimum 1 set required</p>
         {/if}
         
       </div>
@@ -119,7 +119,7 @@
           min="1"
           max="5"
           bind:value={numberOfVersions}
-          class="w-full px-3 py-2 border rounded-md
+          class="w-full text-sm   p-2 border border-gray-300 rounded-md
             {numberOfVersions > 5 || numberOfVersions < 1 ? 
               'border-red-300 focus:ring-red-500 focus:border-red-500' : 
               'focus:ring-blue-500 focus:border-blue-500'}"
@@ -139,7 +139,7 @@
     </div>
   </div>
 
-  <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mt-4">
+  <div class="bg-blue-50 border-l-4 border-blue-400 p-2 mt-2">
     <div class="flex">
       <div class="flex-shrink-0">
         <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -149,8 +149,9 @@
       <div class="ml-3">
         <p class="text-sm text-blue-700">
           You will generate {numberOfSets} different question paper(s) with {numberOfVersions} version(s) each. 
-          Each paper will contain {totalQuestions} questions and should be completed in {totalTime} minutes.
+          Each paper will contain {totalQuestions} questions.
         </p>
+        <!-- and should be completed in {totalTime} minutes. -->
       </div>
     </div>
   </div>
