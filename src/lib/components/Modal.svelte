@@ -13,7 +13,7 @@
   export let standard = "" ; 
 
 
-  let selectedFormat = "json";
+  let selectedFormat = "pdf";
   let hideAnswers = false;
 
   function handlePaperAction(paperId) {

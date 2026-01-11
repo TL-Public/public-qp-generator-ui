@@ -123,7 +123,7 @@
 <main class="min-h-screen bg-gray-50">
     <!-- Hero Section -->
     <div class="bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-4 py-2 sm:py-4">
             <div class="text-center">
                 <h1 class="text-2xl  tracking-tight font-extrabold text-gray-900">
                     <p class="leading-tight">
@@ -133,7 +133,7 @@
                         </span>
                     </p>
                 </h1>
-                <p class="mt-3 max-w-md mx-auto  text-lg md:mt-5  md:max-w-3xl text-gray-500">
+                <p class="mt-1 max-w-md mx-auto  text-lg md:mt-1  md:max-w-3xl text-gray-500">
                     {#if isAdmin}
                         Manage your exams and users with Smart QP
                     {:else}
@@ -176,19 +176,21 @@
             <div class="mb-6 sm:mb-8">
                 <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Dashboard Stats</h2>
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <!-- Widget Header -->
+                    <!-- Widget Header -
                     <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 class="text-sm font-medium text-gray-900">Overview</h3>
-                    </div>
+                    </div>-->
 
                     <!-- Widget Content - Responsive grid -->
-                    <div class="p-4 sm:p-6">
+                    <div class="p-1 sm:p-1">
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                             {#each stats as stat}
-                                <div class="text-center p-3 sm:p-4 bg-gray-50 rounded-lg">
-                                    <div class="text-lg sm:text-2xl mb-1 sm:mb-2">{stat.icon}</div>
-                                    <div class="text-lg sm:text-2xl font-bold text-gray-900">{stat.value}</div>
-                                    <div class="text-xs sm:text-sm text-gray-500">{stat.label}</div>
+                                <div class="p-3 sm:p-4 bg-gray-50 rounded-lg flex flex-row items-center justify-center">
+                                    <div class="text-lg sm:text-2xl mr-3 sm:mr-4">{stat.icon}</div>
+                                    <div class="flex flex-row items-baseline justify-center h-full">
+                                        <div class="text-lg sm:text-2xl font-bold text-gray-900 mr-2">{stat.value}</div>
+                                        <div class="text-xs sm:text-sm text-gray-500">{stat.label}</div>
+                                    </div>
                                 </div>
                             {/each}
                         </div>
@@ -199,14 +201,14 @@
             <!-- Main Content - Responsive layout -->
             <div class="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-4 lg:gap-6">
                 <!-- Quick Actions - Stacks on mobile, sidebar on desktop -->
-                <div class="lg:col-span-1">
+               <!-- <div class="lg:col-span-1">
                     <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Quick Actions</h2>
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                         <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
                             <h3 class="text-sm font-medium text-gray-900">Actions</h3>
                         </div>
                         <div class="p-2">
-                            <!-- Mobile: Grid layout, Desktop: Vertical list -->
+                            <!-- Mobile: Grid layout, Desktop: Vertical list 
                             <nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-1 sm:gap-2 lg:gap-1">
                                 {#each filteredFeatures as feature}
                                     <button
@@ -229,11 +231,11 @@
                             </nav>
                         </div>
                     </div>
-                </div>
+                </div>-->
                 
                 <!-- Recent Exams Widget - Full width on mobile, 3/4 on desktop -->
-                <div class="lg:col-span-3">
-                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Recent Exams</h2>
+                <div class="lg:col-span-4">
+                    <!--<h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Recent Exams</h2>-->
                     <RecentTableList />
                 </div>
             </div>
