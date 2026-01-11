@@ -120,9 +120,9 @@
 </script>
 
 <!-- Font Size Control - Always visible -->
-<div class="font-size-control-container">
+<!-- <div class="font-size-control-container">
   <FontSizeControl />
-</div>
+</div> -->
 
 <!-- Full viewport layout - no restrictions when quiz is running -->
 {#if currentStep === "running"}
