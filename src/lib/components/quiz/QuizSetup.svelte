@@ -901,12 +901,12 @@
 
       <!-- Quiz Configuration (only show if selections are made) -->
       {#if selectedCard && selectedMedium && selectedCodes.length > 0}
-        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <div class=" rounded-lg p-4 border border-gray-200">
           <h3 class="text-base font-medium text-gray-700 mb-4">Quiz Configuration</h3>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Exam Name -->
-            <div class="md:col-span-2">
+            <div class="">
               <label for="examName" class="input-label">
                 Quiz Name
               </label>
@@ -919,7 +919,7 @@
               />
               <p class="text-xs text-gray-500 mt-1">Leave blank to use auto-generated name</p>
             </div>
-            <div class="md:col-span-2">
+            <div class="">
               <label for="questionCount" class="input-label">
                 Questions to add
               </label>
