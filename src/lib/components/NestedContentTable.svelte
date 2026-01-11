@@ -588,7 +588,7 @@ function handleConfirmAndReview(event){
                       >
                         <path d="M6 6L14 10L6 14V6Z" />
                       </svg>
-                      <span class="font-medium text-sm text-gray-700">{chapter.name}</span>
+                      <span class="font-medium text-sm! text-gray-700">{chapter.name}</span>
                     </button>
 
                     <!-- Status indicators -->
@@ -613,7 +613,7 @@ function handleConfirmAndReview(event){
                     {@const selectedItems = getSelectedItemsForChapter(chapter)}
                     {@const totalSelectable = (chapter.topics?.length || 0) + (chapter.topics?.flatMap((t) => t.subtopics || []).length || 0)}
                     <button
-                      class="text-blue-600 hover:underline italic text-sm"
+                      class="text-blue-600  hover:underline italic text-sm"
                       on:click|preventDefault={() => openSummaryModal(chapter)}
                     >
                       {selectedItems.length} of {totalSelectable} items selected

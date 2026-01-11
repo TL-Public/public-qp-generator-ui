@@ -711,7 +711,7 @@ function handleAllocationConfirmed(event) {
 <!-- Template remains the same as before -->
 <div class="flex min-h-screen bg-white">
   <!-- Stepper -->
-  <div class="w-48 flex-shrink-0 p-2 bg-white border-r border-gray-200 sticky top-0 h-screen overflow-y-auto">
+  <div class="w-48 flex-shrink-0 p-2 bg-white  sticky top-0 h-screen overflow-y-auto">
     <VerticalStepper
       steps={[
         { id: 'examDetails', label: 'Exam Details', completed: completedSteps.examDetails },

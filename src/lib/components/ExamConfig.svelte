@@ -45,7 +45,7 @@
         type="number"
         bind:value={totalTime}
         min="1"
-      class="mt-1 block w-full p-2  border-gray-300 rounded-md  border focus:border-blue-500 focus:ring-blue-500"
+      class="mt-1 text-sm block w-full p-2  border-gray-300 rounded-md  border focus:border-blue-500 focus:ring-blue-500"
       />
     </div>
 
@@ -72,7 +72,7 @@
         type="number"
         bind:value={totalQuestions}
         min="1"
-        class="mt-1 block w-full p-2  border-gray-300 rounded-md  border focus:border-blue-500 focus:ring-blue-500"
+        class="mt-1  text-sm  block w-full p-2  border-gray-300 rounded-md  border focus:border-blue-500 focus:ring-blue-500"
       />
     </div>
 
@@ -87,7 +87,7 @@
           min="1"
           max="10"
           bind:value={numberOfSets}
-          class="w-full p-2  border-gray-300 rounded-md  border
+          class="w-full p-2  text-sm   border-gray-300 rounded-md  border
             {numberOfSets > 10 || numberOfSets < 1 ? 
               'border-red-300 focus:ring-red-500 focus:border-red-500' : 
               'focus:ring-blue-500 focus:border-blue-500'}"
@@ -119,7 +119,7 @@
           min="1"
           max="5"
           bind:value={numberOfVersions}
-          class="w-full p-2 border border-gray-300 rounded-md
+          class="w-full text-sm   p-2 border border-gray-300 rounded-md
             {numberOfVersions > 5 || numberOfVersions < 1 ? 
               'border-red-300 focus:ring-red-500 focus:border-red-500' : 
               'focus:ring-blue-500 focus:border-blue-500'}"

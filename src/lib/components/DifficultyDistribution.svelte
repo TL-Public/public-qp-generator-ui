@@ -104,7 +104,7 @@
           min="0"
           max="100"
           bind:value={easy}
-          class="w-full p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
+          class="w-full text-sm p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
           {disabled}
         />
       {/if}
@@ -125,7 +125,7 @@
           min="0"
           max="100"
           bind:value={medium}
-          class="w-full p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
+          class="w-full text-sm p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
           {disabled}
         />
       {/if}
@@ -146,7 +146,7 @@
           min="0"
           max="100"
           bind:value={hard}
-          class="w-full p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
+          class="w-full text-sm p-2 border border-gray-300 rounded-md  focus:ring-blue-500 focus:border-blue-500 {disabled ? 'bg-gray-50 cursor-not-allowed' : ''}"
           {disabled}
         />
       {/if}
@@ -167,6 +167,6 @@
     {isValid ? 'Valid distribution' : 'Distribution must equal 100%'}
   </span>
     </p>
-    <canvas bind:this={chartCanvas} class="max-h-12"></canvas>
+    <canvas bind:this={chartCanvas} class="max-h-4"></canvas>
   </div>
 </div>
