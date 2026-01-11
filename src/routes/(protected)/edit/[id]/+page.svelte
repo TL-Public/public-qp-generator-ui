@@ -50,11 +50,98 @@
   // caputer the exam id 
   const examId = $page.params.id ; 
   
+  // Loading state
+  let isLoading = false;
+  let loadError = null;
 
   // Subscribe to API store for debugging
   let apiStoreData = {};
   apiPayloadStore.subscribe(store => {
     apiStoreData = store;
+  });
+
+  // Fetch exam data on mount
+  onMount(async () => {
+    if (!examId) {
+      console.error('No exam ID provided');
+      loadError = 'No exam ID provided';
+      return;
+    }
+
+    isLoading = true;
+    loadError = null;
+
+    try {
+      console.log('Fetching exam data for:', examId);
+      const response = await api.viewPapers.getByCode(examId);
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      if (!response.data || !response.data.design) {
+        throw new Error('Invalid response: missing design data');
+      }
+
+      const design = response.data.design;
+      console.log('Fetched exam design:', design);
+
+      // Populate form fields from design data
+      examTitle = design.exam_name || '';
+      examMode = design.exam_mode ? design.exam_mode.charAt(0).toUpperCase() + design.exam_mode.slice(1) : 'Online';
+      examClass = design.standard || '';
+      
+      // Handle subject and medium - try codes first, then fall back to names
+      // The design might have subject_code/medium_code or just subject/medium (names)
+      examMedium = design.medium_code || design.medium || '';
+      examSubject = design.subject_code || design.subject || '';
+
+      // Populate exam configuration
+      totalTime = design.total_time || 40;
+      totalQuestions = design.total_questions || design.no_of_qns || 40;
+      numberOfSets = design.number_of_sets || design.no_of_sets || 1;
+      numberOfVersions = design.number_of_versions || design.no_of_versions || 1;
+
+      // Update API store with fetched data
+      apiPayloadStore.updateExamDetails({
+        examTitle: examTitle,
+        examMode: examMode
+      });
+
+      apiPayloadStore.updateExamConfig({
+        totalTime: totalTime,
+        totalQuestions: totalQuestions,
+        numberOfVersions: numberOfVersions,
+        numberOfSets: numberOfSets
+      });
+
+      apiPayloadStore.updateClassSubject({
+        subject_code: examSubject,
+        medium_code: examMedium,
+        examClass: examClass
+      });
+
+      // If there are chapters_topics in the design, update the store
+      if (design.chapters_topics && Array.isArray(design.chapters_topics) && design.chapters_topics.length > 0) {
+        // The chapters_topics structure should match what the store expects
+        apiPayloadStore.update(currentStore => ({
+          ...currentStore,
+          chapters_topics: design.chapters_topics
+        }));
+      }
+
+      // Update excluded questions if any
+      if (design.qtn_codes_to_exclude && Array.isArray(design.qtn_codes_to_exclude) && design.qtn_codes_to_exclude.length > 0) {
+        apiPayloadStore.updateExcludedQuestions(design.qtn_codes_to_exclude);
+      }
+
+      console.log('Exam data loaded successfully');
+    } catch (error) {
+      console.error('Failed to load exam data:', error);
+      loadError = error.message || 'Failed to load exam details';
+    } finally {
+      isLoading = false;
+    }
   });
 
   // Exam configuration state
@@ -727,11 +814,36 @@ function handleAllocationConfirmed(event) {
     <div class="bg-white rounded-lg shadow">
       
       <div class="px-8 py-4 border-b border-gray-200">
-        <h1 class="text-2xl font-bold text-gray-900">Create exam event</h1>
+        <h1 class="text-2xl font-bold text-gray-900">Edit exam event</h1>
       </div>
 
       <div class="p-8">
-        {#if currentView === 'config'}
+        {#if isLoading}
+          <div class="flex items-center justify-center py-12">
+            <div class="text-center">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
+              <p class="text-gray-600">Loading exam details...</p>
+            </div>
+          </div>
+        {:else if loadError}
+          <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Error loading exam details</h3>
+                <div class="mt-2 text-sm text-red-700">
+                  <p>{loadError}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        {/if}
+        
+        {#if currentView === 'config' && !isLoading && !loadError}
           <form on:submit|preventDefault={handleSubmit}>
             <!-- Exam Details -->
             <div class="space-y-6 w-full">

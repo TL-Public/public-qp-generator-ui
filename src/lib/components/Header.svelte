@@ -51,7 +51,18 @@
             <span class="font-medium">Dashboard</span>
           </a>
         </li>
-
+        <!-- View Papers -->
+        <li>
+          <a 
+            href="/search" 
+            class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {isActiveRoute('/search') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m-5-8h8m-8 4h8m-7-8h8m-8 8h8M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+            </svg>
+            <span class="font-medium">View Papers</span>
+          </a>
+        </li>
         <!-- Create Paper -->
         <li>
           <a 
@@ -64,6 +75,8 @@
             <span class="font-medium">Create Paper</span>
           </a>
         </li>
+
+      
 
         <!-- Create Quiz -->
         <li>
@@ -78,18 +91,7 @@
           </a>
         </li>
 
-        <!-- View Papers -->
-        <li>
-          <a 
-            href="/search" 
-            class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {isActiveRoute('/search') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m-5-8h8m-8 4h8m-7-8h8m-8 8h8M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
-            </svg>
-            <span class="font-medium">View Papers</span>
-          </a>
-        </li>
+     
 
         <!-- Users/Admin -->
         <li>

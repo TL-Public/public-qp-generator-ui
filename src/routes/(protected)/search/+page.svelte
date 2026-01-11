@@ -334,18 +334,18 @@ function createNestedStructure(chaptersTopics) {
   function getColumnWidth(key) {
     const widths = {
       'exam_code': '8%',
-      'exam_name': '12%',
-      'subject': '10%',
-      'standard': '6%',
-      'medium': '8%',
+      'exam_name': '25%', // Increased width to prevent overlap
+      'subject': '12%',
+  /*    'standard': '6%',
+      'medium': '8%',*/
       'created_at': '10%',
-      'status': '6%',
-      'number_of_sets': '6%',
-      'number_of_versions': '6%',
-      'total_questions': '6%',
+      'status': '8%',
+      'number_of_sets': '10%',
+    /*  'number_of_versions': '6%',
+      'total_questions': '6%',*/
       'exam_type': '6%',
       'exam_mode': '6%',
-      'actions': '9%',
+      'actions': '12%', // Increased width for actions to ensure visibility
     };
     return widths[key] || 'auto';
   }
@@ -854,13 +854,13 @@ function createNestedStructure(chaptersTopics) {
           {:else}
             <div class="border border-gray-200 rounded-lg overflow-hidden">
               <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed; width: 100%;">
                   <thead class="bg-gray-50">
                     <tr>
                       {#each headers as header}
                         <th
                           class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
-                          style="width: {getColumnWidth(header.key)};"
+                          style="width: {getColumnWidth(header.key)}; min-width: {header.key === 'actions' ? '120px' : 'auto'};"
                           on:click={() => !['actions'].includes(header.key) && toggleSort(header.key)}
                         >
                           <div class="flex items-center space-x-1">
@@ -880,19 +880,23 @@ function createNestedStructure(chaptersTopics) {
                       <tr class="hover:bg-gray-50 transition-colors duration-150">
                         {#each headers as header}
                           <td 
-                            class="px-4 py-4 whitespace-nowrap text-xs"
-                            style="width: {getColumnWidth(header.key)};"
+                            class="px-4 py-4 text-xs {header.key === 'actions' || header.key === 'exam_name' ? '' : 'whitespace-nowrap'}"
+                            style="width: {getColumnWidth(header.key)}; {header.key === 'actions' ? 'min-width: 120px;' : ''} {header.key === 'exam_name' ? 'word-wrap: break-word; overflow-wrap: break-word;' : ''}"
                           >
                             {#if header.key === 'exam_name'}
-                              <button
-                                type="button" 
-                                class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-left font-medium transition-colors duration-150"
-                                title="Click to view paper details: {paper[header.key]}"
-                                on:click={() => handleViewPaper(paper)}
-                              >
-                                <span class="word-wrap">{paper[header.key]} </span> <br/>
-                                <span class="text-xs text-red-600">({paper['total_questions']} Questions)</span>
-                              </button>
+                              <div class="w-full">
+                                <button
+                                  type="button" 
+                                  class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-left font-medium transition-colors duration-150 w-full"
+                                  title="Click to view paper details: {paper[header.key]}"
+                                  on:click={() => handleViewPaper(paper)}
+                                >
+                                  <div class="break-words" style="word-wrap: break-word; overflow-wrap: break-word;">
+                                    {paper[header.key]}
+                                  </div>
+                                  <div class="text-xs text-red-600 mt-1">({paper['total_questions']} Questions)</div>
+                                </button>
+                              </div>
                             {:else if header.key === 'exam_code'} 
                              <button
                              type = "button"
@@ -1488,6 +1492,38 @@ function createNestedStructure(chaptersTopics) {
 /* Ensure proper table spacing */
 table td {
   vertical-align: top;
+}
+
+/* Fix table layout to enforce column widths */
+table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Ensure action column content doesn't overflow */
+table td:last-child {
+  overflow: visible;
+  white-space: normal;
+}
+
+/* Ensure exam_name column (2nd column) wraps properly and doesn't overlap */
+table thead th:nth-child(2),
+table tbody td:nth-child(2) {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 0; /* Force column to respect width */
+}
+
+/* Ensure exam_name button content wraps */
+table tbody td:nth-child(2) button {
+  width: 100%;
+  text-align: left;
+}
+
+table tbody td:nth-child(2) button div {
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Chapter rows styling */
