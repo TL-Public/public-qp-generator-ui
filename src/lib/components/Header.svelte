@@ -79,7 +79,7 @@
       
 
         <!-- Create Quiz -->
-        <li>
+        <!-- <li>
           <a 
             href="/quiz" 
             class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {isActiveRoute('/quiz') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
@@ -89,7 +89,7 @@
             </svg>
             <span class="font-medium">Create Quiz</span>
           </a>
-        </li>
+        </li> -->
 
      
 
@@ -130,8 +130,8 @@
           class="h-10 w-10 rounded-full ring-2 ring-slate-600"
         />
         <div class="flex-1 min-w-0">
-          <div class="text-sm font-medium text-white truncate">User Name</div>
-          <div class="text-xs text-slate-400 truncate">user@example.com</div>
+          <div class="text-sm font-medium text-white truncate">admin</div>
+          <div class="text-xs text-slate-400 truncate">admin@example.com</div>
         </div>
       </div>
       
