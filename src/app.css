@@ -5,6 +5,16 @@
   --font-scale: 1;
 }
 
+@theme{
+
+  --color-primary: #3b82f6; /* Tailwind's blue-500 */
+  --color-primary-hover: #2563eb; /* Tailwind's blue-600 */
+  --color-dark: #1d293d; /* Tailwind's gray-500 */
+  --color-stroke: #e5e7eb; /* Tailwind's gray-200 */
+  --color-background: #ffffff; /* Tailwind's white */
+  --color-canvas-base-fixed: #ffffff; /* Tailwind's white */
+}
+
 /* Apply scaling to all text elements */
 /* html[data-font-size] {
   font-size: calc(16px * var(--font-scale));

@@ -20,8 +20,8 @@
   let activeTooltip = null;
 </script>
 
-<div class="space-y-6">
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<div >
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Total Time Field -->
     <div class="relative">
       <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -50,7 +50,7 @@
     </div>
 
     <!-- Total Questions Field -->
-    <div class="relative">
+    <!-- <div class="relative">
       <label class="block text-sm font-medium text-gray-700 mb-1">
         Total Questions
         <button 
@@ -74,7 +74,7 @@
         min="1"
         class="mt-1  text-sm  block w-full p-2  border-gray-300 rounded-md  border focus:border-blue-500 focus:ring-blue-500"
       />
-    </div>
+    </div> -->
 
     <!-- Number of Sets Field -->
     <div class="relative">

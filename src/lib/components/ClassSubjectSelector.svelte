@@ -121,7 +121,7 @@
   });
 </script>
 
-<Card title="Class & Subject Selection">
+
   <div class="grid grid-cols-3 gap-6">
     <div>
       <!-- ✅ Hardcoded dropdown for class 1 to 12 -->
@@ -181,5 +181,5 @@
   </div>
 
   
-</Card>
+
 
