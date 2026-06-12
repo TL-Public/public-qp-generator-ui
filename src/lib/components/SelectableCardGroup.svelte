@@ -25,8 +25,8 @@
       type="button"
       class="flex-1 flex gap-2 items-center  rounded-md border transition-all duration-200 focus:outline-none px-2 
       {selected === option.value 
-        ? 'bg-gray-900 border-gray-900 text-white' 
-        : 'bg-white border-gray-200 text-gray-900 hover:border-gray-300'}"
+        ? 'bg-dark border-dark text-white' 
+        : 'bg-white border-gray-200 text-dark hover:border-gray-300'}"
       on:click={() => handleSelect(option.value)}
       {disabled}
     >

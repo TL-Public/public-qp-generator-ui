@@ -162,7 +162,7 @@
 
 <div class="space-y-4">
   <!-- Responsive Table Container -->
-  <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+  <div class="overflow-x-auto border border-stroke md:rounded-lg">
     <table class="min-w-full divide-y divide-gray-300">
       <thead class="bg-gray-50">
         <tr>
@@ -256,7 +256,7 @@
                 class="text-red-600 hover:text-red-900 transition-colors duration-200"
                 on:click={() => excludedQuestions.includes(question.id) ? restoreQuestion(question.id) : removeQuestion(question.id)}
               >
-                {excludedQuestions.includes(question.id) ? 'Restore' : 'Remove'}
+                {excludedQuestions.includes(question.id) ? 'Restore' : 'Exclude'}
               </button>
             </td>
           </tr>

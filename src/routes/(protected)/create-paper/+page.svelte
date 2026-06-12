@@ -28,9 +28,12 @@
   // Exam details state
   let examTitle = "";
   let examMode = "Online";
-  let examClass = "";
-  let examMedium = "";
-  let examSubject = "";
+  //  let examClass = "";
+  // let examMedium = "";
+  // let examSubject = "";
+   let examClass = "10";
+  let examMedium = "2000";
+  let examSubject = "3000";
 
   // Initialize validation states
   let examDetailsValid = true;
@@ -609,9 +612,9 @@
 </script>
 
 <!-- Template remains the same as before -->
-<div class="flex min-h-screen bg-white">
+<div class="flex min-h-screen  max-w-5xl mx-auto">
   <!-- Stepper -->
-  <div
+  <!-- <div
     class="w-48 flex-shrink-0 p-2 bg-white sticky top-0 h-screen overflow-y-auto"
   >
     <VerticalStepper
@@ -645,11 +648,11 @@
       ]}
       {currentStep}
     />
-  </div>
+  </div> -->
 
   <!-- Main content -->
   <div class="flex-1 mx-auto w-full max-w-7xl">
-    <div class="bg-white rounded-lg">
+    <div class=" rounded-lg">
       <!-- <div class="px-8 py-4 border-b border-gray-200">
         <h1 class="text-2xl font-bold text-gray-900">Create exam event</h1>
       </div> -->
@@ -701,7 +704,7 @@
             {#if examClass && examSubject && examMedium}
               <div class="space-y-6 mt-8 w-full">
                 <Card title="Content Selection & Question Allocation">
-                  <NestedContentTable
+                    <NestedContentTable
                     bind:this={nestedContentTableRef}
                     {examClass}
                     {examSubject}

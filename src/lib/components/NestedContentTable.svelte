@@ -527,7 +527,7 @@ function handleConfirmAndReview(event){
 <div class="w-full">
   <!-- Content Selection Interface -->
   {#if !showQuestions}
-    <div id="content-selection">
+    <div id="content-selection" >
       <!-- Add hash anchor for content selection -->
       {#if isLoading}
         <div class="flex justify-center py-4">
@@ -542,8 +542,8 @@ function handleConfirmAndReview(event){
         <SelectionSidebar on:highlightItem={handleHighlightItem} />
 
         <!-- Your existing table with checkboxes -->
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-gray-200  ">
+          <thead class="bg-gray-50 sticky top-0 z-10">
             <tr>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Name
@@ -768,7 +768,7 @@ function handleConfirmAndReview(event){
 
   <!-- Questions and Selected Content Tabs (shown after fetch) -->
   {#if showQuestions}
-    <div id = "questions-table">
+    <div id = "questions-table" >
 
       <SelectionSidebar on:highlightItem={handleHighlightItem} />
 
@@ -982,9 +982,9 @@ function handleConfirmAndReview(event){
     </div>
     
     
-    <div id="questions-section " class="mt-8 border-t border-t-gray-200">
+    <div id="questions-section " class="mt-8 border-t border-t-gray-200 ">
       <div class=" pt-4 pb-4 flex items-center justify-between">
-        <h2 class="text-base font-medium text-gray-700">Question Paper Content</h2>
+        <h2 class="text-base font-medium text-gray-700">Question Configuration & Filtering</h2>
         <button
           type="button"
           class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
@@ -1014,7 +1014,7 @@ function handleConfirmAndReview(event){
               on:click={() => browser && goto('#questions', { replaceState: true, noScroll: true })}
             />
             
-            <Tab name = "questions-removed" title = "Removed Questions" />
+            <Tab name = "questions-removed" title = "Excluded Questions" />
           </nav>
         </div>
 

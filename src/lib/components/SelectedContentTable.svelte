@@ -668,9 +668,9 @@
 <div class="space-y-4">
   <!-- Header with Configuration -->
   <div class="bg-gray-50 p-4 rounded-lg">
-    <div class="flex items-center justify-between mb-4">
+    <!-- <div class="flex items-center justify-between mb-4">
       <h3 class="text-base font-medium text-gray-700">Question Configuration & Filtering</h3>
-    </div>
+    </div> -->
 
     <!-- AI/Manual Toggle -->
     <div class="flex items-center space-x-4 mb-4">
