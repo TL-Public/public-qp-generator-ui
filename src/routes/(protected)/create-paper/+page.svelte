@@ -18,6 +18,7 @@
   import { mockQuestionsData } from "$lib/utils/mockData.js";
   import { selectedContentStore } from "$lib/stores/selectedContentStore.js";
   import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
+  import { onDestroy } from "svelte";
 
   // Initialize state variables
   let allQuestions = [];
@@ -31,7 +32,7 @@
   //  let examClass = "";
   // let examMedium = "";
   // let examSubject = "";
-   let examClass = "10";
+  let examClass = "10";
   let examMedium = "2000";
   let examSubject = "3000";
 
@@ -609,10 +610,15 @@
       }
     }
   }
+
+  onDestroy(() => {
+    // Clean up API store when component is destroyed
+    selectedContentStore.clearAll();
+  });
 </script>
 
 <!-- Template remains the same as before -->
-<div class="flex min-h-screen  max-w-5xl mx-auto">
+<div class="flex min-h-screen max-w-5xl mx-auto">
   <!-- Stepper -->
   <!-- <div
     class="w-48 flex-shrink-0 p-2 bg-white sticky top-0 h-screen overflow-y-auto"
@@ -681,7 +687,6 @@
                 <hr class="divider-line" />
                 <ExamConfig
                   bind:totalTime
-                  bind:totalQuestions
                   bind:numberOfSets
                   bind:numberOfVersions
                   on:validate={handleExamConfigValidation}
@@ -704,12 +709,12 @@
             {#if examClass && examSubject && examMedium}
               <div class="space-y-6 mt-8 w-full">
                 <Card title="Content Selection & Question Allocation">
-                    <NestedContentTable
+                  <NestedContentTable
                     bind:this={nestedContentTableRef}
                     {examClass}
                     {examSubject}
                     {examMedium}
-                    {totalQuestions}
+                    bind:totalQuestions
                     {examTitle}
                     bind:examMode
                     bind:totalTime

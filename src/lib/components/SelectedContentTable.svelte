@@ -498,10 +498,7 @@
       draftSaveError =
         error.message || "Failed to save draft. Please try again.";
 
-      // Clear error message after 10 seconds
-      setTimeout(() => {
-        draftSaveError = "";
-      }, 10000);
+  
     } finally {
       savingDraft = false;
     }
@@ -634,9 +631,18 @@
 <div class="space-y-4">
   <!-- Header with Configuration -->
   <div class="bg-gray-50 p-4 rounded-lg">
-    <!-- <div class="flex items-center justify-between mb-4">
-      <h3 class="text-base font-medium text-gray-700">Question Configuration & Filtering</h3>
-    </div> -->
+    <div class="mb-6 w-1/2">
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        No. of questions <span class="text-red-500">*</span>
+      </label>
+      <input
+        type="number"
+        bind:value={totalQuestions}
+        min="1"
+        class="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+        placeholder="e.g. 40"
+      />
+    </div>
 
     <!-- AI/Manual Toggle -->
     <div class="flex items-center justify-between mb-4">
@@ -650,73 +656,71 @@
     </div>
 
     {#if !allocateWithAI}
-      <div
-        class="text-xs text-gray-700 bg-gray-100 border border-gray-200 rounded-md p-2"
-      >
-        <strong>Tip:</strong> If you specify a number at the chapter level, it will
-        override the topic-level selections.
-      </div>
-      {#if !allocateWithAI}
-        <!-- Allocation Summary -->
-        <div class="sticky top-0 rounded-lg mt-4">
-          <!-- <h3 class="text-base font-medium text-gray-700 mb-4">
+      <!-- Allocation Summary -->
+      <div class="sticky top-0 rounded-lg mt-4">
+        <!-- <h3 class="text-base font-medium text-gray-700 mb-4">
         Allocation Summary
       </h3> -->
 
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span class="text-gray-600 text-sm">Required:</span>
+            <span class="font-medium ml-1">{allocationSummary.required}</span>
+          </div>
+          <div>
+            <span class="text-gray-600 text-sm">Available:</span>
+            <span class="font-medium ml-1">{allocationSummary.available}</span>
+          </div>
+          {#if !allocateWithAI}
             <div>
-              <span class="text-gray-600 text-sm">Required:</span>
-              <span class="font-medium ml-1">{allocationSummary.required}</span>
-            </div>
-            <div>
-              <span class="text-gray-600 text-sm">Available:</span>
-              <span class="font-medium ml-1">{allocationSummary.available}</span
+              <span class="text-gray-600 text-sm">Allocated:</span>
+              <span class="font-medium ml-1">{allocationSummary.allocated}</span
               >
             </div>
-            {#if !allocateWithAI}
-              <div>
-                <span class="text-gray-600 text-sm">Allocated:</span>
-                <span class="font-medium ml-1"
-                  >{allocationSummary.allocated}</span
-                >
-              </div>
-              <div>
-                <span class="text-gray-600 text-sm">Remaining:</span>
-                <span
-                  class="font-medium ml-1 {allocationSummary.remaining < 0
-                    ? 'text-red-600'
-                    : allocationSummary.remaining > 0
-                      ? 'text-amber-600'
-                      : 'text-green-600'}"
-                >
-                  {allocationSummary.remaining}
-                </span>
-              </div>
-            {/if}
-          </div>
-
-          {#if allocationSummary.hasError}
-            <div
-              class="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2"
-            >
-              ⚠️ Not enough questions available to meet the requirement. Add
-              more chapters and topics.
-            </div>
-          {:else if !allocateWithAI && allocationSummary.remaining > 0}
-            <div
-              class="mt-3 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2"
-            >
-              📝 {allocationSummary.remaining} questions remaining. These will be
-              auto-allocated from unspecified content.
-            </div>
-          {:else if !allocateWithAI && allocationSummary.remaining === 0}
-            <div
-              class="mt-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md p-2"
-            >
-              Perfect allocation! All {allocationSummary.required} questions are
-              allocated.
+            <div>
+              <span class="text-gray-600 text-sm">Remaining:</span>
+              <span
+                class="font-medium ml-1 {allocationSummary.remaining < 0
+                  ? 'text-red-600'
+                  : allocationSummary.remaining > 0
+                    ? 'text-amber-600'
+                    : 'text-green-600'}"
+              >
+                {allocationSummary.remaining}
+              </span>
             </div>
           {/if}
+        </div>
+
+        {#if allocationSummary.hasError}
+          <div
+            class="mt-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2"
+          >
+            ⚠️ Not enough questions available to meet the requirement. Add more
+            chapters and topics.
+          </div>
+        {:else if !allocateWithAI && allocationSummary.remaining > 0}
+          <div
+            class="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2"
+          >
+            📝 {allocationSummary.remaining} questions remaining. These will be auto-allocated
+            from unspecified content.
+          </div>
+        {:else if !allocateWithAI && allocationSummary.remaining === 0}
+          <div
+            class="mt-3 text-xs text-green-600 bg-green-50 border border-green-200 rounded-md p-2"
+          >
+            Perfect allocation! All {allocationSummary.required} questions are allocated.
+          </div>
+        {/if}
+      </div>
+
+      {#if !allocateWithAI}
+        <div
+          class="text-xs text-gray-700 bg-gray-100 border border-gray-200 rounded-md p-2 mt-4"
+        >
+          <strong>Tip:</strong> If you specify a number at the chapter level, it
+          will override the topic-level selections.
         </div>
       {/if}
     {/if}
@@ -944,7 +948,7 @@
                     <span
                       class="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full"
                     >
-                      AI will decide
+                      Auto Allocation
                     </span>
                   </div>
                 {:else if row.item.isSelected}

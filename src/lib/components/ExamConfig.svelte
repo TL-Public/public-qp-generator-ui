@@ -3,7 +3,6 @@
   const dispatch = createEventDispatcher();
 
   export let totalTime = 40;
-  export let totalQuestions = 40;
   export let numberOfSets = 1;
   export let numberOfVersions = 1;
 
