@@ -75,8 +75,6 @@
 
   // Update the back handler in ReviewPage
   function handleBackFromReview() {
-    console.log("Handling back from review page");
-
     // Reset to content selection view
     currentView = "config";
     currentStep = "allocation";
@@ -122,26 +120,14 @@
 
   // Navigation reactive statement
   $: {
-    console.log("🔍 Reactive check:", {
-      shouldNavigateToReview,
-      isAllocationConfirmed,
-      confirmedAllocationData: !!confirmedAllocationData,
-      currentView,
-    });
-
     if (
       shouldNavigateToReview &&
       isAllocationConfirmed &&
       confirmedAllocationData
     ) {
-      console.log("🚀 REACTIVE: Navigating to review page via prop change");
       currentView = "review";
       currentStep = "review";
       shouldNavigateToReview = false; // Reset the flag
-      console.log(
-        "🚀 REACTIVE: Navigation complete, currentView is now:",
-        currentView,
-      );
     }
   }
 
@@ -189,12 +175,7 @@
 
   // Simplify - use one handler that checks for the navigateToReview flag
   function handleAllocationConfirmed(event) {
-    console.log("=== ALLOCATION CONFIRMATION HANDLER ===");
-    console.log("Raw event received:", event);
-    console.log("Event detail:", event.detail);
-
     if (!event.detail) {
-      console.error("No detail in allocation confirmation event");
       alert("Invalid allocation data received. Please try again.");
       return;
     }
@@ -206,17 +187,9 @@
       !allocationData.selectedItems ||
       !Array.isArray(allocationData.selectedItems)
     ) {
-      console.error(
-        "Invalid selectedItems in allocation data:",
-        allocationData,
-      );
       alert("Invalid allocation data format. Please try again.");
       return;
     }
-
-    console.log("Allocation data received:", allocationData);
-    console.log("Selected items count:", allocationData.selectedItems.length);
-    console.log("Navigate to review flag:", allocationData.navigateToReview);
 
     // Update state
     isAllocationConfirmed = true;
@@ -263,33 +236,19 @@
 
     // Check if we should navigate to review
     if (allocationData.navigateToReview === true) {
-      console.log(
-        "🚀 NAVIGATING TO REVIEW - Setting shouldNavigateToReview = true",
-      );
       shouldNavigateToReview = true;
     } else {
       // Move to next step
       currentStep = "allocation";
     }
 
-    console.log("✅ Allocation confirmed and API store updated");
-    console.log("   - isAllocationConfirmed:", isAllocationConfirmed);
-    console.log("   - confirmedAllocationData:", confirmedAllocationData);
-    console.log("   - shouldNavigateToReview:", shouldNavigateToReview);
-
     // Debug the API store state
     const payloadResult = apiPayloadStore.getApiPayload();
-    console.log("API Payload after allocation confirmation:", payloadResult);
   }
 
   // ✅ SINGLE: Allocation confirmation with direct review navigation
   function handleAllocationConfirmedAndReview(event) {
-    console.log("=== ALLOCATION CONFIRMATION WITH REVIEW HANDLER ===");
-    console.log("Raw event received:", event);
-    console.log("Event detail:", event.detail);
-
     if (!event.detail) {
-      console.error("No detail in allocation confirmation event");
       alert("Invalid allocation data received. Please try again.");
       return;
     }
@@ -301,16 +260,9 @@
       !allocationData.selectedItems ||
       !Array.isArray(allocationData.selectedItems)
     ) {
-      console.error(
-        "Invalid selectedItems in allocation data:",
-        allocationData,
-      );
       alert("Invalid allocation data format. Please try again.");
       return;
     }
-
-    console.log("Allocation data received:", allocationData);
-    console.log("Selected items count:", allocationData.selectedItems.length);
 
     // Update state
     isAllocationConfirmed = true;
@@ -358,13 +310,8 @@
     // Trigger navigation via prop
     shouldNavigateToReview = true;
 
-    console.log("✅ Allocation confirmed, navigation flag set to true");
-    console.log("   - isAllocationConfirmed:", isAllocationConfirmed);
-    console.log("   - shouldNavigateToReview:", shouldNavigateToReview);
-
     // Debug the API store state
     const payloadResult = apiPayloadStore.getApiPayload();
-    console.log("API Payload after allocation confirmation:", payloadResult);
   }
 
   function handleCreatePaper(event) {
@@ -407,14 +354,12 @@
     }
 
     if (difficultyValid) {
-      console.log("Moving to review view");
       currentView = "review";
     }
   }
 
   function handleQuestionsUpdate(event) {
     allQuestions = event.detail;
-    console.log("Updated all questions:", allQuestions);
   }
 
   function handleExamConfigUpdate(event) {
@@ -426,25 +371,16 @@
 
   async function handleGeneratePapers() {
     try {
-      console.log("=== GENERATE PAPERS WITH API STORE ===");
-
       // Try to update API store one more time before generating
       if (confirmedAllocationData && confirmedAllocationData.selectedItems) {
-        console.log("Ensuring API store is updated with allocation data...");
         apiPayloadStore.updateFromAllocationData(confirmedAllocationData);
       }
 
       // Get the API payload from the store
       const payloadResult = apiPayloadStore.getApiPayload();
 
-      console.log("API Payload validation result:", payloadResult);
-
       if (!payloadResult.isValid) {
         // Provide more detailed error information
-        console.error("API Payload validation failed:");
-        console.error("- Errors:", payloadResult.errors);
-        console.error("- Current API store state:", apiStoreData);
-        console.error("- Confirmed allocation data:", confirmedAllocationData);
 
         throw new Error("Invalid data: " + payloadResult.errors.join(", "));
       }
@@ -454,17 +390,6 @@
         ...apiPayload,
         status: 2,
       };
-      console.log("API Payload from store:", apiPayload);
-
-      // // Validate with the API's validatePayload method
-      // const validation = api.questionPapers.validatePayload(apiPayload);
-      // if (!validation.isValid) {
-      //   console.error('API validation failed:', validation.errors);
-      //   throw new Error(`API validation failed: ${validation.errors.join(', ')}`);
-      // }
-
-      // console.log('Making API call with payload:', apiPayload);
-      // console.log('iam testing this', apiPayload);
 
       // Make the API call
       const response = await api.questionPapers.create(apiPayload);
@@ -477,7 +402,6 @@
         throw new Error("No data received from server");
       }
 
-      console.log("Question papers generated successfully:", response.data);
       const responseData = response.data.data || response.data;
       // Store the generated data with updated structure
       const generatedPapersData = {
@@ -514,8 +438,6 @@
         `Successfully generated ${paperCount} question papers for "${responseData.exam_name}"!\n\nExam Code: ${responseData.exam_code}\nSets: ${responseData.number_of_sets}\nVersions: ${responseData.number_of_versions}`,
       );
     } catch (error) {
-      console.error("Failed to generate papers:", error);
-
       let errorMessage = "Failed to generate question papers.\n\n";
       errorMessage += error.message;
 
@@ -557,12 +479,6 @@
 
   function handleSelectionUpdate(event) {
     const { chapter, topic, subtopic, selections } = event.detail;
-    console.log("Selection updated:", {
-      chapter: chapter?.name,
-      topic: topic?.name,
-      subtopic: subtopic?.name,
-      selections,
-    });
 
     if (selectedChapter !== chapter?.id) {
       allQuestions = [];
@@ -576,7 +492,6 @@
 
   async function handleQuestionSelect(event) {
     const { item, type } = event.detail;
-    console.log("Selected item for questions:", item, type);
 
     try {
       // Get mock data based on selection type
@@ -601,10 +516,7 @@
 
       // Update allQuestions with new questions
       allQuestions = [...allQuestions, ...fetchedQuestions];
-
-      console.log("Fetched questions:", fetchedQuestions);
     } catch (err) {
-      console.error("Error processing questions:", err);
       alert("Failed to load questions: " + err.message);
     }
   }
@@ -642,12 +554,6 @@
   async function handleClassSubjectSelect(event) {
     const { examClass, examSubject, examMedium } = event.detail;
 
-    console.log("Updating class/subject with:", {
-      subject_code: examSubject,
-      medium_code: examMedium,
-      examClass,
-    });
-
     if (allQuestions.length > 0) {
       currentStep = "allocation";
     }
@@ -669,8 +575,6 @@
   }
 
   function handleForceApiStoreUpdate() {
-    console.log("=== FORCE API STORE UPDATE ===");
-
     // Update API store with current exam details
     apiPayloadStore.updateExamDetails({
       examTitle,
@@ -701,45 +605,7 @@
         apiPayloadStore.updateExcludedQuestions(excludedQuestions);
       }
     }
-
-    console.log("API store updated with current data");
   }
-
-  // Debug reactive statements
-  $: {
-    if (allQuestions.length > 0) {
-      console.log("Questions changed:", allQuestions.length);
-    }
-  }
-
-  $: {
-    if (examClass && examSubject && examMedium) {
-      console.log("Selection props updated:", {
-        examClass,
-        examSubject,
-        examMedium,
-      });
-    }
-  }
-
-  $: {
-    if (classSubjectValid) {
-      console.log("Valid class/subject selection:", {
-        class: examClass,
-        subject: examSubject,
-        medium: examMedium,
-      });
-    }
-  }
-
-  $: {
-    console.log("=== Allocation State Debug ===");
-    console.log("Allocation confirmed:", isAllocationConfirmed);
-    console.log("Confirmed data:", confirmedAllocationData);
-    console.log("Questions array length:", allQuestions?.length);
-  }
-
-  $: console.log("Current paper data:", $questionPaperStore);
 </script>
 
 <!-- Template remains the same as before -->
@@ -790,45 +656,44 @@
 
       <div class="p-4 px-6">
         {#if currentView === "config"}
-          <form on:submit|preventDefault={handleSubmit} >
+          <form on:submit|preventDefault={handleSubmit}>
             <!-- Exam Details -->
             <Card className="!p-8" title="Create Question Paper">
-            <div class=" space-y-8 ">
-
-              <div class="space-y-4">
-                <ExamDetailsForm
-                  bind:examTitle
-                  bind:examMode
-                  bind:isValid={examDetailsValid}
+              <div class=" space-y-8">
+                <div class="space-y-4">
+                  <ExamDetailsForm
+                    bind:examTitle
+                    bind:examMode
+                    bind:isValid={examDetailsValid}
+                  />
+                  <ClassSubjectSelector
+                    bind:examClass
+                    bind:examMedium
+                    bind:examSubject
+                    bind:isValid={classSubjectValid}
+                    on:change={handleClassSubjectSelect}
+                  />
+                </div>
+                <!-- Exam Config -->
+                <hr class="divider-line" />
+                <ExamConfig
+                  bind:totalTime
+                  bind:totalQuestions
+                  bind:numberOfSets
+                  bind:numberOfVersions
+                  on:validate={handleExamConfigValidation}
                 />
-                <ClassSubjectSelector
-                  bind:examClass
-                  bind:examMedium
-                  bind:examSubject
-                  bind:isValid={classSubjectValid}
-                  on:change={handleClassSubjectSelect}
+                <hr class="divider-line" />
+                <!-- Difficulty Distribution -->
+
+                <DifficultyDistribution
+                  bind:easy
+                  bind:medium
+                  bind:hard
+                  bind:isValid={difficultyValid}
+                  isReviewPageEnabled={false}
                 />
               </div>
-              <!-- Exam Config -->
-              <hr class="divider-line" />
-              <ExamConfig
-                bind:totalTime
-                bind:totalQuestions
-                bind:numberOfSets
-                bind:numberOfVersions
-                on:validate={handleExamConfigValidation}
-              />
-              <hr class="divider-line" />
-              <!-- Difficulty Distribution -->
-
-              <DifficultyDistribution
-                bind:easy
-                bind:medium
-                bind:hard
-                bind:isValid={difficultyValid}
-                isReviewPageEnabled={false}
-              />
-            </div>
             </Card>
             <!-- Class & Subject Selection -->
 
@@ -851,10 +716,6 @@
                     on:select={handleQuestionSelect}
                     on:fetchQuestions={handleFetchQuestions}
                     on:allocationConfirmed={(e) => {
-                      console.log(
-                        "Main page recieved allocation confirmed event",
-                        e.detail,
-                      );
                       handleAllocationConfirmed(e);
                     }}
                   />
@@ -863,7 +724,9 @@
             {/if}
 
             <!-- Action buttons -->
-            <div class="flex justify-between mt-8 pt-6 divider-line w-full px-4">
+            <div
+              class="flex justify-between mt-8 pt-6 divider-line w-full px-4"
+            >
               <button
                 type="button"
                 class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
