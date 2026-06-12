@@ -783,51 +783,53 @@
 
   <!-- Main content -->
   <div class="flex-1 mx-auto w-full max-w-7xl">
-    <div class="bg-white rounded-lg shadow">
+    <div class="bg-white rounded-lg">
       <!-- <div class="px-8 py-4 border-b border-gray-200">
         <h1 class="text-2xl font-bold text-gray-900">Create exam event</h1>
       </div> -->
 
       <div class="p-4 px-6">
         {#if currentView === "config"}
-          <form
-            on:submit|preventDefault={handleSubmit}
-            class=" space-y-16 px-6 "
-          >
+          <form on:submit|preventDefault={handleSubmit} >
             <!-- Exam Details -->
+            <Card className="!p-8" title="Create Question Paper">
+            <div class=" space-y-8 ">
 
-            <ExamDetailsForm
-              bind:examTitle
-              bind:examMode
-              bind:isValid={examDetailsValid}
-            />
-            <ClassSubjectSelector
-              bind:examClass
-              bind:examMedium
-              bind:examSubject
-              bind:isValid={classSubjectValid}
-              on:change={handleClassSubjectSelect}
-            />
-            <!-- Exam Config -->
+              <div class="space-y-4">
+                <ExamDetailsForm
+                  bind:examTitle
+                  bind:examMode
+                  bind:isValid={examDetailsValid}
+                />
+                <ClassSubjectSelector
+                  bind:examClass
+                  bind:examMedium
+                  bind:examSubject
+                  bind:isValid={classSubjectValid}
+                  on:change={handleClassSubjectSelect}
+                />
+              </div>
+              <!-- Exam Config -->
+              <hr class="divider-line" />
+              <ExamConfig
+                bind:totalTime
+                bind:totalQuestions
+                bind:numberOfSets
+                bind:numberOfVersions
+                on:validate={handleExamConfigValidation}
+              />
+              <hr class="divider-line" />
+              <!-- Difficulty Distribution -->
 
-            <ExamConfig
-              bind:totalTime
-              bind:totalQuestions
-              bind:numberOfSets
-              bind:numberOfVersions
-              on:validate={handleExamConfigValidation}
-            />
-
-            <!-- Difficulty Distribution -->
-
-            <DifficultyDistribution
-              bind:easy
-              bind:medium
-              bind:hard
-              bind:isValid={difficultyValid}
-              isReviewPageEnabled={false}
-            />
-
+              <DifficultyDistribution
+                bind:easy
+                bind:medium
+                bind:hard
+                bind:isValid={difficultyValid}
+                isReviewPageEnabled={false}
+              />
+            </div>
+            </Card>
             <!-- Class & Subject Selection -->
 
             <!-- Content Selection & Allocation -->
@@ -861,7 +863,7 @@
             {/if}
 
             <!-- Action buttons -->
-            <div class="flex justify-between mt-8 pt-6 border-t w-full px-4">
+            <div class="flex justify-between mt-8 pt-6 divider-line w-full px-4">
               <button
                 type="button"
                 class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"

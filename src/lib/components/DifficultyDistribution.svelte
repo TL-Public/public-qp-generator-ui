@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte";
   import Chart from "chart.js/auto";
   import Card from "./Cards/Card.svelte";
   import Toggle from "./Toggle.svelte";
@@ -11,14 +10,13 @@
   export let isValid = true;
   export let isReviewPageEnabled = false;
   export let disabled = false; // Add this line
-  export let autoBalance = false;
+  export let autoBalance = true;
 
   // Rename existing percentage variables to match the chart functionality
   $: easyPercentage = easy;
   $: mediumPercentage = medium;
   $: hardPercentage = hard;
 
-  let chartCanvas;
   let chart;
 
   let easyValid = true;
@@ -31,8 +29,8 @@
     isValid = total === 100;
   }
 
-  onMount(() => {
-    chart = new Chart(chartCanvas, {
+  function initChart(node) {
+    chart = new Chart(node, {
       type: "bar",
       data: {
         labels: ["Distribution"],
@@ -78,8 +76,13 @@
       },
     });
 
-    return () => chart.destroy();
-  });
+    return {
+      destroy() {
+        chart?.destroy();
+        chart = null;
+      },
+    };
+  }
 
   $: if (chart) {
     chart.data.datasets[0].data = [easyPercentage];
@@ -91,8 +94,9 @@
 
 <div>
   <div class="flex items-center justify-between mb-4">
-    <p class="block text-sm font-medium text-gray-700">
+    <p class="flex flex-col text-sm font-medium text-gray-700">
       Auto Balance Difficulty
+      <span class="text-xs text-gray-500 font-normal">Automatically distribute questions across difficulty levels</span>
     </p>
     <Toggle bind:checked={autoBalance} {disabled} />
   </div>
@@ -101,7 +105,7 @@
     <div class="grid grid-cols-3 gap-4">
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">
-          Easy %*
+          Easy (%)<span class="text-sm font-medium text-red-500 ml-1">*</span>
         </label>
       {#if isReviewPageEnabled}
         <div
@@ -126,7 +130,7 @@
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">
-        Medium %*
+        Medium (%)<span class="text-sm font-medium text-red-500 ml-1">*</span>
       </label>
       {#if isReviewPageEnabled}
         <div
@@ -151,7 +155,7 @@
 
     <div>
       <label class="block text-sm font-medium text-gray-700 mb-1">
-        Hard %*
+        Hard (%)<span class="text-sm font-medium text-red-500 ml-1">*</span>
       </label>
       {#if isReviewPageEnabled}
         <div
@@ -177,9 +181,9 @@
 
   <div>
     <p class="text-sm text-gray-700 mb-1 flex w-full justify-between">
-      <span class="font-medium"> Distribution preview </span>
+      <!-- <span class="font-medium"> Distribution preview </span> -->
       <span
-        class="text-center text-sm {isValid
+        class="text-center text-sm my-2 {isValid
           ? 'text-green-600'
           : 'text-red-600'}"
       >
@@ -187,7 +191,9 @@
         {isValid ? "Valid distribution" : "Distribution must equal 100%"}
       </span>
     </p>
-    <canvas bind:this={chartCanvas} class="max-h-4"></canvas>
+    <div class="h-4 w-full">
+      <canvas use:initChart></canvas>
+    </div>
   </div>
   {/if}
 </div>

@@ -1,6 +1,6 @@
 <script>
   import Card from "$lib/components/Cards/Card.svelte";
-  import RadioGroup from "$lib/components/RadioGroup.svelte";
+  import SelectableCardGroup from "$lib/components/SelectableCardGroup.svelte";
   import { createEventDispatcher } from "svelte";
   import { questionPaperStore } from "$lib/stores/questionPaperStore";
 
@@ -10,7 +10,11 @@
 
   const dispatch = createEventDispatcher();
 
-  const examModes = ["Online", "Offline", "Hybrid"];
+  const examModes = [
+    { value: "Offline", label: "Offline", description: "Pen & paper", icon: "menu_book" },
+    { value: "Online", label: "Online", description: "Digital test", icon: "computer" },
+    { value: "Hybrid", label: "Hybrid", description: "Both formats", icon: "wifi" }
+  ];
 
   $: {
     isValid = !!examTitle && !!examMode;
@@ -25,8 +29,8 @@
 </script>
 
 
-  <div class="flex gap-6 w-full justify-between">
-    <div class="flex-1">
+  <div class="grid grid-cols-12 gap-6 w-full ">
+    <div class="col-span-6">
       <label class="block text-sm font-medium text-gray-700 mb-1">
         Exam title <span class="text-red-600">*</span>
       </label>
@@ -44,11 +48,11 @@
       {/if}
     </div>
 
-    <div class="mb-2 py-1 flex-1">
+    <div class="col-span-6">
       <label class="block text-sm font-medium text-gray-700 mb-1">
         Exam mode
       </label>
-      <RadioGroup
+      <SelectableCardGroup
         options={examModes}
         bind:selected={examMode}
         on:change={handleInput}

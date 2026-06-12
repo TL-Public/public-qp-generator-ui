@@ -94,3 +94,7 @@ html[data-font-size="small"] .question-card {
 .sub-heading{
   @apply text-gray-700 text-sm;
 }
+
+.divider-line{
+  @apply border-t border-t-stroke;
+}
