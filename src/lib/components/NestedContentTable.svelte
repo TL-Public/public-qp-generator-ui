@@ -15,6 +15,7 @@
   import TabPanel from "./TabTable/TabPanel.svelte";
   import MockQuestionsTable from "./MockQuestionsTable.svelte";
   import SelectedContentTable from "./SelectedContentTable.svelte";
+  import ContentHierarchyTable from "./ContentHierarchyTable.svelte";
   import {
     decodeHTMLEntities,
     cleanQuestionText,
@@ -514,533 +515,68 @@
       goto("#content-selection", { replaceState: true, noScroll: true });
     }
   }
-
-  $: console.log("selections", selections);
 </script>
 
 <div class="w-full">
-  <!-- Content Selection Interface -->
-  {#if !showQuestions}
-    <div id="content-selection" class="max-h-[650px] overflow-y-auto">
-      <!-- Add hash anchor for content selection -->
-      {#if isLoading}
-        <div class="flex justify-center py-4">
-          <div
-            class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
-          ></div>
-          <p>Loading content...</p>
-        </div>
-      {:else if error}
-        <div class="text-red-600 p-4">{error}</div>
-      {:else if chaptersData.length === 0}
-        <div class="flex justify-center">No content available</div>
-      {:else}
-        <SelectionSidebar on:highlightItem={handleHighlightItem} />
-
-        <!-- Your existing table with checkboxes -->
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50 sticky top-0 z-10">
-            <tr>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Name
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Questions
-              </th>
-              <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
-              >
-                Selection Summary
-              </th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            {#each chaptersData as chapter}
-              {@const chapterSelected = isChapterSelected(chapter.code)}
-              {@const hasSelectedTopics = hasSelectedTopicsInChapter(chapter)}
-
-              <!-- Chapter row -->
-              <tr class="hover:bg-gray-50" data-item-code={chapter.code}>
-                <td class="px-6 py-4">
-                  <div class="flex items-center space-x-2">
-                    <!-- Chapter Checkbox - disabled if any topics/subtopics are selected -->
-                    <input
-                      type="checkbox"
-                      class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      checked={chapterSelected}
-                      disabled={hasSelectedTopics}
-                      on:change={(e) =>
-                        handleCheckboxChange(e, chapter, "chapter")}
-                    />
-
-                    <!-- Expand/collapse button -->
-                    <button
-                      class="flex items-center space-x-2"
-                      on:click={(e) => toggleChapter(e, chapter.code)}
-                    >
-                      <svg
-                        class="h-4 w-4 transition-transform duration-200 {expandedChapters.has(
-                          chapter.code,
-                        )
-                          ? 'transform rotate-90'
-                          : ''}"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M6 6L14 10L6 14V6Z" />
-                      </svg>
-                      <span class="font-medium text-sm! text-gray-700"
-                        >{chapter.name}</span
-                      >
-                    </button>
-
-                    <!-- Status indicators -->
-                    {#if chapterSelected}
-                      <span class="text-sm text-gray-600">
-                        ✓ Chapter Selected
-                      </span>
-                    {:else if hasSelectedTopics}
-                      <span class="text-sm text-gray-600">
-                        Partial Selection
-                      </span>
-                    {/if}
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500">
-                  {chapter.question_count || 0}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-600">
-                  {#if chapterSelected}
-                    <span class="italic">Entire chapter selected</span>
-                  {:else if hasSelectedTopics}
-                    {@const selectedItems = getSelectedItemsForChapter(chapter)}
-                    {@const totalSelectable =
-                      (chapter.topics?.length || 0) +
-                      (chapter.topics?.flatMap((t) => t.subtopics || [])
-                        .length || 0)}
-                    <button
-                      class="text-blue-600 hover:underline italic text-sm"
-                      on:click|preventDefault={() => openSummaryModal(chapter)}
-                    >
-                      {selectedItems.length} of {totalSelectable} items selected
-                    </button>
-                  {:else}
-                    <span class="italic text-gray-400">No selection</span>
-                  {/if}
-                </td>
-              </tr>
-
-              {#if expandedChapters.has(chapter.code) && chapter.topics}
-                {#each chapter.topics as topic}
-                  {@const topicSelected = isTopicSelected(topic.code)}
-                  {@const hasSelectedSubtopics =
-                    hasSelectedSubtopicsInTopic(topic)}
-
-                  <!-- Topic row -->
-                  <tr class="bg-gray-50" data-item-code={topic.code}>
-                    <td class="px-6 py-4 pl-12">
-                      <div class="flex items-center space-x-2">
-                        <!-- Topic Checkbox - disabled if chapter is selected OR subtopics are selected -->
-                        <input
-                          type="checkbox"
-                          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          checked={topicSelected}
-                          disabled={chapterSelected || hasSelectedSubtopics}
-                          on:change={(e) =>
-                            handleCheckboxChange(e, topic, "topic")}
-                        />
-
-                        <!-- Expand/collapse button -->
-                        <button
-                          class="flex items-center space-x-2"
-                          on:click={(e) => toggleTopic(e, topic.code)}
-                        >
-                          {#if topic.subtopics && topic.subtopics.length > 0}
-                            <svg
-                              class="h-4 w-4 transition-transform duration-200 {expandedTopics.has(
-                                topic.code,
-                              )
-                                ? 'transform rotate-90'
-                                : ''}"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path d="M6 6L14 10L6 14V6Z" />
-                            </svg>
-                          {:else}
-                            <div class="w-4"></div>
-                          {/if}
-                          <span class="text-sm text-gray-700">{topic.name}</span
-                          >
-                        </button>
-
-                        <!-- Status indicators -->
-                        {#if chapterSelected}
-                          <span class="text-xs text-gray-500 italic"
-                            >(included in chapter)</span
-                          >
-                        {:else if topicSelected}
-                          <span class="text-sm text-gray-600">
-                            ✓ Selected
-                          </span>
-                        {:else if hasSelectedSubtopics}
-                          <span class="text-sm text-gray-600"> Partial </span>
-                        {/if}
-                      </div>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-500">
-                      {topic.question_count || 0}
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">
-                      {#if chapterSelected}
-                        <span class="italic text-gray-500">Included</span>
-                      {:else if topicSelected}
-                        <span class="italic text-sm">Topic selected</span>
-                      {:else if hasSelectedSubtopics}
-                        {@const selectedSubtopics =
-                          topic.subtopics?.filter((st) =>
-                            isSubtopicSelected(st.code),
-                          ) || []}
-                        <span class="italic text-sm">
-                          {selectedSubtopics.length} subtopic{selectedSubtopics.length !==
-                          1
-                            ? "s"
-                            : ""} selected
-                        </span>
-                      {:else}
-                        <span class="italic text-gray-400">-</span>
-                      {/if}
-                    </td>
-                  </tr>
-
-                  {#if expandedTopics.has(topic.code) && topic.subtopics}
-                    {#each topic.subtopics as subtopic}
-                      {@const subtopicSelected = isSubtopicSelected(
-                        subtopic.code,
-                      )}
-
-                      <!-- Subtopic row -->
-                      <tr class="bg-gray-100" data-item-code={subtopic.code}>
-                        <td class="px-6 py-4 pl-20">
-                          <div class="flex items-center space-x-2">
-                            <!-- Subtopic Checkbox - disabled if chapter or topic is selected -->
-                            <input
-                              type="checkbox"
-                              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                              checked={subtopicSelected}
-                              disabled={chapterSelected || topicSelected}
-                              on:change={(e) =>
-                                handleCheckboxChange(e, subtopic, "subtopic")}
-                            />
-
-                            <span>{subtopic.name}</span>
-
-                            <!-- Status indicators -->
-                            {#if chapterSelected}
-                              <span class="text-xs text-gray-500 italic"
-                                >(included in chapter)</span
-                              >
-                            {:else if topicSelected}
-                              <span class="text-xs text-gray-500 italic"
-                                >(included in topic)</span
-                              >
-                            {:else if subtopicSelected}
-                              <span class="text-sm text-gray-600">
-                                ✓ Selected
-                              </span>
-                            {/if}
-                          </div>
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-500">
-                          {subtopic.question_count || 0}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
-                          {#if chapterSelected || topicSelected}
-                            <span class="italic text-gray-500">Included</span>
-                          {:else if subtopicSelected}
-                            <span class="italic">Selected</span>
-                          {:else}
-                            <span class="italic text-gray-400">-</span>
-                          {/if}
-                        </td>
-                      </tr>
-                    {/each}
-                  {/if}
-                {/each}
-              {/if}
-            {/each}
-          </tbody>
-        </table>
-      {/if}
-
-      <!-- Fetch button -->
-      <div class="mt-4">
-        {#if selections.length > 0}
-          <div class="flex justify-end">
-            <button
-              type="button"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              on:click={handleFetchQuestions}
-              disabled={!hasContentChanged || selections.length === 0}
-            >
-              Fetch Questions ({selections.length} items)
-            </button>
-          </div>
-        {/if}
-      </div>
+  <!-- Table Section: Shared between selection and review -->
+  {#if isLoading}
+    <div class="flex justify-center py-4">
+      <div
+        class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
+      ></div>
+      <p>Loading content...</p>
+    </div>
+  {:else if error}
+    <div class="text-red-600 p-4">{error}</div>
+  {:else if chaptersData.length === 0}
+    <div class="flex justify-center">No content available</div>
+  {:else}
+    <div
+      id={showQuestions ? "questions-table" : "content-selection"}
+      class={""}
+    >
+      <ContentHierarchyTable
+        {chaptersData}
+        {selections}
+        {expandedChapters}
+        {expandedTopics}
+        selectionSidebar={SelectionSidebar}
+        on:toggleChapter={(e) => toggleChapter(e, e.detail.chapterId)}
+        on:toggleTopic={(e) => toggleTopic(e, e.detail.topicId)}
+        on:checkboxChange={(e) =>
+          handleCheckboxChange(e.detail.event, e.detail.item, e.detail.type)}
+        on:openSummary={(e) => openSummaryModal(e.detail.chapter)}
+        on:highlightItem={handleHighlightItem}
+      />
     </div>
   {/if}
 
-  <!-- Questions and Selected Content Tabs (shown after fetch) -->
-  {#if showQuestions}
-    <div id="questions-table">
-      <SelectionSidebar on:highlightItem={handleHighlightItem} />
-
-      <!-- Your existing table with checkboxes -->
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Name
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-            >
-              Questions
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
-            >
-              Selection Summary
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          {#each chaptersData as chapter}
-            {@const chapterSelected = isChapterSelected(chapter.code)}
-            {@const hasSelectedTopics = hasSelectedTopicsInChapter(chapter)}
-
-            <!-- Chapter row -->
-            <tr class="hover:bg-gray-50" data-item-code={chapter.code}>
-              <td class="px-6 py-4">
-                <div class="flex items-center space-x-2">
-                  <!-- Chapter Checkbox - disabled if any topics/subtopics are selected -->
-                  <input
-                    type="checkbox"
-                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    checked={chapterSelected}
-                    disabled={hasSelectedTopics}
-                    on:change={(e) =>
-                      handleCheckboxChange(e, chapter, "chapter")}
-                  />
-
-                  <!-- Expand/collapse button -->
-                  <button
-                    class="flex items-center space-x-2"
-                    on:click={(e) => toggleChapter(e, chapter.code)}
-                  >
-                    <svg
-                      class="h-4 w-4 transition-transform duration-200 {expandedChapters.has(
-                        chapter.code,
-                      )
-                        ? 'transform rotate-90'
-                        : ''}"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M6 6L14 10L6 14V6Z" />
-                    </svg>
-                    <span class="font-medium">{chapter.name}</span>
-                  </button>
-
-                  <!-- Status indicators -->
-                  {#if chapterSelected}
-                    <span class="text-sm text-gray-600">
-                      ✓ Chapter Selected
-                    </span>
-                  {:else if hasSelectedTopics}
-                    <span class="text-sm text-gray-600">
-                      Partial Selection
-                    </span>
-                  {/if}
-                </div>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-500">
-                {chapter.question_count || 0}
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-600">
-                {#if chapterSelected}
-                  <span class="italic">Entire chapter selected</span>
-                {:else if hasSelectedTopics}
-                  {@const selectedItems = getSelectedItemsForChapter(chapter)}
-                  {@const totalSelectable =
-                    (chapter.topics?.length || 0) +
-                    (chapter.topics?.flatMap((t) => t.subtopics || []).length ||
-                      0)}
-                  <button
-                    class="text-blue-600 hover:underline italic text-sm"
-                    on:click|preventDefault={() => openSummaryModal(chapter)}
-                  >
-                    {selectedItems.length} of {totalSelectable} items selected
-                  </button>
-                {:else}
-                  <span class="italic text-gray-400 text-sm">No selection</span>
-                {/if}
-              </td>
-            </tr>
-
-            {#if expandedChapters.has(chapter.code) && chapter.topics}
-              {#each chapter.topics as topic}
-                {@const topicSelected = isTopicSelected(topic.code)}
-                {@const hasSelectedSubtopics =
-                  hasSelectedSubtopicsInTopic(topic)}
-
-                <!-- Topic row -->
-                <tr class="bg-gray-50" data-item-code={topic.code}>
-                  <td class="px-6 py-4 pl-12">
-                    <div class="flex items-center space-x-2">
-                      <!-- Topic Checkbox - disabled if chapter is selected OR subtopics are selected -->
-                      <input
-                        type="checkbox"
-                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        checked={topicSelected}
-                        disabled={chapterSelected || hasSelectedSubtopics}
-                        on:change={(e) =>
-                          handleCheckboxChange(e, topic, "topic")}
-                      />
-
-                      <!-- Expand/collapse button -->
-                      <button
-                        class="flex items-center space-x-2"
-                        on:click={(e) => toggleTopic(e, topic.code)}
-                      >
-                        {#if topic.subtopics && topic.subtopics.length > 0}
-                          <svg
-                            class="h-4 w-4 transition-transform duration-200 {expandedTopics.has(
-                              topic.code,
-                            )
-                              ? 'transform rotate-90'
-                              : ''}"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M6 6L14 10L6 14V6Z" />
-                          </svg>
-                        {:else}
-                          <div class="w-4"></div>
-                        {/if}
-                        <span>{topic.name}</span>
-                      </button>
-
-                      <!-- Status indicators -->
-                      {#if chapterSelected}
-                        <span class="text-xs text-gray-500 italic"
-                          >(included in chapter)</span
-                        >
-                      {:else if topicSelected}
-                        <span class="text-sm text-gray-600"> ✓ Selected </span>
-                      {:else if hasSelectedSubtopics}
-                        <span class="text-sm text-gray-600"> Partial </span>
-                      {/if}
-                    </div>
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-500">
-                    {topic.question_count || 0}
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-600">
-                    {#if chapterSelected}
-                      <span class="italic text-gray-500">Included</span>
-                    {:else if topicSelected}
-                      <span class="italic">Topic selected</span>
-                    {:else if hasSelectedSubtopics}
-                      {@const selectedSubtopics =
-                        topic.subtopics?.filter((st) =>
-                          isSubtopicSelected(st.code),
-                        ) || []}
-                      <span class="italic">
-                        {selectedSubtopics.length} subtopic{selectedSubtopics.length !==
-                        1
-                          ? "s"
-                          : ""} selected
-                      </span>
-                    {:else}
-                      <span class="italic text-gray-400">-</span>
-                    {/if}
-                  </td>
-                </tr>
-
-                {#if expandedTopics.has(topic.code) && topic.subtopics}
-                  {#each topic.subtopics as subtopic}
-                    {@const subtopicSelected = isSubtopicSelected(
-                      subtopic.code,
-                    )}
-
-                    <!-- Subtopic row -->
-                    <tr class="bg-gray-100" data-item-code={subtopic.code}>
-                      <td class="px-6 py-4 pl-20">
-                        <div class="flex items-center space-x-2">
-                          <!-- Subtopic Checkbox - disabled if chapter or topic is selected -->
-                          <input
-                            type="checkbox"
-                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            checked={subtopicSelected}
-                            disabled={chapterSelected || topicSelected}
-                            on:change={(e) =>
-                              handleCheckboxChange(e, subtopic, "subtopic")}
-                          />
-
-                          <span>{subtopic.name}</span>
-
-                          <!-- Status indicators -->
-                          {#if chapterSelected}
-                            <span class="text-xs text-gray-500 italic"
-                              >(included in chapter)</span
-                            >
-                          {:else if topicSelected}
-                            <span class="text-xs text-gray-500 italic"
-                              >(included in topic)</span
-                            >
-                          {:else if subtopicSelected}
-                            <span class="text-sm text-gray-600">
-                              ✓ Selected
-                            </span>
-                          {/if}
-                        </div>
-                      </td>
-                      <td class="px-6 py-4 text-sm text-gray-500">
-                        {subtopic.question_count || 0}
-                      </td>
-                      <td class="px-6 py-4 text-sm text-gray-600">
-                        {#if chapterSelected || topicSelected}
-                          <span class="italic text-gray-500">Included</span>
-                        {:else if subtopicSelected}
-                          <span class="italic">Selected</span>
-                        {:else}
-                          <span class="italic text-gray-400">-</span>
-                        {/if}
-                      </td>
-                    </tr>
-                  {/each}
-                {/if}
-              {/each}
-            {/if}
-          {/each}
-        </tbody>
-      </table>
+  <!-- Selection Mode Footer -->
+  {#if selections.length >0}
+    <div class="mt-4">
+      {#if selections.length > 0}
+        <div class="flex justify-end">
+          <button
+            type="button"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            on:click={handleFetchQuestions}
+            disabled={!hasContentChanged || selections.length === 0}
+          >
+            Fetch Questions ({selections.length} items)
+          </button>
+        </div>
+      {/if}
     </div>
+  {/if}
 
-    <div id="questions-section " class="mt-8 border-t border-t-gray-200">
+  <!-- Review Mode Section (Tabs & Configuration) -->
+  {#if showQuestions}
+    <div id="questions-section" class="mt-8 border-t border-t-gray-200">
       <div class=" pt-4 pb-4 flex items-center justify-between">
         <h2 class="text-base font-medium text-gray-700">
           Question Configuration & Filtering
         </h2>
-        <button
+        <!-- <button
           type="button"
           class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
           on:click={handleBackToContentSelection}
@@ -1059,7 +595,7 @@
             />
           </svg>
           Back to Content Selection
-        </button>
+        </button> -->
       </div>
 
       <Tabs bind:active={activeTab}>
