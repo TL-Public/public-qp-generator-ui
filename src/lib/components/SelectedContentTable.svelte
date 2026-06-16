@@ -23,7 +23,7 @@
   });
 
   // Toggle states - Start with manual allocation
-  let allocateWithAI = true;
+  let allocateWithAI = false;
   let allocationLevel = "chapter";
 
   // Make requiredQuestions reactive to totalQuestions
@@ -46,6 +46,46 @@
     hierarchicalSelections,
     requiredQuestions,
   );
+
+  // Validation for required fields
+  $: isFormValid = !!(
+    examData?.exam_name?.trim() &&
+    examData?.subject_code &&
+    examData?.medium_code &&
+    examData?.exam_mode &&
+    examData?.total_time &&
+    examData?.exam_class &&
+    examData?.no_of_versions &&
+    examData?.no_of_sets
+  );
+
+  function getExamValidationError(examData) {
+    const missingFields = [];
+
+    // Map of field keys to their display labels
+    const requiredFields = {
+      exam_name: "Exam title",
+      subject_code: "Subject",
+      medium_code: "Medium",
+      exam_mode: "Exam mode",
+      total_time: "Duration",
+      exam_class: "Class",
+      no_of_versions: "Number of Versions",
+      no_of_sets: "Number of Sets",
+    };
+
+    // Check each field
+    for (const [key, label] of Object.entries(requiredFields)) {
+      if (!examData?.[key]) {
+        missingFields.push(label);
+      }
+    }
+
+    // Return the error message or null if everything is valid
+    return missingFields.length > 0
+      ? `To enable the buttons, please fill the required fields - ${missingFields.join(", ")}`
+      : null;
+  }
 
   // Watch for AI mode changes and update API store
   $: {
@@ -332,9 +372,23 @@
   //   Renamed and improved function
   function handleApplyAllocation() {
     const preview = generateAllocationPreview();
+
     if (preview) {
-      previewData = preview;
-      showAllocationPreview = true;
+      // NEW: Immediately update API store with allocation data forward directly to next step
+      apiPayloadStore.updateFromAllocationData(preview);
+
+      // Dispatch the event with the data as detail to navigate to review
+      dispatch("allocationConfirmed", {
+        allocationType:
+          preview.allocationType || (allocateWithAI ? "AI" : "Manual"),
+        allocationLevel: preview.allocationLevel || allocationLevel,
+        totalRequired: preview.totalRequired || requiredQuestions,
+        totalAllocated: preview.totalAllocated || 0,
+        totalAvailable: preview.totalAvailable || 0,
+        remaining: preview.remaining || 0,
+        selectedItems: preview.selectedItems || [],
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 
@@ -489,13 +543,9 @@
         examName: draftPayload.exam_name,
         message: draftSaveSuccess,
       });
-
- 
     } catch (error) {
       draftSaveError =
         error.message || "Failed to save draft. Please try again.";
-
-  
     } finally {
       savingDraft = false;
     }
@@ -536,7 +586,6 @@
         chaptersMap.get("chapters").codes.push(chapterEntry);
       }
 
-     
       // Process topics within this chapter
       if (chapterData.children && chapterData.children instanceof Map) {
         for (const [topicCode, topicData] of chapterData.children) {
@@ -629,31 +678,6 @@
 <div class="space-y-4">
   <!-- Header with Configuration -->
   <div class="bg-gray-50 p-4 rounded-lg">
-    <div class="mb-6 w-1/2">
-      <label class="block text-sm font-medium text-gray-700 mb-1">
-        No. of questions <span class="text-red-500">*</span>
-      </label>
-      <input
-        type="number"
-        bind:value={totalQuestions}
-        min="1"
-        class="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-        placeholder="e.g. 40"
-      />
-      {#if allocateWithAI && allocationSummary.hasError}
-        <p class="mt-1 text-xs text-red-600">
-          ⚠️ Only {allocationSummary.available} questions available. Add more
-            chapters and topics.
-        </p>
-         <!-- <div
-            class="mt-3 mb-6 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2"
-          >
-            ⚠️ Only {allocationSummary.available} questions available. Add more
-            chapters and topics.
-          </div> -->
-      {/if}
-    </div>
-
     <!-- AI/Manual Toggle -->
     <div class="flex items-center justify-between mb-4">
       <p class="flex flex-col text-sm font-medium text-gray-700">
@@ -665,74 +689,74 @@
       <Toggle bind:checked={allocateWithAI} />
     </div>
 
-    {#if !allocateWithAI}
-      <!-- Allocation Summary -->
-      <div class="sticky top-0 rounded-lg mt-4">
-        <!-- <h3 class="text-base font-medium text-gray-700 mb-4">
-        Allocation Summary
-      </h3> -->
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span class="text-gray-600 text-sm">Required:</span>
-            <span class="font-medium ml-1">{allocationSummary.required}</span>
-          </div>
-          <div>
-            <span class="text-gray-600 text-sm">Available:</span>
-            <span class="font-medium ml-1">{allocationSummary.available}</span>
-          </div>
-          {#if !allocateWithAI}
-            <div>
-              <span class="text-gray-600 text-sm">Allocated:</span>
-              <span class="font-medium ml-1">{allocationSummary.allocated}</span
-              >
-            </div>
-            <div>
-              <span class="text-gray-600 text-sm">Remaining:</span>
-              <span
-                class="font-medium ml-1 {allocationSummary.remaining < 0
-                  ? 'text-red-600'
-                  : allocationSummary.remaining > 0
-                    ? 'text-amber-600'
-                    : 'text-green-600'}"
-              >
-                {allocationSummary.remaining}
-              </span>
-            </div>
-          {/if}
+    <!-- Allocation Summary -->
+    <div class="sticky top-0 rounded-lg mt-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center text-sm">
+        <div class="flex items-center">
+          <span class="text-gray-600 text-sm mr-2 whitespace-nowrap"
+            >Required:</span
+          >
+          <input
+            type="number"
+            bind:value={totalQuestions}
+            min="1"
+            class="w-20 p-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-medium bg-white"
+          />
         </div>
-
-        {#if allocationSummary.hasError}
-          <div
-            class="mt-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2"
-          >
-            ⚠️ Not enough questions available to meet the requirement. Add more
-            chapters and topics.
+        <div>
+          <span class="text-gray-600 text-sm">Available:</span>
+          <span class="font-medium ml-1">{allocationSummary.available}</span>
+        </div>
+        {#if !allocateWithAI}
+          <div>
+            <span class="text-gray-600 text-sm">Allocated:</span>
+            <span class="font-medium ml-1">{allocationSummary.allocated}</span>
           </div>
-        {:else if !allocateWithAI && allocationSummary.remaining > 0}
-          <div
-            class="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2"
-          >
-            📝 {allocationSummary.remaining} questions remaining. These will be auto-allocated
-            from unspecified content.
-          </div>
-        {:else if !allocateWithAI && allocationSummary.remaining === 0}
-          <div
-            class="mt-3 text-xs text-green-600 bg-green-50 border border-green-200 rounded-md p-2"
-          >
-            Perfect allocation! All {allocationSummary.required} questions are allocated.
+          <div>
+            <span class="text-gray-600 text-sm">Remaining:</span>
+            <span
+              class="font-medium ml-1 {allocationSummary.remaining < 0
+                ? 'text-red-600'
+                : allocationSummary.remaining > 0
+                  ? 'text-amber-600'
+                  : 'text-green-600'}"
+            >
+              {allocationSummary.remaining}
+            </span>
           </div>
         {/if}
       </div>
 
-      {#if !allocateWithAI}
+      {#if allocationSummary.hasError}
         <div
-          class="text-xs text-gray-700 bg-gray-100 border border-gray-200 rounded-md p-2 mt-4"
+          class="mt-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2"
         >
-          <strong>Tip:</strong> If you specify a number at the chapter level, it
-          will override the topic-level selections.
+          ⚠️ Only {allocationSummary.available} questions available. Please reduce
+          the number or add more content.
+        </div>
+      {:else if !allocateWithAI && allocationSummary.remaining > 0}
+        <div
+          class="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2"
+        >
+          📝 {allocationSummary.remaining} questions remaining. These will be auto-allocated
+          from unspecified content.
+        </div>
+      {:else if !allocateWithAI && allocationSummary.remaining === 0}
+        <div
+          class="mt-3 text-xs text-green-600 bg-green-50 border border-green-200 rounded-md p-2"
+        >
+          Perfect allocation! All {allocationSummary.required} questions are allocated.
         </div>
       {/if}
+    </div>
+
+    {#if !allocateWithAI}
+      <div
+        class="text-xs text-gray-700 bg-gray-100 border border-gray-200 rounded-md p-2 mt-4"
+      >
+        <strong>Tip:</strong> If you specify a number at the chapter level, it will
+        override the topic-level selections.
+      </div>
     {/if}
   </div>
 
@@ -1049,80 +1073,92 @@
   </div>
 
   <!-- Action Buttons -->
-  <div class="flex flex-row justify-end gap-3">
-    <!-- Save as Draft Button -->
-    <div class="flex justify-end">
-      <button
-        type="button"
-        class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-        disabled={savingDraft || tableRows.length === 0}
-        on:click|preventDefault={handleSaveAsDraft}
-      >
-        {#if savingDraft}
-          <div class="flex items-center">
-            <svg
-              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
+  <div class="flex flex-col items-end gap-3 mt-4">
+    <div class="flex flex-row justify-end gap-3 w-full">
+      <!-- Save as Draft Button -->
+      <div class="flex justify-end">
+        <button
+          type="button"
+          class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          disabled={!isFormValid || savingDraft || tableRows.length === 0}
+          on:click|preventDefault={handleSaveAsDraft}
+        >
+          {#if savingDraft}
+            <div class="flex items-center">
+              <svg
+                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Saving Draft...
+            </div>
+          {:else}
+            <div class="flex items-center">
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
                 stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            Saving Draft...
-          </div>
-        {:else}
-          <div class="flex items-center">
-            <svg
-              class="w-4 h-4 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
-              />
-            </svg>
-            Save as Draft
-          </div>
-        {/if}
-      </button>
-    </div>
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"
+                />
+              </svg>
+              Save as Draft
+            </div>
+          {/if}
+        </button>
+        
+      </div>
 
-    <!-- Confirm Allocation Button -->
-    <div class="flex justify-end">
-      <button
-        type="button"
-        class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-        disabled={allocationSummary.hasError ||
-          tableRows.length === 0 ||
-          savingDraft ||
-          (!allocateWithAI && allocationSummary.remaining !== 0)}
-        on:click|preventDefault={handleApplyAllocation}
-      >
-        {allocateWithAI
-          ? "Confirm and Review Allocation"
-          : "Confirm and Review Allocation"}
-      </button>
+      <!-- Confirm Allocation Button -->
+      <div class="flex justify-end">
+        <button
+          type="button"
+          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+         
+          disabled={!isFormValid ||
+            allocationSummary.hasError ||
+            tableRows.length === 0 ||
+            savingDraft ||
+            (!allocateWithAI && allocationSummary.remaining !== 0)}
+          on:click|preventDefault={handleApplyAllocation}
+        >
+          {allocateWithAI
+            ? "Confirm and Review Allocation"
+            : "Confirm and Review Allocation"}
+        </button>
+      </div>
     </div>
+     {#if !isFormValid}
+      <p
+        class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2 w-full md:w-auto"
+      >
+        ⚠️ {getExamValidationError(examData)}
+      </p>
+    {/if}
   </div>
 </div>
 
-<!-- Allocation Preview Modal -->
-<AllocationPreviewModal
+<!-- Allocation Preview Modal (Disabled for now) -->
+<!-- <AllocationPreviewModal
   {allocateWithAI}
   bind:showModal={showAllocationPreview}
   allocationType={previewData?.allocationType || ""}
@@ -1137,4 +1173,4 @@
   on:confirm={handleConfirmAllocation}
   on:cancel={handleCancelAllocation}
   on:allocationConfirmed={handleAllocationConfirmed}
-/>
+/> -->

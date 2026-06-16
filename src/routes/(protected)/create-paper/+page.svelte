@@ -179,12 +179,14 @@
 
   // Simplify - use one handler that checks for the navigateToReview flag
   function handleAllocationConfirmed(event) {
-    if (!event.detail) {
+    const data = event.detail || event;
+
+    if (!data) {
       alert("Invalid allocation data received. Please try again.");
       return;
     }
 
-    const allocationData = event.detail;
+    const allocationData = data;
 
     // Validate the allocation data structure
     if (
@@ -238,86 +240,14 @@
       questionPaperStore.updateAllocationData(allocationData);
     }
 
-    // Check if we should navigate to review
-    if (allocationData.navigateToReview === true) {
-      shouldNavigateToReview = true;
-    } else {
-      // Move to next step
-      currentStep = "allocation";
-    }
-
-    // Debug the API store state
-    const payloadResult = apiPayloadStore.getApiPayload();
-  }
-
-  // ✅ SINGLE: Allocation confirmation with direct review navigation
-  function handleAllocationConfirmedAndReview(event) {
-    if (!event.detail) {
-      alert("Invalid allocation data received. Please try again.");
-      return;
-    }
-
-    const allocationData = event.detail;
-
-    // Validate the allocation data structure
-    if (
-      !allocationData.selectedItems ||
-      !Array.isArray(allocationData.selectedItems)
-    ) {
-      alert("Invalid allocation data format. Please try again.");
-      return;
-    }
-
-    // Update state
-    isAllocationConfirmed = true;
-    confirmedAllocationData = allocationData;
-
-    // Update API store with allocation data immediately
-    apiPayloadStore.updateFromAllocationData(allocationData);
-
-    // Also update API store with current exam details to ensure everything is in sync
-    apiPayloadStore.updateExamDetails({
-      examTitle,
-      examMode,
-    });
-
-    apiPayloadStore.updateExamConfig({
-      totalTime,
-      totalQuestions,
-      numberOfVersions,
-      numberOfSets,
-    });
-
-    apiPayloadStore.updateClassSubject({
-      subject_code: examSubject,
-      medium_code: examMedium,
-      examClass,
-    });
-
-    // Update excluded questions if any
-    if (allQuestions?.length > 0) {
-      const excludedQuestions = allQuestions
-        .filter((q) => q.isRemoved === true)
-        .map((q) => q.id || q.code)
-        .filter(Boolean);
-
-      if (excludedQuestions.length > 0) {
-        apiPayloadStore.updateExcludedQuestions(excludedQuestions);
-      }
-    }
-
-    // Update the legacy store for backward compatibility
-    if (typeof questionPaperStore.updateAllocationData === "function") {
-      questionPaperStore.updateAllocationData(allocationData);
-    }
-
-    // Trigger navigation via prop
+    // Trigger navigation to review
     shouldNavigateToReview = true;
 
     // Debug the API store state
     const payloadResult = apiPayloadStore.getApiPayload();
   }
 
+ 
   function handleCreatePaper(event) {
     event.preventDefault();
 
@@ -669,7 +599,7 @@
             <!-- Exam Details -->
             <Card className="!p-8" title="Create Question Paper">
               <div class=" space-y-8">
-                <div class="space-y-4">
+                <div class="space-y-6">
                   <ExamDetailsForm
                     bind:examTitle
                     bind:examMode
@@ -723,8 +653,8 @@
                     navigateToReview={shouldNavigateToReview}
                     on:select={handleQuestionSelect}
                     on:fetchQuestions={handleFetchQuestions}
-                    on:allocationConfirmed={(e) => {
-                      handleAllocationConfirmed(e);
+                    on:allocationConfirmed={(data) => {
+                      handleAllocationConfirmed(data);
                     }}
                   />
                 </Card>

@@ -30,14 +30,14 @@
 
   export let examMode = "";
   export let totalTime = "";
-  export let standard = "";
+
   export let numberOfVersions = "";
   export let numberOfSets = "";
 
   let navigationHistory = [];
 
   $: if (browser && $page.url.hash) {
-    handleNavigation($page.url.harsh);
+    handleNavigation($page.url.hash);
   }
   function handleNavigation(hash) {
     switch (hash) {
@@ -254,9 +254,9 @@
       activeTab = "selected-content";
 
       //  Set hash for questions view
-      if (browser) {
-        goto("#questions", { replaceState: true, noScroll: true });
-      }
+      // if (browser) {
+      //   goto("#questions", { replaceState: true, noScroll: true });
+      // }
       dispatch("fetchQuestions", { questions: fetchedQuestions });
     } else {
       fetchedQuestions = [];
@@ -646,7 +646,6 @@
                 medium_code: examMedium,
                 exam_mode: examMode,
                 total_time: totalTime,
-                standard: standard,
                 no_of_versions: numberOfVersions,
                 no_of_sets: numberOfSets,
                 exam_class: examClass,
