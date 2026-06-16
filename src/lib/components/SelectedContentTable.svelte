@@ -200,7 +200,7 @@
     hierarchicalSelections = [...hierarchicalSelections];
 
     //  NEW: Update API store with current allocation data
-    updateApiStoreFromCurrentData();
+    // updateApiStoreFromCurrentData();
   }
 
   //   Enhanced increment function with validation
@@ -490,10 +490,7 @@
         message: draftSaveSuccess,
       });
 
-      // Clear success message after 8 seconds
-      setTimeout(() => {
-        draftSaveSuccess = "";
-      }, 8000);
+ 
     } catch (error) {
       draftSaveError =
         error.message || "Failed to save draft. Please try again.";
@@ -539,6 +536,7 @@
         chaptersMap.get("chapters").codes.push(chapterEntry);
       }
 
+     
       // Process topics within this chapter
       if (chapterData.children && chapterData.children instanceof Map) {
         for (const [topicCode, topicData] of chapterData.children) {
@@ -642,6 +640,18 @@
         class="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
         placeholder="e.g. 40"
       />
+      {#if allocateWithAI && allocationSummary.hasError}
+        <p class="mt-1 text-xs text-red-600">
+          ⚠️ Only {allocationSummary.available} questions available. Add more
+            chapters and topics.
+        </p>
+         <!-- <div
+            class="mt-3 mb-6 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2"
+          >
+            ⚠️ Only {allocationSummary.available} questions available. Add more
+            chapters and topics.
+          </div> -->
+      {/if}
     </div>
 
     <!-- AI/Manual Toggle -->
