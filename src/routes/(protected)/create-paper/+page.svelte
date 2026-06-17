@@ -27,11 +27,12 @@
   let fetchedQuestions = [];
 
   // Exam details state
-  let examTitle = "";
   let examMode = "Online";
+  let examTitle = "";
    let examClass = "";
   let examMedium = "";
   let examSubject = "";
+  // let examTitle = "New title";
   // let examClass = "10";
   // let examMedium = "2000";
   // let examSubject = "3000";

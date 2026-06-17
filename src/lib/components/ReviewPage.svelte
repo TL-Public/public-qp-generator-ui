@@ -1,6 +1,7 @@
 <script>
   import Card from "./Cards/Card.svelte";
   import DifficultyDistribution from "./DifficultyDistribution.svelte";
+  import InfoCard from "$lib/components/quiz/InfoCard.svelte";
 
   // Props
   export let examTitle = "";
@@ -41,7 +42,7 @@
   <Card>
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between border-b pb-4">
+      <div class="flex items-center justify-between border-b border-stroke pb-4">
         <h2 class="text-base font-semibold text-gray-700">
           Exam Configuration
         </h2>
@@ -53,56 +54,42 @@
       </div>
 
       <!-- Content Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="space-y-6">
         <!-- Basic Details -->
-        <div class="space-y-4">
-          <h3
-            class="text-xs font-medium text-subtext uppercase tracking-wider"
-          >
+        <div class="space-y-2">
+          <h3 class="text-xs font-medium text-subtext uppercase tracking-wider">
             Basic Details
           </h3>
-          <div class="space-y-3">
+          <div class="space-y-3 flex w-full justify-between">
             <div class="flex flex-col">
               <span class="text-sm text-subtext">Title</span>
-              <span class="text-sm font-medium text-gray-900">{examTitle}</span>
+              <span class="text-sm font-medium text-dark">{examTitle}</span>
             </div>
             <div class="flex flex-col">
               <span class="text-sm text-subtext">Class</span>
-              <span class="text-sm font-medium text-gray-900">{examClass}</span>
+              <span class="text-sm font-medium text-dark">{examClass}</span>
             </div>
             <div class="flex flex-col">
               <span class="text-sm text-subtext">Medium</span>
-              <span class="text-sm font-medium text-gray-900">{examMedium}</span>
+              <span class="text-sm font-medium text-dark">{examMedium}</span>
             </div>
             <div class="flex flex-col">
               <span class="text-sm text-subtext">Subject</span>
-              <span class="text-sm font-medium text-gray-900"
-                >{examSubject}</span
-              >
+              <span class="text-sm font-medium text-dark">{examSubject}</span>
             </div>
           </div>
         </div>
 
         <!-- Time & Questions -->
-        <div class="space-y-4">
-          <h3
-            class="text-xs font-medium text-subtext uppercase tracking-wider"
-          >
+        <div class="space-y-2">
+          <h3 class="text-xs font-medium text-subtext uppercase tracking-wider">
             Paper Details
           </h3>
-          <div class="space-y-3">
-            <div
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div class="flex flex-col">
-                <span class="text-sm text-subtext">Duration</span>
-                <span class="text-sm font-medium text-gray-900"
-                  >{totalTime} mins</span
-                >
-              </div>
+          <div class="grid grid-cols-3 gap-8">
+            <InfoCard label="Duration (mins)" count={totalTime}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-gray-400"
+                class="h-5 w-5 text-subtext"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -112,102 +99,40 @@
                   clip-rule="evenodd"
                 />
               </svg>
-            </div>
-            <div
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div class="flex flex-col">
-                <span class="text-sm text-subtext">Questions</span>
-                <span class="text-sm font-medium text-gray-900"
-                  >{totalQuestions}</span
-                >
-              </div>
+            </InfoCard>
+            <InfoCard label="Sets" count={numberOfSets}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 text-gray-400"
+                class="h-5 w-5 text-subtext"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
                 <path
-                  fill-rule="evenodd"
-                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
-                  clip-rule="evenodd"
+                  d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"
                 />
               </svg>
-            </div>
+            </InfoCard>
+            <InfoCard label="Versions" count={numberOfVersions}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-subtext"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"
+                />
+                <path d="M3 8a2 2 0 012-2v10h8a2 2 01-2 2H5a2 2 0 01-2-2V8z" />
+              </svg>
+            </InfoCard>
           </div>
         </div>
-
-        <!-- Version Details -->
-        <div class="space-y-4">
-          <h3
-            class="text-xs font-medium text-subtext uppercase tracking-wider"
-          >
-            Version Details
-          </h3>
-          <div class="space-y-3">
-            <div
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div class="flex flex-col">
-                <span class="text-sm text-subtext">Sets</span>
-                <span class="text-sm font-medium text-gray-900"
-                  >{numberOfSets}</span
-                >
-              </div>
-              <div class="flex items-center gap-1">
-                <span class="text-xs text-gray-400">max 10</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5 text-gray-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div
-              class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div class="flex flex-col">
-                <span class="text-sm text-subtext">Versions</span>
-                <span class="text-sm font-medium text-gray-900"
-                  >{numberOfVersions}</span
-                >
-              </div>
-              <div class="flex items-center gap-1">
-                <span class="text-xs text-gray-400">max 5</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5 text-gray-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    d="M9 2a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V6.414A2 2 0 0016.414 5L14 2.586A2 2 0 0012.586 2H9z"
-                  />
-                  <path
-                    d="M3 8a2 2 0 012-2v10h8a2 2 01-2 2H5a2 2 0 01-2-2V8z"
-                  />
-                </svg>
-              </div>
-            </div>
+        <!-- Footer with total papers info -->
+        <div class="mt-2">
+          <div class="flex items-center justify-end">
+            <span class="text-sm text-subtext">Total papers to generate : {numberOfSets * numberOfVersions} paper(s)</span>
+            
           </div>
-        </div>
-      </div>
-
-      <!-- Footer with total papers info -->
-      <div class="pt-4 border-t">
-        <div class="flex items-center justify-between">
-          <span class="text-sm text-subtext">Total papers to generate</span>
-          <span
-            class="inline-flex items-center px-3 py-1 rounded-full text-sm text-subtext"
-          >
-            {numberOfSets * numberOfVersions} papers
-          </span>
         </div>
       </div>
     </div>
@@ -215,24 +140,22 @@
 
   <!-- Difficulty Distribution -->
   <Card title="Question Difficulty Distribution">
-   
-      <DifficultyDistribution
-        bind:easy
-        bind:medium
-        bind:hard
-        bind:isValid={difficultyValid}
-        {isReviewPageEnabled}
-      />
-   
+    <DifficultyDistribution
+      bind:easy
+      bind:medium
+      bind:hard
+      bind:isValid={difficultyValid}
+      {isReviewPageEnabled}
+    />
   </Card>
 
   <!--  NEW: Allocation Breakdown Card -->
   <Card>
     <div class="space-y-4">
       <!-- Header with allocation mode -->
-      <div class="flex items-center justify-between border-b pb-3">
+      <div class="flex items-center justify-between border-b border-stroke pb-3">
         <div class="flex items-center gap-3">
-          <h3 class="text-sm font-medium text-gray-900">
+          <h3 class="text-sm font-medium text-dark">
             Question Allocation Summary
           </h3>
           <span
@@ -243,7 +166,7 @@
         </div>
 
         <div class="text-sm text-gray-600">
-          Required Questions: <span class="font-medium text-gray-900"
+          Required Questions: <span class="font-medium text-dark"
             >{totalQuestions}</span
           >
         </div>
@@ -253,7 +176,7 @@
         <!-- Allocation Table -->
         <div class="overflow-hidden border border-gray-200 rounded-lg">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+            <thead class="bg-canvas-muted">
               <tr>
                 <th
                   class="px-6 py-3 text-left text-xs font-medium text-subtext uppercase tracking-wider"
@@ -282,12 +205,12 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
               {#each selectedItems as item, index}
-                <tr class={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                <tr class={index % 2 === 0 ? "bg-white" : "bg-canvas-muted"}>
                   <!-- Item Name -->
                   <td class="px-6 py-4">
                     <div class="flex items-start">
                       <div class="flex-1">
-                        <div class="text-sm font-medium text-gray-900">
+                        <div class="text-sm font-medium text-dark">
                           {item.name}
                         </div>
                       </div>
@@ -310,7 +233,7 @@
 
                   <!-- Available Questions -->
                   <td class="px-6 py-4 text-center">
-                    <span class="text-sm text-gray-900 font-medium">
+                    <span class="text-sm text-dark font-medium">
                       {item.questionAvailable || 0}
                     </span>
                   </td>
@@ -338,7 +261,7 @@
         <!-- No allocation data -->
         <div class="text-center py-8">
           <svg
-            class="mx-auto h-12 w-12 text-gray-400"
+            class="mx-auto h-12 w-12 text-subtext"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -350,9 +273,7 @@
               stroke-linejoin="round"
             />
           </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900">
-            No allocation data
-          </h3>
+          <h3 class="mt-2 text-sm font-medium text-dark">No allocation data</h3>
           <p class="mt-1 text-sm text-subtext">
             Question allocation information is not available. Please go back and
             complete the allocation process.
@@ -363,14 +284,14 @@
   </Card>
 
   <!-- Action Buttons -->
-  <div class="flex items-center justify-end pt-6 border-t">
+  <div class="flex items-center justify-end pt-6 border-t border-stroke">
     <!-- <div class="text-sm text-gray-600">
       {numberOfSets} sets × {numberOfVersions} versions = {numberOfSets *
         numberOfVersions} total papers
     </div> -->
     <div class="flex space-x-4">
       <button
-        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-canvas-muted"
         on:click={() => dispatch("back")}
       >
         Back
