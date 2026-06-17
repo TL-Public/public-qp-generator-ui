@@ -68,6 +68,8 @@
   // Navigation state
   let currentView = "config";
   let shouldNavigateToReview = false;
+  let showQuestions = false;
+  let nestedContentActiveTab = "selected-content";
 
   // Difficulty distribution
   let easy = 40;
@@ -83,17 +85,13 @@
     currentView = "config";
     currentStep = "allocation";
 
-    // Reset the NestedContentTable to content selection
-    if (
-      nestedContentTableRef &&
-      typeof nestedContentTableRef.resetToContentSelection === "function"
-    ) {
-      nestedContentTableRef.resetToContentSelection();
-    }
+    // Set showQuestions to true to ensure selected questions are shown
+    showQuestions = true;
+    nestedContentActiveTab = "selected-content";
 
     // Update hash to content selection
     if (browser) {
-      goto("#content-selection", { replaceState: true, noScroll: true });
+      goto("#selected-content", { replaceState: true, noScroll: true });
     }
   }
 
@@ -180,7 +178,7 @@
   // Simplify - use one handler that checks for the navigateToReview flag
   function handleAllocationConfirmed(event) {
     const data = event.detail || event;
-
+    
     if (!data) {
       alert("Invalid allocation data received. Please try again.");
       return;
@@ -200,7 +198,7 @@
     // Update state
     isAllocationConfirmed = true;
     confirmedAllocationData = allocationData;
-
+    // console.log("confirmedAllocationData", confirmedAllocationData);
     // Update API store with allocation data immediately
     apiPayloadStore.updateFromAllocationData(allocationData);
 
@@ -247,7 +245,6 @@
     const payloadResult = apiPayloadStore.getApiPayload();
   }
 
- 
   function handleCreatePaper(event) {
     event.preventDefault();
 
@@ -650,6 +647,9 @@
                     bind:totalTime
                     bind:numberOfVersions
                     bind:numberOfSets
+                    bind:showQuestions
+                    bind:fetchedQuestions
+                    bind:activeTab={nestedContentActiveTab}
                     navigateToReview={shouldNavigateToReview}
                     on:select={handleQuestionSelect}
                     on:fetchQuestions={handleFetchQuestions}

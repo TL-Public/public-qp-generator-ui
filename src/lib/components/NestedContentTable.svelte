@@ -34,6 +34,10 @@
   export let numberOfVersions = "";
   export let numberOfSets = "";
 
+  export let showQuestions = false;
+  export let activeTab = "selected-content";
+  export let fetchedQuestions = [];
+
   let navigationHistory = [];
 
   $: if (browser && $page.url.hash) {
@@ -54,7 +58,7 @@
       case "#selected-content":
         if (selections.length > 0 && fetchedQuestions.length > 0) {
           showQuestions = true;
-          activeTab = "questions";
+          activeTab = "selected-content";
         }
         break;
     }
@@ -121,10 +125,7 @@
     };
   }
 
-  // forward the confirma nd review event from modal
-  function handleConfirmAndReview(event) {
-    dispatch("allocationConfirmed", event.detail);
-  }
+
 
   // this function will load take the chapters and topics
   // fetched from the store and then will be used in api calls
@@ -219,9 +220,6 @@
     expandedTopics = expandedTopics;
   }
 
-  let fetchedQuestions = [];
-  let showQuestions = false;
-  let activeTab = "selected-content"; // Default to questions tab when opened
 
   // function to fetch the questions and map with table
   async function handleFetchQuestions(event) {

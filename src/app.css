@@ -13,6 +13,10 @@
   --color-stroke: #e5e7eb; /* Tailwind's gray-200 */
   --color-background: #ffffff; /* Tailwind's white */
   --color-canvas-base-fixed: #ffffff; /* Tailwind's white */
+  --color-subtext: #6a7282; /* Tailwind's gray-500 */
+  --color-light-green: #f0fdf4; /* Tailwind's green-50 */
+  --color-light-red: #fef2f2; /* Tailwind's red-50 */
+  --color-light-yellow: #fefce8; /* Tailwind's yellow-50 */
 }
 
 /* Apply scaling to all text elements */

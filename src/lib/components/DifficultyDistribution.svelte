@@ -11,6 +11,7 @@
   export let isReviewPageEnabled = false;
   export let disabled = false; // Add this line
   export let autoBalance = true;
+ 
 
   // Rename existing percentage variables to match the chart functionality
   $: easyPercentage = easy;
@@ -19,11 +20,7 @@
 
   let chart;
 
-  let easyValid = true;
-  let mediumValid = true;
-  let totalValid = true;
-  let hardValid = true;
-
+  
   $: {
     const total = easyPercentage + mediumPercentage + hardPercentage;
     isValid = total === 100;
@@ -106,7 +103,7 @@
         >Automatically distribute questions across difficulty levels</span
       >
     </p>
-    <Toggle bind:checked={autoBalance} {disabled} />
+      <Toggle bind:checked={autoBalance} {disabled} />
   </div>
 
   {#if !autoBalance}

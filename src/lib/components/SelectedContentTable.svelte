@@ -23,7 +23,6 @@
   });
 
   // Toggle states - Start with manual allocation
-  let allocateWithAI = false;
   let allocationLevel = "chapter";
 
   // Make requiredQuestions reactive to totalQuestions
@@ -85,11 +84,6 @@
     return missingFields.length > 0
       ? `To enable the buttons, please fill the required fields - ${missingFields.join(", ")}`
       : null;
-  }
-
-  // Watch for AI mode changes and update API store
-  $: {
-    apiPayloadStore.updateAIMode(allocateWithAI);
   }
 
   function buildHierarchyFromStore(storeData) {
@@ -194,7 +188,7 @@
         totalAvailable += item.questionAvailable;
 
         // Always count allocations in manual mode
-        if (!allocateWithAI) {
+        if (!$apiPayloadStore.is_ai_selected) {
           // Always count allocations for selected items regardless of level
           totalAllocated += item.questionsToAdd || 0;
         }
@@ -271,9 +265,7 @@
 
   //  UPDATED: Enhanced toggle allocation
   function toggleAllocation() {
-    allocateWithAI = !allocateWithAI;
-    // Update API store immediately
-    apiPayloadStore.updateAIMode(allocateWithAI);
+    $apiPayloadStore.is_ai_selected = !$apiPayloadStore.is_ai_selected;
   }
 
   function setAllocationLevel(level) {
@@ -352,7 +344,7 @@
     const remaining = requiredQuestions - totalAllocated;
 
     const preview = {
-      allocationType: allocateWithAI ? "AI" : "Manual",
+      allocationType: $apiPayloadStore.is_ai_selected ? "Auto" : "Manual",
       allocationLevel: allocationLevel,
       totalRequired: requiredQuestions,
       totalAllocated: totalAllocated,
@@ -380,7 +372,7 @@
       // Dispatch the event with the data as detail to navigate to review
       dispatch("allocationConfirmed", {
         allocationType:
-          preview.allocationType || (allocateWithAI ? "AI" : "Manual"),
+          preview.allocationType || ($apiPayloadStore.is_ai_selected ? "Auto" : "Manual"),
         allocationLevel: preview.allocationLevel || allocationLevel,
         totalRequired: preview.totalRequired || requiredQuestions,
         totalAllocated: preview.totalAllocated || 0,
@@ -393,41 +385,41 @@
   }
 
   //  UPDATED: Enhanced allocation confirmation
-  function handleConfirmAllocation(event) {
-    const data = event.detail;
+  // function handleConfirmAllocation(event) {
+  //   const data = event.detail;
 
-    //  NEW: Immediately update API store with allocation data
-    apiPayloadStore.updateFromAllocationData(data);
+  //   //  NEW: Immediately update API store with allocation data
+  //   apiPayloadStore.updateFromAllocationData(data);
 
-    // Double-check that the API store has the data
-    apiPayloadStore.debug();
+  //   // Double-check that the API store has the data
+  //   apiPayloadStore.debug();
 
-    // Dispatch the event with the data as detail
-    dispatch("allocationConfirmed", {
-      allocationType: data.allocationType || "Manual",
-      allocationLevel: data.allocationLevel || "chapter",
-      totalRequired: data.totalRequired || 0,
-      totalAllocated: data.totalAllocated || 0,
-      totalAvailable: data.totalAvailable || 0,
-      remaining: data.remaining || 0,
-      selectedItems: data.selectedItems || [],
-      timestamp: new Date().toISOString(),
-    });
+  //   // Dispatch the event with the data as detail
+  //   dispatch("allocationConfirmed", {
+  //     allocationType: data.allocationType || "Manual",
+  //     allocationLevel: data.allocationLevel || "chapter",
+  //     totalRequired: data.totalRequired || 0,
+  //     totalAllocated: data.totalAllocated || 0,
+  //     totalAvailable: data.totalAvailable || 0,
+  //     remaining: data.remaining || 0,
+  //     selectedItems: data.selectedItems || [],
+  //     timestamp: new Date().toISOString(),
+  //   });
 
-    // Close the modal
-    showAllocationPreview = false;
-  }
+  //   // Close the modal
+  //   showAllocationPreview = false;
+  // }
 
-  //   Added missing cancel function
-  function handleCancelAllocation() {
-    showAllocationPreview = false;
-    previewData = null;
-  }
+  // //   Added missing cancel function
+  // function handleCancelAllocation() {
+  //   showAllocationPreview = false;
+  //   previewData = null;
+  // }
 
-  // Add this function to forward the allocation confirmed event
-  function handleAllocationConfirmed(event) {
-    dispatch("allocationConfirmed", event.detail);
-  }
+  // // Add this function to forward the allocation confirmed event
+  // function handleAllocationConfirmed(event) {
+  //   dispatch("allocationConfirmed", event.detail);
+  // }
 
   /**
    * Save exam design as draft
@@ -500,7 +492,7 @@
       // Prepare the draft payload
       const draftPayload = {
         status: 1, // Draft mode
-        is_ai_selected: allocateWithAI,
+        is_ai_selected: $apiPayloadStore.is_ai_selected,
         exam_name: examName,
         exam_type_code: String(examTypeCode),
         subject_code: String(subjectCode),
@@ -579,7 +571,7 @@
         };
 
         // Only add question count for manual allocation (NOT for AI)
-        if (!allocateWithAI && chapterData.questionsToAdd > 0) {
+        if (!$apiPayloadStore.is_ai_selected && chapterData.questionsToAdd > 0) {
           chapterEntry.qn_count = chapterData.questionsToAdd;
         }
 
@@ -602,7 +594,7 @@
             };
 
             // Only add question count for manual allocation (NOT for AI)
-            if (!allocateWithAI && topicData.questionsToAdd > 0) {
+            if (!$apiPayloadStore.is_ai_selected && topicData.questionsToAdd > 0) {
               topicEntry.qn_count = topicData.questionsToAdd;
             }
 
@@ -625,7 +617,7 @@
                 };
 
                 // Only add question count for manual allocation (NOT for AI)
-                if (!allocateWithAI && subtopicData.questionsToAdd > 0) {
+                if (!$apiPayloadStore.is_ai_selected && subtopicData.questionsToAdd > 0) {
                   subtopicEntry.qn_count = subtopicData.questionsToAdd;
                 }
 
@@ -686,7 +678,7 @@
           >Automatically distribute questions across selected content</span
         >
       </p>
-      <Toggle bind:checked={allocateWithAI} />
+      <Toggle bind:checked={$apiPayloadStore.is_ai_selected} />
     </div>
 
     <!-- Allocation Summary -->
@@ -707,7 +699,7 @@
           <span class="text-gray-600 text-sm">Available:</span>
           <span class="font-medium ml-1">{allocationSummary.available}</span>
         </div>
-        {#if !allocateWithAI}
+        {#if !$apiPayloadStore.is_ai_selected}
           <div>
             <span class="text-gray-600 text-sm">Allocated:</span>
             <span class="font-medium ml-1">{allocationSummary.allocated}</span>
@@ -734,14 +726,14 @@
           ⚠️ Only {allocationSummary.available} questions available. Please reduce
           the number or add more content.
         </div>
-      {:else if !allocateWithAI && allocationSummary.remaining > 0}
+      {:else if !$apiPayloadStore.is_ai_selected && allocationSummary.remaining > 0}
         <div
           class="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2"
         >
           📝 {allocationSummary.remaining} questions remaining. These will be auto-allocated
           from unspecified content.
         </div>
-      {:else if !allocateWithAI && allocationSummary.remaining === 0}
+      {:else if !$apiPayloadStore.is_ai_selected && allocationSummary.remaining === 0}
         <div
           class="mt-3 text-xs text-green-600 bg-green-50 border border-green-200 rounded-md p-2"
         >
@@ -750,7 +742,7 @@
       {/if}
     </div>
 
-    {#if !allocateWithAI}
+    {#if !$apiPayloadStore.is_ai_selected}
       <div
         class="text-xs text-gray-700 bg-gray-100 border border-gray-200 rounded-md p-2 mt-4"
       >
@@ -976,7 +968,7 @@
 
               <!-- Questions to Add - Always show, but enable/disable based on mode and level -->
               <td class="px-6 py-4 text-center">
-                {#if allocateWithAI}
+                {#if $apiPayloadStore.is_ai_selected}
                   <!-- AI Mode - Show disabled state -->
                   <div class="flex items-center justify-center">
                     <span
@@ -1138,10 +1130,10 @@
             allocationSummary.hasError ||
             tableRows.length === 0 ||
             savingDraft ||
-            (!allocateWithAI && allocationSummary.remaining !== 0)}
+            (!$apiPayloadStore.is_ai_selected && allocationSummary.remaining !== 0)}
           on:click|preventDefault={handleApplyAllocation}
         >
-          {allocateWithAI
+          {$apiPayloadStore.is_ai_selected
             ? "Confirm and Review Allocation"
             : "Confirm and Review Allocation"}
         </button>
@@ -1159,7 +1151,7 @@
 
 <!-- Allocation Preview Modal (Disabled for now) -->
 <!-- <AllocationPreviewModal
-  {allocateWithAI}
+  allocateWithAI={$apiPayloadStore.is_ai_selected}
   bind:showModal={showAllocationPreview}
   allocationType={previewData?.allocationType || ""}
   allocationLevel={previewData?.allocationLevel || ""}
