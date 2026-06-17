@@ -527,7 +527,7 @@
   {:else if error}
     <div class="text-red-600 p-4">{error}</div>
   {:else if chaptersData.length === 0}
-    <div class="flex justify-center">No content available</div>
+    <div class="flex justify-center py-8 w-full border border-stroke rounded-lg text-subtext">No content available for the selected Class, Subject and Medium combination</div>
   {:else}
     <div
       id={showQuestions ? "questions-table" : "content-selection"}

@@ -71,6 +71,10 @@
               <span class="text-sm font-medium text-gray-900">{examClass}</span>
             </div>
             <div class="flex flex-col">
+              <span class="text-sm text-subtext">Medium</span>
+              <span class="text-sm font-medium text-gray-900">{examMedium}</span>
+            </div>
+            <div class="flex flex-col">
               <span class="text-sm text-subtext">Subject</span>
               <span class="text-sm font-medium text-gray-900"
                 >{examSubject}</span

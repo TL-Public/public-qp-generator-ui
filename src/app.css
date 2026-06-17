@@ -17,6 +17,7 @@
   --color-light-green: #f0fdf4; /* Tailwind's green-50 */
   --color-light-red: #fef2f2; /* Tailwind's red-50 */
   --color-light-yellow: #fefce8; /* Tailwind's yellow-50 */
+  --color-danger: #e7000b; /* Tailwind's red-600 */
 }
 
 /* Apply scaling to all text elements */
@@ -101,4 +102,7 @@ html[data-font-size="small"] .question-card {
 
 .divider-line{
   @apply border-t border-t-stroke;
+}
+.input-error-msg{
+  @apply text-xs text-danger;
 }

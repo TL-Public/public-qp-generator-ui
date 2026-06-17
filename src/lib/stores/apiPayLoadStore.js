@@ -70,8 +70,7 @@ const createApiPayloadStore = () => {
           qtn_codes_to_exclude: excludedQuestionIds || []
         };
         
-        console.log('API Store - Updated excluded questions:', excludedQuestionIds);
-        console.log('Updated store:', updatedStore);
+    
         
         return updatedStore;
       });
@@ -79,7 +78,6 @@ const createApiPayloadStore = () => {
 
     //  NEW: Build chapters_topics from selected content with question allocations
     buildChaptersTopics: (chapters, topics) => {
-      console.log('Building chapters_topics with:', { chapters, topics });
       
       const chaptersTopics = [];
 
@@ -122,18 +120,15 @@ const createApiPayloadStore = () => {
         chapters_topics: chaptersTopics
       }));
 
-      console.log('Built chapters_topics:', chaptersTopics);
       return chaptersTopics;
     },
 
     //  NEW: Update chapters_topics from allocation confirmation
     updateFromAllocationData: (allocationData) => {
       if (!allocationData) {
-        console.warn('No allocation data provided');
         return;
       }
 
-      console.log('Updating API store from allocation data:', allocationData);
       
       update(store => {
         // Build chapters_topics from allocation data
@@ -197,7 +192,7 @@ const createApiPayloadStore = () => {
           chapters_topics: chaptersTopics
         };
 
-        console.log('Updated API store with allocation data:', updatedStore);
+       
         return updatedStore;
       });
     },
@@ -282,7 +277,6 @@ const createApiPayloadStore = () => {
     // Debug method
     debug: () => {
       const storeData = get({ subscribe });
-      console.log('🔍 API Payload Store Debug:', storeData);
       return storeData;
     }
   };

@@ -10,6 +10,8 @@
   export let examClass = '';
   export let examMedium = '';
   export let examSubject = '';
+  export let examMediumName = '';
+  export let examSubjectName = '';
   export let isValid = false;
 
   // ✅ Hardcoded class options 1 to 12
@@ -39,21 +41,26 @@
   // Watch for changes and dispatch selected values
   $: {
     if (examClass && examMedium && examSubject) {
-      // Find the selected subject's full data
+      // Find the selected subject and medium's full data
       const selectedSubject = subjectOptions.find(s => s.value === examSubject);
+      const selectedMedium = mediumOptions.find(m => m.value === examMedium);
       
-      console.log('Selected values:', {
-        class: examClass,
-        medium: examMedium,
-        subject: selectedSubject
-      });
+      if (selectedSubject) examSubjectName = selectedSubject.label;
+      if (selectedMedium) examMediumName = selectedMedium.label;
+
+    
 
       // Dispatch the event with the codes
-      dispatch('selectionComplete', {
+      const selectionData = {
         standard: examClass,
-        medium_code: examMedium,     // This is already the medium_code from the API
-        subject_code: examSubject    // This is already the subject_code from the API
-      });
+        medium_code: examMedium,
+        subject_code: examSubject,
+        subject_name: examSubjectName,
+        medium_name: examMediumName
+      };
+
+      dispatch('selectionComplete', selectionData);
+      dispatch('change', selectionData);
     }
     
     isValid = examClass !== '' && examMedium !== '' && examSubject !== '';
@@ -77,7 +84,7 @@
         label: medium.medium_name
       }));
 
-      console.log('Medium options:', mediumOptions);
+     
 
     } catch (err) {
       console.error('Error in fetchMediums:', err);
@@ -104,7 +111,6 @@
         mediumCode: subject.medium_code // Store medium_code for reference
       }));
 
-      console.log('Subject options:', subjectOptions);
 
     } catch (err) {
       console.error('Error fetching subjects:', err);

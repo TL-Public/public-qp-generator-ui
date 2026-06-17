@@ -132,7 +132,7 @@
         {#if numberOfVersions > 5}
           <p class="mt-1 text-sm text-red-600">Maximum 5 versions allowed</p>
         {:else if numberOfVersions < 1}
-          <p class="mt-1 text-sm text-red-600">Minimum 1 version required</p>
+          <p class="mt-1 input-error-msg">Minimum 1 version required</p>
         {/if}
       </div>
     </div>

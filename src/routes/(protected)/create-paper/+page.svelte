@@ -29,12 +29,14 @@
   // Exam details state
   let examTitle = "";
   let examMode = "Online";
-  //  let examClass = "";
-  // let examMedium = "";
-  // let examSubject = "";
-  let examClass = "10";
-  let examMedium = "2000";
-  let examSubject = "3000";
+   let examClass = "";
+  let examMedium = "";
+  let examSubject = "";
+  // let examClass = "10";
+  // let examMedium = "2000";
+  // let examSubject = "3000";
+  let examMediumName = "";
+  let examSubjectName = "";
 
   // Initialize validation states
   let examDetailsValid = true;
@@ -483,16 +485,21 @@
   }
 
   async function handleClassSubjectSelect(event) {
-    const { examClass, examSubject, examMedium } = event.detail;
-
+    const { standard, subject_code, medium_code } = event.detail;
+console.log('standard',standard, 'subject_code', subject_code, 'medium_code', medium_code);
     if (allQuestions.length > 0) {
       currentStep = "allocation";
     }
 
+    // Also update the local state to ensure it's in sync if variables aren't bound correctly
+    if (standard) examClass = standard;
+    if (subject_code) examSubject = subject_code;
+    if (medium_code) examMedium = medium_code;
+
     questionPaperStore.updateClassSubject({
-      subject_code: examSubject,
-      medium_code: examMedium,
-      examClass,
+      subject_code: subject_code || examSubject,
+      medium_code: medium_code || examMedium,
+      examClass: standard || examClass,
     });
   }
 
@@ -606,6 +613,8 @@
                     bind:examClass
                     bind:examMedium
                     bind:examSubject
+                    bind:examMediumName
+                    bind:examSubjectName
                     bind:isValid={classSubjectValid}
                     on:change={handleClassSubjectSelect}
                   />
@@ -680,8 +689,8 @@
               {examTitle}
               {examMode}
               {examClass}
-              {examMedium}
-              {examSubject}
+              examMedium={examMediumName }
+              examSubject={examSubjectName}
               {totalTime}
               {totalQuestions}
               {numberOfSets}
@@ -701,8 +710,8 @@
             <GeneratePapers
               {examTitle}
               {examClass}
-              {examMedium}
-              {examSubject}
+              examMedium={examMediumName}
+              examSubject={examSubjectName}
               {numberOfSets}
               {numberOfVersions}
               questions={allQuestions}
