@@ -5,11 +5,15 @@
   import ClassSubjectSelector from "$lib/components/ClassSubjectSelector.svelte";
   import Card from "$lib/components/Cards/Card.svelte";
   import ReviewPage from "$lib/components/ReviewPage.svelte";
+  import StepIndicator from "$lib/components/quiz/StepIndicator.svelte";
 
   import GeneratePapers from "$lib/components/GeneratePapers.svelte";
 
   import { api } from "$lib/utils/api";
   import { questionPaperStore } from "$lib/stores/questionPaperStore";
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
+  import { browser } from "$app/environment";
 
   import VerticalStepper from "$lib/components/VerticalStepper.svelte";
   import { v4 as uuidv4 } from "uuid";
@@ -73,6 +77,57 @@
   let shouldNavigateToReview = false;
   let showQuestions = false;
   let nestedContentActiveTab = "selected-content";
+
+  // Step Configuration
+  const STEPS = {
+    config: { index: 1, title: "Add Exam Details" },
+    review: { index: 2, title: "Review Configuration" },
+    generate: { index: 3, title: "Generated Papers" },
+  };
+
+  function getStepByView(view) {
+    return STEPS[view]?.index || 1;
+  }
+
+  function getViewByStep(step) {
+    const stepNum = parseInt(step);
+    const entry = Object.entries(STEPS).find(
+      ([_, data]) => data.index === stepNum,
+    );
+    return entry ? entry[0] : "config";
+  }
+
+  function syncViewWithStep(step) {
+    const view = getViewByStep(step);
+    if (currentView !== view) {
+      currentView = view;
+
+      // Restore allocation view state if going back to config
+      if (view === "config" && isAllocationConfirmed) {
+        showQuestions = true;
+        nestedContentActiveTab = "selected-content";
+      }
+    }
+  }
+
+  function syncUrlWithView(view) {
+    if (!browser) return;
+    const step = getStepByView(view).toString();
+    const currentStepParam = $page.url.searchParams.get("step");
+
+    if (currentStepParam !== step) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("step", step);
+      goto(url.toString(), { keepFocus: true, noScroll: true });
+    }
+  }
+
+  // Reactive Navigation Logic
+  $: syncViewWithStep($page.url.searchParams.get("step"));
+  $: syncUrlWithView(currentView);
+
+  $: currentStepIndex = STEPS[currentView].index;
+  $: stepTitle = STEPS[currentView].title;
 
   // Difficulty distribution
   let easy = 40;
@@ -552,6 +607,15 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
   });
 </script>
 
+
+<div class="mb-4 max-w-5xl mx-auto">
+<StepIndicator
+  totalSteps={3}
+  currentStep={currentStepIndex}
+  {stepTitle}
+/>
+
+</div>
 <!-- Template remains the same as before -->
 <div class="flex min-h-screen max-w-5xl mx-auto">
   <!-- Stepper -->
@@ -592,13 +656,14 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
   </div> -->
 
   <!-- Main content -->
+   
   <div class="flex-1 mx-auto w-full max-w-7xl">
     <div class=" rounded-lg">
       <!-- <div class="px-8 py-4 border-b border-gray-200">
         <h1 class="text-2xl font-bold text-gray-900">Create exam event</h1>
       </div> -->
 
-      <div class="p-4 px-6">
+      <div class="">
         {#if currentView === "config"}
           <form on:submit|preventDefault={handleSubmit}>
             <!-- Exam Details -->
@@ -690,7 +755,7 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
               {examTitle}
               {examMode}
               {examClass}
-              examMedium={examMediumName }
+              examMedium={examMediumName}
               examSubject={examSubjectName}
               {totalTime}
               {totalQuestions}
@@ -702,7 +767,7 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
               {hard}
               isReviewPageEnabled={true}
               questions={allQuestions}
-              on:back={() => (currentView = "config")}
+              on:back={handleBackFromReview}
               on:generate={handleGeneratePapers}
             />
           </div>

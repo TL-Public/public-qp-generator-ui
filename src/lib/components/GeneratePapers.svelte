@@ -250,35 +250,35 @@
   }
 </script>
 
-<Card title="Generated Question Papers">
+<Card >
   <!-- Show papers table only when we have actual generated data -->
   {#if displayData?.questionPapers?.length > 0}
     <div class="overflow-x-auto ">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
-            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="table-header-cell">
               Question Paper ID
             </th>
-            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="table-header-cell">
               Event ID
             </th>
-            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="table-header-cell">
               Event Name
             </th>
-            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="table-header-cell">
               Subject Name
             </th>
-            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="table-header-cell">
               Standard
             </th>
-            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="table-header-cell">
               Medium
             </th>
-            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="table-header-cell">
               Questions
             </th>
-            <th scope="col" class="px-1 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th scope="col" class="table-header-cell">
               Actions
             </th>
           </tr>
@@ -289,22 +289,22 @@
               <td class="px-1 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
                 {paper.questionPaperId}
               </td>
-              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
+              <td class="table-data-cell-light">
                 {paper.eventId}
               </td>
-              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
+              <td class="table-data-cell-light">
                 {paper.eventName}
               </td>
-              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
+              <td class="table-data-cell-light">
                 {paper.subjectName}
               </td>
-              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
+              <td class="table-data-cell-light">
                 {paper.standard}
               </td>
-              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
+              <td class="table-data-cell-light">
                 {paper.medium}
               </td>
-              <td class="px-1 py-2 whitespace-nowrap text-sm text-gray-500">
+              <td class="table-data-cell-light">
                 {paper.questionsCount}
               </td>
     

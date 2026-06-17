@@ -110,3 +110,9 @@ html[data-font-size="small"] .question-card {
 .input-error-msg{
   @apply text-xs text-danger;
 }
+.table-header-cell{
+  @apply px-1 py-2 text-left text-xs font-medium text-subtext uppercase tracking-wider;
+}
+.table-data-cell-light{
+  @apply px-1 py-2 whitespace-nowrap text-sm text-subtext;
+}
