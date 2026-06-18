@@ -23,6 +23,7 @@
   import { selectedContentStore } from "$lib/stores/selectedContentStore.js";
   import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
   import { onDestroy } from "svelte";
+  import InlineNotification from "$lib/components/InlineNotification.svelte";
 
   // Initialize state variables
   let allQuestions = [];
@@ -77,6 +78,16 @@
   let shouldNavigateToReview = false;
   let showQuestions = false;
   let nestedContentActiveTab = "selected-content";
+
+  let allocationResult = {
+  message: "",
+  type: "success", // or "error"
+};
+
+let generationResult = {
+  message: "",
+  type: "success", // or "error"
+}
 
   // Step Configuration
   const STEPS = {
@@ -233,12 +244,16 @@
     if (examConfigValid) currentStep = "difficulty";
   }
 
+
   // Simplify - use one handler that checks for the navigateToReview flag
   function handleAllocationConfirmed(event) {
+    allocationResult.message = "";
+    allocationResult.type = "success";
     const data = event.detail || event;
-    
+   
     if (!data) {
-      alert("Invalid allocation data received. Please try again.");
+      allocationResult.message = "Invalid allocation data received. Please try again.";
+      allocationResult.type = "error";
       return;
     }
 
@@ -249,7 +264,8 @@
       !allocationData.selectedItems ||
       !Array.isArray(allocationData.selectedItems)
     ) {
-      alert("Invalid allocation data format. Please try again.");
+      allocationResult.message = "Invalid allocation data format. Please try again.";
+      allocationResult.type = "error";
       return;
     }
 
@@ -307,7 +323,8 @@
     event.preventDefault();
 
     if (!isAllocationConfirmed) {
-      alert("Please confirm your question allocation first.");
+      allocationResult.message = "Please confirm your question allocation first.";
+      allocationResult.type = "error";
       return;
     }
 
@@ -360,6 +377,8 @@
 
   async function handleGeneratePapers() {
     try {
+      generationResult.message = "";
+      generationResult.type = "success";
       // Try to update API store one more time before generating
       if (confirmedAllocationData && confirmedAllocationData.selectedItems) {
         apiPayloadStore.updateFromAllocationData(confirmedAllocationData);
@@ -423,9 +442,8 @@
 
       // Show success message
       const paperCount = response.data.question_papers?.length || 0;
-      alert(
-        `Successfully generated ${paperCount} question papers for "${responseData.exam_name}"!\n\nExam Code: ${responseData.exam_code}\nSets: ${responseData.number_of_sets}\nVersions: ${responseData.number_of_versions}`,
-      );
+      generationResult.message = `Successfully generated question papers for "${responseData.exam_name}"!\n\nSets: ${responseData.number_of_sets}\nVersions: ${responseData.number_of_versions}`;
+      generationResult.type = "success";
     } catch (error) {
       let errorMessage = "Failed to generate question papers.\n\n";
       errorMessage += error.message;
@@ -436,9 +454,12 @@
           '\n\nTry clicking "Force API Store Update" button and then try again.';
       }
 
-      alert(errorMessage);
+      generationResult.message = errorMessage;
+      generationResult.type = "error";
     }
   }
+
+
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -733,6 +754,9 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
                     }}
                   />
                 </Card>
+                {#if allocationResult.message}
+                  <InlineNotification  title={`Allocation ${allocationResult.type === "error" ? "Error" : "Successful"}`} subtitle={allocationResult.message} kind={allocationResult.type} />
+                {/if}
               </div>
             {/if}
 
@@ -772,6 +796,7 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
             />
           </div>
         {:else if currentView === "generate"}
+
           <div class="w-full">
             <GeneratePapers
               {examTitle}
@@ -782,6 +807,7 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
               {numberOfVersions}
               questions={allQuestions}
               allocationData={confirmedAllocationData}
+              generationResult={generationResult}
             />
           </div>
         {/if}

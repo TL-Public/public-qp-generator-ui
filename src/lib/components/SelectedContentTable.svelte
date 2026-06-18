@@ -4,6 +4,7 @@
   import { api } from "$lib/utils/api.js";
   import AllocationPreviewModal from "./AllocationPreviewModal.svelte";
   import Toggle from "$lib/components/Toggle.svelte";
+  import InlineNotification from "$lib/components/InlineNotification.svelte";
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
@@ -36,6 +37,7 @@
   let savingDraft = false;
   let draftSaveError = "";
   let draftSaveSuccess = "";
+  let allocationError = "";
 
   // Get hierarchical selections from store
   $: hierarchicalSelections = buildHierarchyFromStore(storeData);
@@ -96,7 +98,7 @@
     }
 
     const result = [];
-
+    console.log("storeData in buildHierarchyFromStore", storeData);
     // Convert Map to array and process each chapter
     for (const [chapterCode, chapterData] of storeData.hierarchy) {
       // Use metadata if available for better chapter names
@@ -162,7 +164,7 @@
 
       result.push(chapter);
     }
-
+    console.log("Hierarchical selections built from store:", result);
     return result;
   }
 
@@ -250,12 +252,14 @@
 
   //   Better input handling
   function handleInputChange(item, event) {
+    allocationError = "";
     const value = event.target.value;
     updateQuestionsToAdd(item, value);
   }
 
   //  UPDATED: Enhanced toggle allocation
   function toggleAllocation() {
+    allocationError = "";
     $apiPayloadStore.is_ai_selected = !$apiPayloadStore.is_ai_selected;
   }
 
@@ -295,11 +299,15 @@
   function generateAllocationPreview() {
     //   Better filtering and data collection for ALL selected items
     const getAllSelectedItems = (items) => {
-      let allSelected = [];
+      let selectedItemsArr = [];
 
       const processItem = (item) => {
-        if (item.isSelected && item.questionsToAdd > 0) {
-          allSelected.push(item);
+        if (item.isSelected) {
+          if (!$apiPayloadStore.is_ai_selected && item.questionsToAdd <= 0) {
+            // Skip items with no allocations in manual mode
+            return;
+          }
+          selectedItemsArr.push(item);
         }
 
         // Process children
@@ -309,17 +317,19 @@
       };
 
       items.forEach((item) => processItem(item));
-      return allSelected;
+      return selectedItemsArr;
     };
 
     const selectedItemsWithAllocations = getAllSelectedItems(
       hierarchicalSelections,
     );
 
-    if (selectedItemsWithAllocations.length === 0) {
-      alert(
-        "Please allocate questions to at least one selected item before proceeding.",
-      );
+    if (
+      selectedItemsWithAllocations.length === 0 &&
+      !$apiPayloadStore.is_ai_selected
+    ) {
+      allocationError =
+        "Please allocate questions to at least one selected item before proceeding.";
       return null;
     }
 
@@ -354,8 +364,12 @@
 
   //   Renamed and improved function
   function handleApplyAllocation() {
+    allocationError = "";
     const preview = generateAllocationPreview();
-
+    console.log(
+      "preview of generateAllcoation preview in SlectedContent Table",
+      preview,
+    );
     if (preview) {
       // NEW: Immediately update API store with allocation data forward directly to next step
       apiPayloadStore.updateFromAllocationData(preview);
@@ -731,7 +745,7 @@
         <div
           class="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2"
         >
-          📝 {allocationSummary.remaining} questions remaining to be allocated. 
+          📝 {allocationSummary.remaining} questions remaining to be allocated.
         </div>
       {:else if !$apiPayloadStore.is_ai_selected && allocationSummary.remaining === 0}
         <div
@@ -754,93 +768,25 @@
 
   <!-- Draft Save Success Message -->
   {#if draftSaveSuccess}
-    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-      <div class="flex items-center justify-between">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg
-              class="h-5 w-5 text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <p class="text-sm text-green-700">{draftSaveSuccess}</p>
-          </div>
-        </div>
-        <button
-          on:click={clearDraftSuccess}
-          class="text-green-400 hover:text-green-600"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+    <div class="mb-4">
+      <InlineNotification
+        kind="success"
+        title="Draft Saved"
+        subtitle={draftSaveSuccess}
+        on:close={clearDraftSuccess}
+      />
     </div>
   {/if}
 
   <!-- Draft Save Error Message -->
   {#if draftSaveError}
-    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-      <div class="flex items-center justify-between">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg
-              class="h-5 w-5 text-red-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div class="ml-3">
-            <p class="text-sm text-red-700">{draftSaveError}</p>
-          </div>
-        </div>
-        <button
-          on:click={clearDraftError}
-          class="text-red-400 hover:text-red-600"
-        >
-          <svg
-            class="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
+    <div class="mb-4">
+      <InlineNotification
+        kind="error"
+        title="Error Saving Draft"
+        subtitle={draftSaveError}
+        on:close={clearDraftError}
+      />
     </div>
   {/if}
 
@@ -1132,11 +1078,19 @@
               allocationSummary.remaining !== 0)}
           on:click|preventDefault={handleApplyAllocation}
         >
-          {$apiPayloadStore.is_ai_selected
-            ? "Confirm and Review Allocation"
-            : "Confirm and Review Allocation"}
+          Confirm and Review Allocation
         </button>
       </div>
+
+      {#if allocationError}
+        <div class="mt-3">
+          <InlineNotification
+            kind="error"
+            title={allocationError}
+            on:close={() => (allocationError = "")}
+          />
+        </div>
+      {/if}
     </div>
     {#if !isFormValid}
       <p
