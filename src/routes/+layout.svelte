@@ -88,7 +88,7 @@
     key: "CREATE_PAPER",
     icon: FilePlus,
   },
-    { name: "View Papers", link: "/search", key: "VIEW_PAPERS", icon: Search },
+    { name: "View Papers", link: "/questionPapers", key: "VIEW_PAPERS", icon: Search },
      { name: "Users", link: "/admin", key: "USERS", icon: Users },
 
     //  {
@@ -120,7 +120,7 @@
     },
   ];
 
-  const excludedRoutes = ["/search", "/create-paper"];
+  const excludedRoutes = ["/questionPapers", "/create-paper"];
 
 
   const staticRouteTitles = {
