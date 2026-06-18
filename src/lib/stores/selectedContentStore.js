@@ -865,16 +865,7 @@ function getParentTopicCode(itemCode, store) {
 }
 
 function getDefaultQuestionsToAdd(type, questionCount) {
-  switch (type) {
-    case 'chapter':
-      return Math.min(8, questionCount);
-    case 'topic':
-      return Math.min(4, questionCount);
-    case 'subtopic':
-      return Math.min(2, questionCount);
-    default:
-      return 0;
-  }
+  return 0; // Default to 0 as per user request
 }
 
 export const selectedContentStore = createSelectedContentStore();

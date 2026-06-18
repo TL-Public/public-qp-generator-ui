@@ -1,6 +1,8 @@
 <script>
   import Card from './Cards/Card.svelte';
   import { questionPaperStore } from '$lib/stores/questionPaperStore';
+  import DataTable from '$lib/components/DataTable.svelte';
+  import { FileText, FileJson, Printer, Eye } from '@lucide/svelte';
 
   // Props with default values
   export let examTitle = '';
@@ -15,9 +17,6 @@
 
   // NEW: Add props for generated papers data
   export let generatedPapersData = null;
-
-  // Add state for dropdown visibility
-  let openDropdowns = {};
 
   // Access the store to get generated papers if not passed as prop
   $: displayData = generatedPapersData || $questionPaperStore.generatedPapers;
@@ -35,23 +34,36 @@
       rawPaper: paper // Keep reference to original paper data
     })) : [];
 
-  // Toggle dropdown function
-  function toggleDropdown(paperId) {
-    openDropdowns[paperId] = !openDropdowns[paperId];
-    // Close other dropdowns
-    Object.keys(openDropdowns).forEach(id => {
-      if (id !== paperId) {
-        openDropdowns[id] = false;
-      }
-    });
+  const tableHeadersDisplay = [
+    { key: 'questionPaperId', name: 'Paper ID', width: '15%' },
+    // { key: 'eventId', name: 'Event ID', width: '10%' },
+    { key: 'eventName', name: 'Exam Title', width: '20%' },
+    { key: 'subjectName', name: 'Subject', width: '15%' },
+    { key: 'standard', name: 'Class', width: '10%' },
+    { key: 'medium', name: 'Medium', width: '10%' },
+    { key: 'questionsCount', name: 'Questions', width: '10%' }
+  ];
+
+  const actionConfigObject = [
+    { actionName: 'PDF', label: 'PDF', icon: FileText },
+    { actionName: 'JSON', label: 'JSON', icon: FileJson },
+    { actionName: 'Print', label: 'Print', icon: Printer },
+    { actionName: 'View', label: 'View', icon: Eye }
+  ];
+
+  function handleTableAction(event) {
+    const { actionName, actionData } = event.detail;
+    const paperId = actionData.questionPaperId;
+    
+    if (actionName === 'PDF') handleDownloadPDF(paperId);
+    if (actionName === 'JSON') handleDownloadJSON(paperId);
+    if (actionName === 'Print') handlePrint(paperId);
+    if (actionName === 'View') handleView(paperId);
   }
 
   // FIXED: Enhanced download functionality with JSON and PDF options
   function handleDownloadJSON(paperId) {
     console.log('Downloading JSON for paper:', paperId);
-    
-    // Close dropdown
-    openDropdowns[paperId] = false;
     
     // Find the paper data
     const paper = papers.find(p => p.questionPaperId === paperId);
@@ -95,9 +107,6 @@
 
   function handleDownloadPDF(paperId) {
     console.log('Downloading PDF for paper:', paperId);
-    
-    // Close dropdown
-    openDropdowns[paperId] = false;
     
     // Find the paper data
     const paper = papers.find(p => p.questionPaperId === paperId);
@@ -228,13 +237,12 @@
   }
 
   function handlePrint(paperId) {
-    console.log('Printing paper:', paperId);
+   
     handleDownloadPDF(paperId);
   }
 
   function handleView(paperId) {
-    console.log('Viewing paper:', paperId);
-    
+      
     // Find the paper data
     const paper = papers.find(p => p.questionPaperId === paperId);
     if (!paper) {
@@ -252,118 +260,13 @@
 
 <Card >
   <!-- Show papers table only when we have actual generated data -->
-  {#if displayData?.questionPapers?.length > 0}
-    <div class="overflow-x-auto ">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th scope="col" class="table-header-cell">
-              Question Paper ID
-            </th>
-            <th scope="col" class="table-header-cell">
-              Event ID
-            </th>
-            <th scope="col" class="table-header-cell">
-              Event Name
-            </th>
-            <th scope="col" class="table-header-cell">
-              Subject Name
-            </th>
-            <th scope="col" class="table-header-cell">
-              Standard
-            </th>
-            <th scope="col" class="table-header-cell">
-              Medium
-            </th>
-            <th scope="col" class="table-header-cell">
-              Questions
-            </th>
-            <th scope="col" class="table-header-cell">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          {#each papers as paper}
-            <tr>
-              <td class="px-1 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
-                {paper.questionPaperId}
-              </td>
-              <td class="table-data-cell-light">
-                {paper.eventId}
-              </td>
-              <td class="table-data-cell-light">
-                {paper.eventName}
-              </td>
-              <td class="table-data-cell-light">
-                {paper.subjectName}
-              </td>
-              <td class="table-data-cell-light">
-                {paper.standard}
-              </td>
-              <td class="table-data-cell-light">
-                {paper.medium}
-              </td>
-              <td class="table-data-cell-light">
-                {paper.questionsCount}
-              </td>
-    
-              <td class="px-1 py-2 whitespace-nowrap text-sm font-medium">
-                <div class="flex items-center space-x-2">
-                  <!-- Download Dropdown -->
-                  <div class="relative inline-block text-left">
-                    <button
-                      type="button"
-                      class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      on:click={() => toggleDropdown(paper.questionPaperId)}
-                    >
-                      Download
-                      <svg class="-mr-1 ml-1 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                      </svg>
-                    </button>
-                    
-                    {#if openDropdowns[paper.questionPaperId]}
-                      <div class="origin-top-right absolute right-0 mt-2 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-                        <div class="py-1">
-                          <button
-                            on:click={() => handleDownloadJSON(paper.questionPaperId)}
-                            class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 w-full text-left"
-                          >
-                            📄 JSON
-                          </button>
-                          <button
-                            on:click={() => handleDownloadPDF(paper.questionPaperId)}
-                            class="block px-4 py-2 text-xs text-gray-700 hover:bg-gray-100 w-full text-left"
-                          >
-                            📋 PDF
-                          </button>
-                        </div>
-                      </div>
-                    {/if}
-                  </div>
-
-                  <!-- Other Actions -->
-                  <button
-                    on:click={() => handlePrint(paper.questionPaperId)}
-                    class="text-blue-600 hover:text-blue-800 text-xs"
-                  >
-                    Print
-                  </button>
-                  <button
-                    on:click={() => handleView(paper.questionPaperId)}
-                    class="text-green-600 hover:text-green-800 text-xs"
-                  >
-                    View
-                  </button>
-                </div>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+  {#if papers.length > 0}
+    <DataTable 
+      tableData={papers}
+      {tableHeadersDisplay}
+      {actionConfigObject}
+      on:tableActionClick={handleTableAction}
+      showPagination={papers.length > 10}
+    />
   {/if}
-
-
 </Card>

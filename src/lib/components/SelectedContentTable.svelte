@@ -167,16 +167,7 @@
   }
 
   function getDefaultQuestionsToAdd(type, questionCount) {
-    switch (type) {
-      case "chapter":
-        return Math.min(8, questionCount);
-      case "topic":
-        return Math.min(4, questionCount);
-      case "subtopic":
-        return Math.min(2, questionCount);
-      default:
-        return 0;
-    }
+    return 0; // Default to 0 as per user request
   }
 
   function calculateAllocationSummary(hierarchicalSelections, required) {
@@ -372,7 +363,8 @@
       // Dispatch the event with the data as detail to navigate to review
       dispatch("allocationConfirmed", {
         allocationType:
-          preview.allocationType || ($apiPayloadStore.is_ai_selected ? "Auto" : "Manual"),
+          preview.allocationType ||
+          ($apiPayloadStore.is_ai_selected ? "Auto" : "Manual"),
         allocationLevel: preview.allocationLevel || allocationLevel,
         totalRequired: preview.totalRequired || requiredQuestions,
         totalAllocated: preview.totalAllocated || 0,
@@ -571,7 +563,10 @@
         };
 
         // Only add question count for manual allocation (NOT for AI)
-        if (!$apiPayloadStore.is_ai_selected && chapterData.questionsToAdd > 0) {
+        if (
+          !$apiPayloadStore.is_ai_selected &&
+          chapterData.questionsToAdd > 0
+        ) {
           chapterEntry.qn_count = chapterData.questionsToAdd;
         }
 
@@ -594,7 +589,10 @@
             };
 
             // Only add question count for manual allocation (NOT for AI)
-            if (!$apiPayloadStore.is_ai_selected && topicData.questionsToAdd > 0) {
+            if (
+              !$apiPayloadStore.is_ai_selected &&
+              topicData.questionsToAdd > 0
+            ) {
               topicEntry.qn_count = topicData.questionsToAdd;
             }
 
@@ -617,7 +615,10 @@
                 };
 
                 // Only add question count for manual allocation (NOT for AI)
-                if (!$apiPayloadStore.is_ai_selected && subtopicData.questionsToAdd > 0) {
+                if (
+                  !$apiPayloadStore.is_ai_selected &&
+                  subtopicData.questionsToAdd > 0
+                ) {
                   subtopicEntry.qn_count = subtopicData.questionsToAdd;
                 }
 
@@ -730,8 +731,7 @@
         <div
           class="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2"
         >
-          📝 {allocationSummary.remaining} questions remaining. These will be auto-allocated
-          from unspecified content.
+          📝 {allocationSummary.remaining} questions remaining to be allocated. 
         </div>
       {:else if !$apiPayloadStore.is_ai_selected && allocationSummary.remaining === 0}
         <div
@@ -1117,7 +1117,6 @@
             </div>
           {/if}
         </button>
-        
       </div>
 
       <!-- Confirm Allocation Button -->
@@ -1125,12 +1124,12 @@
         <button
           type="button"
           class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-         
           disabled={!isFormValid ||
             allocationSummary.hasError ||
             tableRows.length === 0 ||
             savingDraft ||
-            (!$apiPayloadStore.is_ai_selected && allocationSummary.remaining !== 0)}
+            (!$apiPayloadStore.is_ai_selected &&
+              allocationSummary.remaining !== 0)}
           on:click|preventDefault={handleApplyAllocation}
         >
           {$apiPayloadStore.is_ai_selected
@@ -1139,7 +1138,7 @@
         </button>
       </div>
     </div>
-     {#if !isFormValid}
+    {#if !isFormValid}
       <p
         class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2 w-full md:w-auto"
       >

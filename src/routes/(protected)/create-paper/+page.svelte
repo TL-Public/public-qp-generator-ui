@@ -667,7 +667,7 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
         {#if currentView === "config"}
           <form on:submit|preventDefault={handleSubmit}>
             <!-- Exam Details -->
-            <Card className="!p-8" title="Create Question Paper">
+            <Card className="!p-8" >
               <div class=" space-y-8">
                 <div class="space-y-6">
                   <ExamDetailsForm

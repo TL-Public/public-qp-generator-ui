@@ -1,9 +1,9 @@
 <script>
   import { createEventDispatcher } from "svelte";
   import { error } from "@sveltejs/kit";
-  import Select from "$lib/components/reusable/Select.svelte";
-  import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-svelte";
-  import ErrorMessage from "$lib/components/reusable/ErrorMessage.svelte";
+  import Select from "$lib/components/Select.svelte";
+  import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight } from '@lucide/svelte';
+  // import ErrorMessage from "$lib/components/reusable/ErrorMessage.svelte";
 
   export let showPagination = true;
   export let tableStyle = "primary";
@@ -864,5 +864,8 @@
     </div>
   {/if}
 {:else}
-  <ErrorMessage error={notFoundMessage} />
+  <!-- <ErrorMessage error={notFoundMessage} /> -->
+   <div>
+    notFoundMessage
+   </div>
 {/if}
