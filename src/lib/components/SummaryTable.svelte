@@ -22,9 +22,7 @@
     }
   }
 
-  $: {
-    console.log('Groups in table:', groups); // Debug log
-  }
+
 </script>
 
 <div class="overflow-x-auto">

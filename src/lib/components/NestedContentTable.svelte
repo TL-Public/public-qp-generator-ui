@@ -202,7 +202,6 @@
 
   function toggleChapter(event, chapterId) {
     event.preventDefault();
-     console.log('toggleChapter', chapterId);
     if (expandedChapters.has(chapterId)) {
       expandedChapters.delete(chapterId);
     } else {
@@ -342,7 +341,6 @@
   function handleCheckboxChange(event, item, type) {
     event.stopPropagation();
 
-    console.log('handleCheckboxChange')
 
     const isChecked = event.target.checked;
 

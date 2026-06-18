@@ -69,7 +69,6 @@ function createSelectedContentStore() {
     // ✅ FIXED: Consolidated updateQuestionCount method
     updateQuestionCount: (code, questionCount) => {
       update(store => {
-        console.log(`Store: Updating ${code} questionsToAdd to ${questionCount}`);
         
         // Helper function to update an item in a Map
         const updateInMap = (map, code, questionCount) => {
@@ -77,7 +76,6 @@ function createSelectedContentStore() {
             const item = map.get(code);
             item.questionsToAdd = questionCount;
             map.set(code, item);
-            console.log(`Updated in map: ${code} -> ${questionCount}`);
             return true;
           }
           return false;
@@ -89,7 +87,6 @@ function createSelectedContentStore() {
             if (item.code === code) {
               item.questionsToAdd = questionCount;
               hierarchyMap.set(key, item);
-              console.log(`Updated in hierarchy: ${code} -> ${questionCount}`);
               return true;
             }
             
@@ -146,7 +143,6 @@ function createSelectedContentStore() {
     // Remove a question by ID
     removeQuestion: (questionId) => {
     update(store => {
-      console.log('Removing question from store:', questionId);
       store.questions = store.questions.filter(q => q.id !== questionId);
       
       // Also update any excluded questions tracking
@@ -158,7 +154,6 @@ function createSelectedContentStore() {
         store.excludedQuestions.push(questionId);
       }
       
-      console.log('Updated store after question removal:', store);
       return store;
     });
   },

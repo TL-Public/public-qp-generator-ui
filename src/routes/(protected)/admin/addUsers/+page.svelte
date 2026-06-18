@@ -7,7 +7,7 @@
     const { user, message, defaultPassword } = event.detail;
     
     // You can show a success toast here or handle the success state
-    console.log('User created successfully:', { user, message, defaultPassword });
+   
     
     // Optionally redirect back to user management with success message
     // You can pass the success message via URL params or store

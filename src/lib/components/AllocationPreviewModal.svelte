@@ -16,7 +16,6 @@
   export let autoAllocations = [];
   export let allocateWithAI = false ; 
 
-  $: console.log('allocate with ai', allocateWithAI) ; 
 
   // Calculate percentages for progress bars
   $: allocationPercentage = totalRequired > 0 ? Math.round((totalAllocated / totalRequired) * 100) : 0;
@@ -27,7 +26,6 @@
 
    let shouldNavigateToReview = false;
  function handleConfirmAndReview() {
-    console.log('AllocationPreviewModal: handleConfirmAndReview called');
     
     const confirmData = {
       allocationType,
@@ -41,7 +39,6 @@
       navigateToReview: true // This flag tells the main page to navigate
     };
     
-    console.log('AllocationPreviewModal: Dispatching allocationConfirmed (instead of confirmAndReview)');
     
     // Dispatch as allocationConfirmed so it gets forwarded properly
     dispatch('allocationConfirmed', confirmData);

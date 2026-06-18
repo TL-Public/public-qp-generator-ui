@@ -48,10 +48,7 @@ export function createExamEventHandlers(examState) {
   }
 
   function handleAllocationConfirmed(event) {
-    console.log('=== ALLOCATION CONFIRMATION HANDLER ===');
-    console.log('Raw event received:', event);
-    console.log('Event detail:', event.detail);
-    
+  
     if (!event.detail) {
       console.error('No detail in allocation confirmation event');
       alert('Invalid allocation data received. Please try again.');
@@ -66,9 +63,7 @@ export function createExamEventHandlers(examState) {
       return;
     }
     
-    console.log('Allocation data received:', allocationData);
-    console.log('Selected items count:', allocationData.selectedItems.length);
-    console.log('Navigate to review flag:', allocationData.navigateToReview);
+  
     
     // Update state
     isAllocationConfirmed.set(true);
@@ -116,27 +111,17 @@ export function createExamEventHandlers(examState) {
     
     // Check if we should navigate to review
     if (allocationData.navigateToReview === true) {
-      console.log('NAVIGATING TO REVIEW - Setting shouldNavigateToReview = true');
       shouldNavigateToReview.set(true);
     } else {
       currentStep.set('allocation');
     }
     
-    console.log('Allocation confirmed and API store updated');
-    
-    // Debug the API store state
-    const payloadResult = apiPayloadStore.getApiPayload();
-    console.log('API Payload after allocation confirmation:', payloadResult);
   }
 
   async function handleClassSubjectSelect(event) {
     const { examClass: newClass, examSubject: newSubject, examMedium: newMedium } = event.detail;
     
-    console.log('Updating class/subject with:', {
-      subject_code: newSubject,
-      medium_code: newMedium,
-      examClass: newClass
-    });
+    
 
     if (get(allQuestions).length > 0) {
       currentStep.set('allocation');
@@ -151,7 +136,6 @@ export function createExamEventHandlers(examState) {
 
   async function handleQuestionSelect(event) {
     const { item, type } = event.detail;
-    console.log('Selected item for questions:', item, type);
 
     try {
       const mockData = mockQuestionsData[type.toLowerCase()];
@@ -174,7 +158,6 @@ export function createExamEventHandlers(examState) {
 
       allQuestions.update(current => [...current, ...newQuestions]);
       
-      console.log('Fetched questions:', newQuestions);
 
     } catch (err) {
       console.error('Error processing questions:', err);

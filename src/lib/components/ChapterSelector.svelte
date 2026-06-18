@@ -65,19 +65,16 @@ export const mockData = {
     chapters: mockData.chapters.filter(chapter => {
       const matches = chapter.class === Number(examClass) && 
                      chapter.subject.toLowerCase() === examSubject.toLowerCase();
-      console.log('Filtering chapter:', { chapter, matches, examClass, examSubject });
       return matches;
     }),
     topics: mockData.topics.filter(topic => {
       const matches = topic.class === Number(examClass) && 
                      topic.subject.toLowerCase() === examSubject.toLowerCase();
-      console.log('Filtering topic:', { topic, matches, examClass, examSubject });
       return matches;
     }),
     subtopics: mockData.subtopics.filter(subtopic => {
       const matches = subtopic.class === Number(examClass) && 
                      subtopic.subject.toLowerCase() === examSubject.toLowerCase();
-      console.log('Filtering subtopic:', { subtopic, matches, examClass, examSubject });
       return matches;
     })
   };

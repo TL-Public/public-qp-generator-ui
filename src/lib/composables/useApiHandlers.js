@@ -12,19 +12,16 @@ export function createApiHandlers(examState) {
 
   async function handleGeneratePapers() {
     try {
-      console.log('=== GENERATE PAPERS WITH API STORE ===');
       
       // Try to update API store one more time before generating
       const currentAllocationData = get(confirmedAllocationData);
       if (currentAllocationData && currentAllocationData.selectedItems) {
-        console.log('Ensuring API store is updated with allocation data...');
         apiPayloadStore.updateFromAllocationData(currentAllocationData);
       }
       
       // Get the API payload from the store
       const payloadResult = apiPayloadStore.getApiPayload();
       
-      console.log('API Payload validation result:', payloadResult);
       
       if (!payloadResult.isValid) {
         console.error('API Payload validation failed:');
@@ -33,7 +30,6 @@ export function createApiHandlers(examState) {
       }
 
       const apiPayload = payloadResult.payload;
-      console.log('API Payload from store:', apiPayload);
 
       // Validate with the API's validatePayload method
       const validation = api.questionPapers.validatePayload(apiPayload);
@@ -42,7 +38,6 @@ export function createApiHandlers(examState) {
         throw new Error(`API validation failed: ${validation.errors.join(', ')}`);
       }
 
-      console.log('Making API call with payload:', apiPayload);
 
       // Make the API call
       const response = await api.questionPapers.create(apiPayload);
@@ -55,7 +50,6 @@ export function createApiHandlers(examState) {
         throw new Error('No data received from server');
       }
 
-      console.log('Question papers generated successfully:', response.data);
 
       // Store the generated data
       const generatedPapersData = {
@@ -102,7 +96,6 @@ export function createApiHandlers(examState) {
   }
 
   function handleForceApiStoreUpdate() {
-    console.log('=== FORCE API STORE UPDATE ===');
     
     // Update API store with current exam details
     apiPayloadStore.updateExamDetails({
@@ -136,7 +129,6 @@ export function createApiHandlers(examState) {
       }
     }
 
-    console.log('API store updated with current data');
   }
 
   return {

@@ -89,14 +89,7 @@ function createAuthStore() {
       const userId = localStorage.getItem('userId');
       const roleName = localStorage.getItem('roleName');
 
-      console.log('Initializing auth store from localStorage:', {
-        hasToken: !!token,
-        role,
-        roleCode,
-        username,
-        userId,
-        roleName
-      });
+    
 
       if (token && username && role && roleCode) {
         set({
@@ -109,10 +102,7 @@ function createAuthStore() {
           roleName,
         });
         
-        console.log('Auth store initialized successfully');
-      } else {
-        console.log('Auth store initialization failed - missing required data');
-      }
+      } 
     }
   };
 }

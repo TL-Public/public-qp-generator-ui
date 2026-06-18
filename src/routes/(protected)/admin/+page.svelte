@@ -3,8 +3,7 @@
   import { authStore } from '$lib/stores/authStore.js';
   import UserManagement from '$lib/components/Admin/UserManagement.svelte';
 
-  $: console.log('The current user is:', $authStore.username);
-  $: console.log('Is authenticated:', $authStore.isAuthenticated);
+
   
   function handleLogout() {
     // You call methods on the store directly, without the '$'

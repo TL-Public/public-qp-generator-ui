@@ -63,7 +63,6 @@
 
   // FIXED: Enhanced download functionality with JSON and PDF options
   function handleDownloadJSON(paperId) {
-    console.log('Downloading JSON for paper:', paperId);
     
     // Find the paper data
     const paper = papers.find(p => p.questionPaperId === paperId);
@@ -106,7 +105,6 @@
   }
 
   function handleDownloadPDF(paperId) {
-    console.log('Downloading PDF for paper:', paperId);
     
     // Find the paper data
     const paper = papers.find(p => p.questionPaperId === paperId);
@@ -134,7 +132,6 @@
     // Get questions from the correct path in the JSON structure
     const questions = paper.rawPaper.qns || [];
     
-    console.log('Generating PDF for questions:', questions); // Debug log
     
     return `
       <!DOCTYPE html>

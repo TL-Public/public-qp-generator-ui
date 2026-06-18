@@ -28,7 +28,6 @@
             throw new Error('Api response error', response.error);
         }
         exams = response.data.exams || [];
-        console.log('Successfully fetched data', exams);
     } catch (error) {
         console.error('Failed to fetch exams:', error);
         exams = [];
@@ -66,10 +65,8 @@
     try {
       const response = await api.viewPapers.getByCode(examCode);
       if (!response || response.error) {
-        console.log('Failed to fetch the exam papers', response.error);
         throw new Error(response.error);
       }
-      console.log('View paper at recentlist table', response);
       return response;
     } catch (error) {
         console.error('Failed to fetch api', error);
