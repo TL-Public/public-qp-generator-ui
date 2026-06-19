@@ -17,6 +17,7 @@ function createAuthStore() {
 
   return {
     subscribe,
+    set,
     login: async ({ token, role, roleCode, username, userId, roleName }) => {
       try {
         // Validate required fields

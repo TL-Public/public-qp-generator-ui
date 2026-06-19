@@ -8,11 +8,11 @@
     const dispatch = createEventDispatcher();
     
     // Get correct data from auth store
-    $: isAuthenticatedFromStore = $authStore.isAuthenticated;
-    $: userNameFromStore = $authStore.username;
-    $: roleCodeFromStore = $authStore.roleCode;
-    $: roleFromStore = $authStore.roleName;
-    $: userIdFromStore = $authStore.userId ; 
+    $: isAuthenticatedFromStore = $authStore?.isAuthenticated ? true: false;;
+    $: userNameFromStore = $authStore?.username;
+    $: roleCodeFromStore = $authStore?.roleCode;
+    $: roleFromStore = $authStore?.roleName;
+    $: userIdFromStore = $authStore?.userId ; 
 
    
     // Admin check using correct authStore properties
@@ -82,7 +82,7 @@
         console.log('AuthStore on mount:', $authStore);
         
         // If not authenticated, redirect to login
-        if (!$authStore.isAuthenticated) {
+        if (!$authStore?.isAuthenticated) {
             console.warn('User not authenticated, checking localStorage...');
             
             // Try to restore from localStorage
@@ -145,32 +145,9 @@
     </div>
 
     <!-- Authentication Warning -->
-    {#if !isAuthenticatedFromStore}
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <h4 class="text-sm font-medium text-red-800">Authentication Required</h4>
-                        <p class="text-sm text-red-700 mt-1">Please log in to access your dashboard.</p>
-                        <button 
-                            on:click={() => goto('/auth/login')}
-                            class="mt-2 text-sm bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded"
-                        >
-                            Go to Login
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {/if}
-
+    
     <!-- Dashboard Content -->
-    {#if isAuthenticatedFromStore}
+    
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
             <!-- Dashboard Stats - Responsive layout -->
             <div class="mb-6 sm:mb-8">
@@ -274,5 +251,5 @@
                 </div>
             </div>
         </div>
-    {/if}
+  
 </main>

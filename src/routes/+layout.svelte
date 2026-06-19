@@ -10,7 +10,7 @@
                        $page.url.pathname.startsWith('/create-paper') ||
                        $page.url.pathname.startsWith('/papers');
 
-  $: isAuthenticated = $authStore.isAuthenticated;
+  $: isAuthenticated = $authStore?.isAuthenticated ? true: false;;
 </script>
 
 <div class="min-h-screen bg-gray-50 flex flex-col justify-between">
@@ -114,7 +114,7 @@
 
     {
       name: "My Profile",
-      link: $authStore?.userId ? `/updateProfile/${$authStore.userId}` : "/home",
+      link: $authStore?.userId ? `/updateProfile/${$authStore?.userId}` : "/home",
       key: "PROFILE",
       icon: User,
     },

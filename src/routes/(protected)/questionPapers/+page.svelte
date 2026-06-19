@@ -262,7 +262,7 @@ function createNestedStructure(chaptersTopics) {
   // Subscribe to auth store to check admin status
   onMount(async () => {
     const unsubscribe = authStore.subscribe(value => {
-      isAdmin = value.roleCode === '100';
+      isAdmin = value?.roleCode === '100';
     });
     return unsubscribe;
   });

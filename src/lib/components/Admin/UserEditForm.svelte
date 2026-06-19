@@ -36,10 +36,10 @@ arma/Desktop/Desktop/Internship project/my-app/src/lib/components/Admin/UserEdit
   let passwordSuccess = '';
 
   // Get correct data from auth store
-  $: isAuthenticatedFromStore = $authStore.isAuthenticated;
-  $: userNameFromStore = $authStore.username;
-  $: roleCodeFromStore = $authStore.roleCode;
-  $: roleFromStore = $authStore.role;
+  $: isAuthenticatedFromStore = $authStore?.isAuthenticated ? true: false;;
+  $: userNameFromStore = $authStore?.username;
+  $: roleCodeFromStore = $authStore?.roleCode;
+  $: roleFromStore = $authStore?.role;
 
   // Admin check using correct authStore properties
   $: isAdmin = !!(isAuthenticatedFromStore && roleCodeFromStore === '100');

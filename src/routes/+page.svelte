@@ -5,7 +5,7 @@
 
     onMount(() => {
         // If user is already authenticated, redirect to protected home
-        if ($authStore.isAuthenticated) {
+        if ($authStore?.isAuthenticated) {
             goto('/');
         }
     });

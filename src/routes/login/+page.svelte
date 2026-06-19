@@ -13,17 +13,25 @@
     error = null;
 
     try {
-      const response = await api.auth.login({
-        username,
-        password
+      const response = await fetch('/apis/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username,
+          password
+        })
       });
 
-      if (response.error) {
-        throw new Error(response.error);
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
       }
 
-      if (!response.data?.access_token) {
-        throw new Error('Invalid response from server');
+      if(response.status !== 200) {
+        throw new Error('Login failed. Please check your credentials.');
       }
 
       // Redirect on success

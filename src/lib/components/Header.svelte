@@ -4,7 +4,7 @@
     import { page } from '$app/stores';
     
     // Use the store value directly
-    $: isAuthenticated = $authStore.isAuthenticated;
+    $: isAuthenticated = $authStore?.isAuthenticated ? true : false;
     $: currentPath = $page.url.pathname;
 
     async function handleLogout() {
