@@ -34,7 +34,7 @@ export async function apiCall(endpoint, options = {}) {
     };
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
-    console.log("Making API call to:", fullUrl);
+  
 
     const response = await fetch(fullUrl, config);
 
@@ -140,7 +140,7 @@ export const api = {
           body: JSON.stringify(credentials),
         });
 
-        console.log("Raw login response:", response);
+      
 
         if (response.error) {
           throw new Error(response.error);
@@ -157,15 +157,7 @@ export const api = {
             role_name = "",
           } = response.data;
 
-          console.log("Extracted login data:", {
-            access_token,
-            token_type,
-            username,
-            role,
-            role_code,
-            user_id,
-            role_name,
-          });
+       
 
           localStorage.setItem("token", access_token);
 
@@ -330,7 +322,6 @@ export const api = {
   questionPapers: {
     create: async (payload) => {
       try {
-        console.log("Creating exam design with payload:", payload);
 
         const response = await apiCall(endpoints.question_papers, {
           method: "POST",
@@ -343,12 +334,7 @@ export const api = {
 
         const { data } = response;
         const statusText = payload.status === 1 ? "draft" : "finalized";
-        console.log(`Exam design ${statusText} created successfully:`, {
-          exam_name: data.data?.exam_name,
-          exam_code: data.data?.exam_code,
-          status: data.data?.status,
-          message: data.message,
-        });
+       
 
         return {
           data: response.data,
@@ -364,7 +350,6 @@ export const api = {
     },
 update: async (examCode, payload) => {
   try {
-    console.log(`Updating exam design ${examCode} with payload:`, payload);
 
     // Make the API call
     const response = await apiCall(
@@ -382,7 +367,6 @@ update: async (examCode, payload) => {
       throw new Error(response.error);
     }
 
-    console.log(`Exam design ${examCode} updated successfully:`, response.data);
 
     return {
       data: response.data,
@@ -436,7 +420,7 @@ update: async (examCode, payload) => {
 
     getByCode: async (examCode) => {
       try {
-        console.log(`Fetching exam design for code: ${examCode}`);
+        
 
         const response = await apiCall(
           `${endpoints.viewPapers}/${examCode}`,
@@ -448,7 +432,6 @@ update: async (examCode, payload) => {
           }
         );
 
-        console.log("The response for the logs for exambyCode", response);
 
         if (response.error) {
           throw new Error(response.error);
@@ -465,10 +448,7 @@ update: async (examCode, payload) => {
           design.papers = [];
         }
 
-        console.log(
-          `Successfully fetched exam design: ${design.exam_name} (${design.exam_code})`
-        );
-        console.log(`Associated papers: ${design.papers.length} papers`);
+       
 
         return {
           data: response.data,
@@ -532,7 +512,6 @@ update: async (examCode, payload) => {
           }
         );
 
-        console.log("testing this api", paperId, paperCode);
 
         if (response.error) {
           throw new Error(response.error);
@@ -572,7 +551,6 @@ update: async (examCode, payload) => {
 
         const queryString = buildQueryString(queryParams);
 
-        console.log(`Fetching users with parameters:`, queryParams);
 
         const response = await apiCall(
           `${endpoints.adminListUsers}?${queryString}`,
@@ -584,7 +562,6 @@ update: async (examCode, payload) => {
           }
         );
 
-        console.log("Raw API response:", response);
 
         if (response && response.error) {
           throw new Error(response.error);
@@ -617,12 +594,7 @@ update: async (examCode, payload) => {
           responseData.users = [];
         }
 
-        console.log(
-          `Successfully fetched ${responseData.users.length} users (Page ${
-            responseData.page
-          } of ${Math.ceil(responseData.total_users / responseData.limit)})`
-        );
-        console.log(`Total users in system: ${responseData.total_users}`);
+       
 
         return {
           data: responseData,
@@ -639,7 +611,6 @@ update: async (examCode, payload) => {
 
     getById: async (userId) => {
       try {
-        console.log(`Fetching user with ID: ${userId}`);
 
         const response = await apiCall(
           `${endpoints.adminListUsers}/${userId}`,
@@ -661,9 +632,7 @@ update: async (examCode, payload) => {
 
         const userData = response.data;
 
-        console.log(
-          `Successfully fetched user: ${userData.username} (ID: ${userData.id})`
-        );
+      
 
         return {
           data: userData,
@@ -680,7 +649,6 @@ update: async (examCode, payload) => {
 
     update: async (userId, updateData) => {
       try {
-        console.log(`Updating user ${userId} with data:`, updateData);
 
         const response = await apiCall(
           `${endpoints.adminListUsers}/${userId}`,
@@ -703,9 +671,7 @@ update: async (examCode, payload) => {
 
         const userData = response.data;
 
-        console.log(
-          `Successfully updated user: ${userData.username} (ID: ${userData.id})`
-        );
+      
 
         return {
           data: userData,
@@ -743,7 +709,6 @@ update: async (examCode, payload) => {
   adminUpdatePassword: {
     update: async (userId, passwordData) => {
       try {
-        console.log(`Updating password for user ID: ${userId}`);
 
         const response = await apiCall(endpoints.adminUpdatePasswords(userId), {
           method: "PUT",
@@ -763,7 +728,6 @@ update: async (examCode, payload) => {
 
         const responseData = response.data;
 
-        console.log(`Successfully updated password for user ID: ${userId}`);
 
         return {
           data: {
@@ -825,8 +789,7 @@ update: async (examCode, payload) => {
         const queryString = queryParams.toString();
         const endpoint = `${endpoints.userQuestionPaper}/${paperCode}?${queryString}`;
 
-        console.log(`Fetching question paper: ${paperCode} in ${format} format`);
-        console.log(`Full endpoint: ${endpoint}`);
+        
 
         const response = await apiCall(endpoint, {
           method: "GET",
@@ -841,7 +804,6 @@ update: async (examCode, payload) => {
         }
 
         if (format === 'pdf' && response.data instanceof Blob) {
-          console.log(`Successfully fetched PDF for paper: ${paperCode}`);
           return {
             data: response.data,
             filename: `${paperCode}.pdf`,
@@ -860,9 +822,6 @@ update: async (examCode, payload) => {
             console.warn("Questions field is not an array, defaulting to empty array");
             paperData.questions = [];
           }
-
-          console.log(`Successfully fetched question paper: ${paperData.exam_name} (${paperCode})`);
-          console.log(`Questions count: ${paperData.questions.length}`);
 
           return {
             data: paperData,

@@ -28,7 +28,6 @@
   }
 
   function processResults() {
-    console.log('Processing results:', { quizResults, quiz });
     
     // Clean the quiz data before processing
     const cleanedQuiz = {
@@ -69,14 +68,12 @@
       }) || []
     };
 
-    console.log('Session data:', quizResults.session);
-    console.log('Answers:', quizResults.session.answers);
+   
     
     // Calculate detailed results using the cleaned quiz data
     calculatedResults = quizStore.calculateResults(cleanedQuiz, quizResults.session);
     questions = cleanedQuiz.questions || [];
     
-    console.log('Calculated results:', calculatedResults);
     
     // Create detailed results for each question
     detailedResults = questions.map((question, index) => {
@@ -92,13 +89,7 @@
       const isCorrect = userAnswer === (question.correct_answer || correctOption?.id);
       const isAttempted = userAnswer !== undefined && userAnswer !== null;
 
-      console.log(`Question ${index + 1} details:`, {
-        questionId: question.id,
-        userAnswer,
-        correctAnswer: question.correct_answer || correctOption?.id,
-        isCorrect,
-        isAttempted
-      });
+     
 
       // Get remarks for this question
       const questionRemark = quizResults.session.remarks?.[question.id];
@@ -133,8 +124,7 @@
       };
     });
 
-    console.log('Detailed results:', detailedResults);
-    console.log('Final calculated results:', calculatedResults);
+   
   }
 
   function getOptionLabel(index) {

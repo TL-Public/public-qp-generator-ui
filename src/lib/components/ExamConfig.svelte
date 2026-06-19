@@ -3,7 +3,6 @@
   const dispatch = createEventDispatcher();
 
   export let totalTime = 40;
-  export let totalQuestions = 40;
   export let numberOfSets = 1;
   export let numberOfVersions = 1;
 
@@ -20,12 +19,12 @@
   let activeTooltip = null;
 </script>
 
-<div class="space-y-6">
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<div >
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Total Time Field -->
     <div class="relative">
       <label class="block text-sm font-medium text-gray-700 mb-1">
-        Total Time (minutes)
+        Duration (minutes)
         <button 
           class="ml-1 text-gray-400 hover:text-gray-600"
           on:mouseenter={() => activeTooltip = 'time'}
@@ -50,7 +49,7 @@
     </div>
 
     <!-- Total Questions Field -->
-    <div class="relative">
+    <!-- <div class="relative">
       <label class="block text-sm font-medium text-gray-700 mb-1">
         Total Questions
         <button 
@@ -74,7 +73,7 @@
         min="1"
         class="mt-1  text-sm  block w-full p-2  border-gray-300 rounded-md  border focus:border-blue-500 focus:ring-blue-500"
       />
-    </div>
+    </div> -->
 
     <!-- Number of Sets Field -->
     <div class="relative">
@@ -133,23 +132,24 @@
         {#if numberOfVersions > 5}
           <p class="mt-1 text-sm text-red-600">Maximum 5 versions allowed</p>
         {:else if numberOfVersions < 1}
-          <p class="mt-1 text-sm text-red-600">Minimum 1 version required</p>
+          <p class="mt-1 input-error-msg">Minimum 1 version required</p>
         {/if}
       </div>
     </div>
   </div>
 
-  <div class="bg-blue-50 border-l-4 border-blue-400 p-2 mt-2">
+  <div class="bg-gray-50 border-l-4 border-gray-400 p-2 mt-2">
     <div class="flex">
-      <div class="flex-shrink-0">
-        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+      <!-- <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
         </svg>
-      </div>
+      </div> -->
       <div class="ml-3">
-        <p class="text-sm text-blue-700">
-          You will generate {numberOfSets} different question paper(s) with {numberOfVersions} version(s) each. 
-          Each paper will contain {totalQuestions} questions.
+        <p class="text-sm text-gray-700">
+          <!-- You will generate {numberOfSets} different question paper(s) with {numberOfVersions} version(s) each.  -->
+         <!-- Total papers to be generated: {numberOfSets} set(s) x {numberOfVersions} version(s) = {numberOfSets * numberOfVersions} paper(s) -->
+          Total paper(s) to be generated : {numberOfSets * numberOfVersions} paper(s)
         </p>
         <!-- and should be completed in {totalTime} minutes. -->
       </div>

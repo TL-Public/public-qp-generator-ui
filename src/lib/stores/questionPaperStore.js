@@ -61,7 +61,6 @@ const createQuestionPaperStore = () => {
 
       // Debug log
       const currentState = get(store);
-      console.log('Store state after exam details update:', currentState);
     },
     updateExamConfig: (config) => update(store => ({
       ...store,
@@ -71,7 +70,6 @@ const createQuestionPaperStore = () => {
       no_of_sets: parseInt(config.numberOfSets) || 0
     })),
     updateClassSubject: (details) => update(store => {
-      console.log('Updating class subject with:', details);
       return {
         ...store,
         subject_code: details.subject_code || '',
@@ -96,7 +94,6 @@ const createQuestionPaperStore = () => {
     })),
     getValidatedData: () => {
       const currentData = get(store);
-      console.log('Current store data before validation:', currentData);
       return validateData(currentData);
     },
     reset: () => set({

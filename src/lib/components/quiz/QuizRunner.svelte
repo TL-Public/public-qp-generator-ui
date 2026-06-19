@@ -112,13 +112,7 @@ let isCompleted = false;
     startTimer();
     startAutoSave();
     
-    console.log('Quiz initialized with cleaned data:', {
-      questions: questions.length,
-      timeRemaining,
-      startTime,
-      showAnswers,
-      sampleQuestionText: questions[0]?.text?.substring(0, 100)
-    });
+  
   }
 
   function startTimer() {
@@ -208,25 +202,18 @@ let isCompleted = false;
       answers: { ...answers }
     }));
 
-    console.log('Answer selected:', {
-      questionId: currentQuestion.id,
-      selectedAnswer: optionId,
-      correctAnswer: currentQuestion.correct_answer,
-      revealedState: revealedAnswers[currentQuestion.id]
-    });
+   
   }
 
   function handleRemarkSave(event) {
     const { questionId, remarks } = event.detail;
     remarksHelpers.saveRemark(questionId, remarks);
-    console.log('Remark saved for question:', questionId, remarks);
   }
 
   function revealAnswer(questionId) {
     revealedAnswers[questionId] = true;
     // Force reactivity by reassigning the object
     revealedAnswers = { ...revealedAnswers };
-    console.log('Answer revealed for question:', questionId);
   }
 
   function getOptionStatus(questionId, optionId) {
@@ -237,15 +224,7 @@ let isCompleted = false;
     const isCorrect = question.correct_answer === optionId;
     const isRevealed = revealedAnswers[questionId] === true;
 
-    console.log('Option status check:', {
-      questionId,
-      optionId,
-      isSelected,
-      isCorrect,
-      isRevealed,
-      correctAnswer: question.correct_answer,
-      revealedAnswersState: revealedAnswers
-    });
+   
 
     if (!isRevealed) {
       return isSelected ? 'selected' : '';
@@ -346,7 +325,6 @@ let isCompleted = false;
         }
       };
 
-      console.log('Submitting quiz with remarks:', quizResults);
       
       quizSessionStore.update(session => ({
         ...session,
@@ -410,9 +388,7 @@ let isCompleted = false;
   }
 
   // Add this reactive statement to force re-rendering when revealedAnswers changes
-  $: if (revealedAnswers && currentQuestion) {
-    console.log('Revealed answers updated:', revealedAnswers);
-  }
+ 
 </script>
 
 <svelte:window on:keydown={handleKeydown} />

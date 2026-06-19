@@ -193,7 +193,6 @@
         is_active: formData.is_active  // Always include this field
       };
 
-      console.log('Updating user with data:', updateData);
 
       // Make API call
       const response = await api.adminListUsers.update(user.id, updateData);
@@ -202,7 +201,6 @@
         throw new Error(response.error);
       }
 
-      console.log('User updated successfully:', response.data);
 
       // Dispatch success event
       dispatch('userUpdated', { updatedUser: response.data });
@@ -235,7 +233,6 @@
     passwordSuccess = '';
 
     try {
-      console.log('Updating password for user:', user.id);
 
       // Check if the API method exists
       if (!api.adminUpdatePassword?.update) {
@@ -250,7 +247,6 @@
         throw new Error(response.error);
       }
 
-      console.log('Password updated successfully');
       passwordSuccess = 'Password updated successfully!';
       
       // Clear password form

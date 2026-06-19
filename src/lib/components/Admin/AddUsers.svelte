@@ -43,7 +43,6 @@
         password: "123456" // Required by API but will be overridden with default
       };
 
-      console.log('Creating user with data:', { ...userData, password: '[REDACTED]' });
 
       const response = await api.auth.register(userData);
 
@@ -51,7 +50,6 @@
         throw new Error(response.error);
       }
 
-      console.log('User created successfully:', response.data);
       
       // Extract default password from response message
       const responseMessage = response.data.message || '';
@@ -114,7 +112,6 @@
     if (defaultPassword) {
       navigator.clipboard.writeText(defaultPassword).then(() => {
         // Optional: Show a brief "copied" indicator
-        console.log('Password copied to clipboard');
       });
     }
   }

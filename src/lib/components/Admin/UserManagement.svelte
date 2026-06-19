@@ -65,7 +65,6 @@
       totalUsers = response.data.total_users;
       totalPages = Math.ceil(totalUsers / itemsPerPage);
 
-      console.log(`Loaded ${users.length} users (Page ${currentPage} of ${totalPages})`);
 
     } catch (err) {
       error = err.message || 'Failed to load users';

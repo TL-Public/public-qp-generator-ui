@@ -39,12 +39,9 @@
   };
 
   function generateQuestionsForGroup(group) {
-    console.log('Generating questions for group:', group); // Debug log
     const questions = [];
     group.items.forEach(item => {
-      console.log('Processing item:', item); // Debug log
       const mockQuestionsForType = mockQuestions[item.type]?.[item.name] || [];
-      console.log('Found mock questions:', mockQuestionsForType); // Debug log
       questions.push(...mockQuestionsForType.map(q => ({
         ...q,
         groupId: group.id,
@@ -58,9 +55,7 @@
 
   $: {
     if (groups.length > 0) {
-      console.log('Groups changed:', groups); // Debug log
       questions = groups.flatMap(group => generateQuestionsForGroup(group));
-      console.log('Generated questions:', questions); // Debug log
     }
   }
 
@@ -91,13 +86,7 @@
 
   let activeView = 'groups';
 
-  // Debug logging for props
-  $: {
-    console.log('=== QuestionsList Component Debug ===');
-    console.log('Groups prop received:', groups);
-    console.log('Questions prop received:', questions);
-  }
-
+ 
   
   
   function handleRemove(questionId) {

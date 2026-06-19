@@ -19,17 +19,13 @@
   // Auto-generate quiz when component loads
   import { onMount } from 'svelte';
   
-  onMount(() => {
-    // Don't auto-generate on mount, only when user clicks Start Quiz
-    console.log('QuizPreview loaded with config:', quizConfig);
-  });
+  
 
   // Function to separate chapter and topic codes
   function separateChapterAndTopicCodes(selectedCodes, chaptersTopicsData) {
     const chapters = [];
     const topics = [];
     
-    console.log('Input data for separation:', { selectedCodes, chaptersTopicsData });
     
     if (!chaptersTopicsData || !Array.isArray(chaptersTopicsData)) {
       console.warn('chaptersTopicsData is not available or not an array');
@@ -44,7 +40,6 @@
       const chapterCode = chapter.code || chapter.chapter_code;
       if (chapterCode) {
         chapterCodeMap.set(chapterCode, chapter);
-        console.log('Added chapter to map:', chapterCode);
       }
       
       if (chapter.topics && Array.isArray(chapter.topics)) {
@@ -52,23 +47,19 @@
           const topicCode = topic.code || topic.topic_code;
           if (topicCode) {
             topicCodeMap.set(topicCode, topic);
-            console.log('Added topic to map:', topicCode);
           }
         });
       }
     });
     
-    console.log('Chapter codes available:', Array.from(chapterCodeMap.keys()));
-    console.log('Topic codes available:', Array.from(topicCodeMap.keys()));
+   
     
     // Separate the selected codes
     selectedCodes.forEach(code => {
       if (chapterCodeMap.has(code)) {
         chapters.push(code);
-        console.log('Found chapter:', code);
       } else if (topicCodeMap.has(code)) {
         topics.push(code);
-        console.log('Found topic:', code);
       } else {
         console.warn('Code not found in chapters or topics:', code);
       }
@@ -83,7 +74,6 @@
     quizPaperResponse = null;
     
     try {
-      console.log('Creating quiz paper with config:', quizConfig);
       
       // Check if we have the required data
       if (!quizConfig.chaptersTopicsData) {
@@ -96,7 +86,6 @@
         quizConfig.chaptersTopicsData || []
       );
       
-      console.log('Separated codes:', { chapters, topics });
       
       // Build chapters_topics array
       const chaptersTopicsArray = [];
@@ -145,12 +134,10 @@
         chapters_topics: chaptersTopicsArray
       };
       
-      console.log('Question paper creation payload:', questionPaperPayload);
 
       // Call the question papers API to create the quiz
       const response = await api.questionPapers.create(questionPaperPayload);
       
-      console.log('Question Paper API Response:', response);
       
       if (response.error) {
         throw new Error(response.error);
@@ -159,7 +146,6 @@
       // Store the response for later use
       quizPaperResponse = response.data.data;
 
-      console.log('Quiz paper created successfully:', quizPaperResponse);
 
     } catch (error) {
       console.error('Error creating quiz paper:', error);
@@ -236,7 +222,6 @@
       }
     };
 
-    console.log('Starting quiz with formatted data:', quizData);
 
     // Store exam code for reference
     localStorage.setItem('currentExamCode', quizPaperResponse.exam_code);

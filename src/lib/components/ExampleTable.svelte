@@ -442,7 +442,6 @@
 
 	// NEW: Handle page selection from dropdown
 	function handlePageSelect() {
-		console.log('in handle page selct')
 		if (serverSidePagination) {
 			dispatch('pageChange', {
 				page: currentPage,

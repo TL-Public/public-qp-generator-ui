@@ -965,7 +965,7 @@ function handleAllocationConfirmed(event) {
                     {examClass}
                     {examSubject}
                     {examMedium}
-                    {totalQuestions}
+                    bind:totalQuestions
                     {examTitle}
                     bind:examMode
                     bind:totalTime

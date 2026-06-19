@@ -1,9 +1,12 @@
 <script>
   import { goto } from '$app/navigation';
+  import { page } from "$app/stores";
   import { onMount } from 'svelte';
   import {api} from '$lib/utils/api.js';
   import { authStore } from '$lib/stores/authStore';
   import Modal from '$lib/components/Modal.svelte';
+  import DropDownSelector from '$lib/components/DropDownSelector.svelte';
+  import Button from '$lib/components/Button.svelte';
 
   // Search and sort state
   let sortField = 'created_at';
@@ -15,10 +18,56 @@
   let itemsPerPage = 10;
   let jumpToPage = '';
 
+  const statusOptions = [
+    { name: '📝 Draft Papers', value: 'draft' },
+    { name: '✅ Released Papers', value: 'closed' }
+  ];
+
   // Status selection state
-  let selectedStatus = '';
+  let selectedStatus = null;
   let statusError = null;
   let hasSelectedStatus = false;
+
+  function handleStatusSelection(event) {
+    const { selectedOption } = event.detail;
+    selectedStatus = selectedOption;
+  }
+
+  $: console.log('selectedStatus is',selectedStatus)
+
+  function handleStatusCancel() {
+    selectedStatus = null;
+  }
+
+  // Sync status and page from URL
+  $: {
+    const statusParam = $page.url.searchParams.get('status');
+    const pageParam = $page.url.searchParams.get('page');
+    
+    if (statusParam) {
+      const option = statusOptions.find(opt => opt.value === statusParam);
+      if (option) {
+        if (selectedStatus?.value !== option.value) {
+          selectedStatus = option;
+        }
+        hasSelectedStatus = true;
+        hasSearched = true;
+        
+        const urlPage = parseInt(pageParam) || 1;
+        if (currentPage !== urlPage) {
+          currentPage = urlPage;
+        }
+      }
+    }
+  }
+
+  // Auto-fetch when status or page changes
+  $: if (hasSelectedStatus && selectedStatus?.value) {
+    // Dependency on currentPage is implicit here if used inside searchPapers
+    // but let's make it explicit to be sure it re-runs on page change
+    const _page = currentPage; 
+    searchPapers();
+  }
 
   // Advanced search filters - updated to match API parameters
   let searchFilters = {
@@ -80,44 +129,19 @@
   // Function to submit selected status
   async function submitSelectedStatus() {
     statusError = null;
-    loading = true;
     errorMessage = '';
-    hasSearched = false;
 
     if (!selectedStatus) {
       statusError = "Please select a status first.";
-      loading = false;
       return;
     }
 
-    try {
-      hasSelectedStatus = true;
-      hasSearched = true;
-      
-      // Reset search filters when status changes
-      searchFilters = {
-        exam_name: '',
-        subject: '',
-        medium: '',
-        standard: '',
-        start_date: '',
-        end_date: ''
-      };
-      currentPage = 1;
-      
-      // Automatically search with just the status
-      await searchPapers();
-      
-    } catch (err) {
-      statusError = err.message || "An unexpected error occurred.";
-      exams = [];
-      totalResults = 0;
-      totalPages = 0;
-      hasSelectedStatus = false;
-      hasSearched = false;
-    } finally {
-      loading = false;
-    }
+    // Update URL with selected status
+    const params = new URLSearchParams($page.url.searchParams);
+    params.set('status', selectedStatus.value);
+    params.set('page', '1');
+    
+    await goto(`${$page.url.pathname}?${params.toString()}`, { keepFocus: true, replaceState: true });
   }
 
   // Function to create nested structure for display
@@ -170,7 +194,7 @@ function createNestedStructure(chaptersTopics) {
 
   // Updated search function using the new API
   async function searchPapers() {
-    if (!hasSelectedStatus) {
+    if (!hasSelectedStatus || !selectedStatus) {
       errorMessage = "Please select a status first.";
       return;
     }
@@ -182,7 +206,7 @@ function createNestedStructure(chaptersTopics) {
     try {
       // Prepare query parameters
       const queryParams = {
-        status: selectedStatus,
+        status: selectedStatus.value,
         page: currentPage,
         limit: itemsPerPage
       };
@@ -253,9 +277,10 @@ function createNestedStructure(chaptersTopics) {
       start_date: '',
       end_date: ''
     };
-    currentPage = 1;
-    // Re-search with cleared filters
-    searchPapers();
+    
+    const params = new URLSearchParams($page.url.searchParams);
+    params.set('page', '1');
+    goto(`${$page.url.pathname}?${params.toString()}`, { replaceState: true });
   }
 
   function toggleAdvancedSearch() {
@@ -263,7 +288,7 @@ function createNestedStructure(chaptersTopics) {
   }
   // Reset everything (including status)
   function resetAll() {
-    selectedStatus = '';
+    selectedStatus = null;
     hasSelectedStatus = false;
     hasSearched = false;
     searchFilters = {
@@ -281,13 +306,17 @@ function createNestedStructure(chaptersTopics) {
     errorMessage = '';
     successMessage = '';
     statusError = null;
+
+    // Clear URL query parameters
+    goto($page.url.pathname, { replaceState: true });
   }
 
   // Pagination functions
-  function goToPage(page) {
-    if (page >= 1 && page <= totalPages) {
-      currentPage = page;
-      searchPapers(); // Re-search with new page
+  function goToPage(pageNumber) {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      const params = new URLSearchParams($page.url.searchParams);
+      params.set('page', pageNumber.toString());
+      goto(`${$page.url.pathname}?${params.toString()}`, { replaceState: true, noScroll: true });
     }
   }
 
@@ -538,46 +567,40 @@ function createNestedStructure(chaptersTopics) {
   <div class="w-full px-4 sm:px-4 lg:px-4 py-4">
     
     <!-- Step 1: Status Selection -->
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+    <div class="bg-white rounded-lg  border border-stroke p-6 mb-8">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h2 class="text-xl font-semibold text-gray-900">Search Question Papers</h2>
-          <p class="text-sm text-gray-600 mt-1">Select a status to view and manage your question papers</p>
+          <h2 class="text-lg font-semibold text-dark">Search Question Papers</h2>
+          <p class="text-sm text-gray-600 ">Select a status to view and manage your question papers</p>
         </div>
-        <div class="hidden sm:block">
+        <!-- <div class="hidden sm:block">
           <div class="flex items-center space-x-2 text-sm text-gray-500">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <span>Paper Management</span>
           </div>
-        </div>
+        </div> -->
       </div>
 
       <div class="flex flex-col sm:flex-row sm:items-end gap-4">
         <div class="flex-1 max-w-xs">
-          <label for="status-select" class="block text-sm font-medium text-gray-700 mb-2">
-            Paper Status
-          </label>
-          <div class="relative">
-            <select 
-              id="status-select" 
-              bind:value={selectedStatus} 
-              class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 shadow-sm transition-colors duration-200"
-            >
-              <option value="" disabled>Choose paper status...</option>
-              <option value="draft">📝 Draft Papers</option>
-              <option value="closed">✅ Released Papers</option>
-            </select>
-          </div>
+          <DropDownSelector
+            title="Paper Status"
+            options={statusOptions}
+            selectedItemName={selectedStatus?.name || ""}
+            on:handleDispatchFilterData={handleStatusSelection}
+            on:handleCancelSelection={handleStatusCancel}
+            placeholder="Choose paper status..."
+          />
         </div>
 
         <div class="flex gap-2">
-          <button
+          <Button
             type="button" 
             on:click={submitSelectedStatus}
-            disabled={loading || !selectedStatus}
-            class="px-2 py-1 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+            disabled={loading || selectedStatus===null}
+            btnType="primary"
           >
             {#if loading}
               <div class="flex items-center">
@@ -595,19 +618,19 @@ function createNestedStructure(chaptersTopics) {
                 Search Papers
               </div>
             {/if}
-          </button>
+          </Button>
 
           {#if hasSelectedStatus}
-            <button
+            <Button
               type="button"
-              class="px-2 py-1 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+              btnType="tertiary"
               on:click={resetAll}
             >
               Reset All
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              class="px-2 py-1 text-sm font-medium text-blue-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+              btnType="tertiary"
               on:click={toggleAdvancedSearch}
             >
               {#if showAdvancedSearch}
@@ -615,7 +638,7 @@ function createNestedStructure(chaptersTopics) {
               {:else}
                 Show Advanced Search
               {/if}
-            </button>
+            </Button>
           {/if}
         </div>
       </div>
@@ -642,14 +665,14 @@ function createNestedStructure(chaptersTopics) {
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
         <div class="flex items-center justify-between mb-6">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">Advanced Search</h3>
+            <h3 class="text-lg font-semibold text-dark">Advanced Search</h3>
             <p class="text-sm text-gray-600 mt-1">
-              Refine your search with additional filters for {formatStatus(selectedStatus).toLowerCase()} papers
+              Refine your search with additional filters for {formatStatus(selectedStatus?.value).toLowerCase()} papers
             </p>
           </div>
           <div class="flex items-center space-x-2 text-sm text-gray-500">
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {formatStatus(selectedStatus)} Papers
+              {formatStatus(selectedStatus?.value)} Papers
             </span>
           </div>
         </div>
@@ -660,7 +683,7 @@ function createNestedStructure(chaptersTopics) {
             <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
             </svg>
-            <h4 class="text-sm font-medium text-gray-900">Search Filters</h4>
+            <h4 class="text-sm font-medium text-dark">Search Filters</h4>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
@@ -779,13 +802,13 @@ function createNestedStructure(chaptersTopics) {
 
     <!-- Step 3: Results Section (Only shown after search) -->
     {#if hasSearched}
-      <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div class="bg-white rounded-lg  border border-gray-200 overflow-hidden">
         <!-- Header Section -->
         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 class="text-lg font-semibold text-gray-900">
-                Search Results ({formatStatus(selectedStatus)} Papers)
+              <h3 class="text-base font-semibold text-dark">
+                Search Results ({formatStatus(selectedStatus?.value)} Papers)
               </h3>
               <p class="text-sm text-gray-600 mt-1">
                 Found {totalResults} {totalResults === 1 ? 'paper' : 'papers'}
@@ -800,7 +823,7 @@ function createNestedStructure(chaptersTopics) {
         </div>
 
         <!-- Content Area -->
-        <div class="p-6">
+        <div >
           <!-- Success and Error Messages -->
           {#if errorMessage}
             <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -846,13 +869,13 @@ function createNestedStructure(chaptersTopics) {
               <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              <h3 class="mt-2 text-sm font-medium text-gray-900">No papers found</h3>
+              <h3 class="mt-2 text-sm font-medium text-dark">No papers found</h3>
               <p class="mt-1 text-sm text-gray-500">
                 No papers match your search criteria. Try adjusting your filters.
               </p>
             </div>
           {:else}
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
+            <div class="border-y border-y-stroke  overflow-hidden">
               <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200" style="table-layout: fixed; width: 100%;">
                   <thead class="bg-gray-50">
@@ -959,7 +982,7 @@ function createNestedStructure(chaptersTopics) {
                                 {paper['exam_type']}, {paper['exam_mode']}
                               </div>
                             {:else}
-                              <div class="text-gray-900" title={paper[header.key]}>
+                              <div class="text-dark" title={paper[header.key]}>
                                 <span class="word-wrap">{paper[header.key] || 'N/A'}</span>
                               </div>
                             {/if}
@@ -974,7 +997,7 @@ function createNestedStructure(chaptersTopics) {
 
             <!-- Enhanced Pagination Controls -->
             {#if totalPages > 1}
-              <div class="mt-6 flex items-center justify-between border-t border-gray-200 pt-6">
+              <div class="mt-6 flex items-center justify-between border-t border-gray-200 p-4">
                 <!-- Left side: Page info -->
                 <div class="text-sm text-gray-700">
                   Page <span class="font-medium">{currentPage}</span> of <span class="font-medium">{totalPages}</span>
@@ -1123,13 +1146,13 @@ function createNestedStructure(chaptersTopics) {
           </svg>
         </div>
         <div class="ml-3">
-          <h3 class="text-lg font-medium text-gray-900">Confirm Delete</h3>
+          <h3 class="text-lg font-medium text-dark">Confirm Delete</h3>
         </div>
       </div>
       
       <div class="mb-4">
         <p class="text-sm text-gray-600">
-          Are you sure you want to delete exam <span class="font-semibold text-gray-900">{examToDelete}</span>? 
+          Are you sure you want to delete exam <span class="font-semibold text-dark">{examToDelete}</span>? 
           This action cannot be undone.
         </p>
       </div>
@@ -1183,7 +1206,7 @@ function createNestedStructure(chaptersTopics) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <div>
-              <h2 class="text-xl font-semibold text-gray-900">Exam Design Summary</h2>
+              <h2 class="text-xl font-semibold text-dark">Exam Design Summary</h2>
               <p class="text-sm text-gray-600 mt-1">Complete exam details and configuration</p>
             </div>
           </div>
@@ -1204,7 +1227,7 @@ function createNestedStructure(chaptersTopics) {
         {#if examSummaryData}
           <!-- Exam Basic Information -->
           <div class="mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <h3 class="text-lg font-medium text-dark mb-4 flex items-center">
               <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -1214,7 +1237,7 @@ function createNestedStructure(chaptersTopics) {
               <div class="bg-gray-50 rounded-lg p-4">
                 <div class="flex justify-between items-center">
                   <span class="text-sm font-medium text-gray-500">Exam Name</span>
-                  <span class="text-sm font-semibold text-gray-900">{examSummaryData.exam_name}</span>
+                  <span class="text-sm font-semibold text-dark">{examSummaryData.exam_name}</span>
                 </div>
               </div>
               <div class="bg-gray-50 rounded-lg p-4">
@@ -1226,19 +1249,19 @@ function createNestedStructure(chaptersTopics) {
               <div class="bg-gray-50 rounded-lg p-4">
                 <div class="flex justify-between items-center">
                   <span class="text-sm font-medium text-gray-500">Subject</span>
-                  <span class="text-sm font-semibold text-gray-900">{examSummaryData.subject}</span>
+                  <span class="text-sm font-semibold text-dark">{examSummaryData.subject}</span>
                 </div>
               </div>
               <div class="bg-gray-50 rounded-lg p-4">
                 <div class="flex justify-between items-center">
                   <span class="text-sm font-medium text-gray-500">Standard/Class</span>
-                  <span class="text-sm font-semibold text-gray-900">{examSummaryData.standard}</span>
+                  <span class="text-sm font-semibold text-dark">{examSummaryData.standard}</span>
                 </div>
               </div>
               <div class="bg-gray-50 rounded-lg p-4">
                 <div class="flex justify-between items-center">
                   <span class="text-sm font-medium text-gray-500">Medium</span>
-                  <span class="text-sm font-semibold text-gray-900">{examSummaryData.medium}</span>
+                  <span class="text-sm font-semibold text-dark">{examSummaryData.medium}</span>
                 </div>
               </div>
               <div class="bg-gray-50 rounded-lg p-4">
@@ -1254,7 +1277,7 @@ function createNestedStructure(chaptersTopics) {
 
           <!-- Exam Configuration -->
           <div class="mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <h3 class="text-lg font-medium text-dark mb-4 flex items-center">
               <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1285,7 +1308,7 @@ function createNestedStructure(chaptersTopics) {
 
           <!-- Paper Structure -->
           <div class="mb-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <h3 class="text-lg font-medium text-dark mb-4 flex items-center">
               <svg class="w-5 h-5 text-orange-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
@@ -1320,7 +1343,7 @@ function createNestedStructure(chaptersTopics) {
           <!-- Generated Papers -->
           {#if examSummaryData.papers && examSummaryData.papers.length > 0}
             <div class="mb-6">
-              <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+              <h3 class="text-lg font-medium text-dark mb-4 flex items-center">
                 <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -1349,7 +1372,7 @@ function createNestedStructure(chaptersTopics) {
       {#if examSummaryData.chapters_topics && examSummaryData.chapters_topics.length > 0}
   <!-- Nested Content Table -->
   <div class="mb-6">
-    <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+    <h3 class="text-lg font-medium text-dark mb-4 flex items-center">
       <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>

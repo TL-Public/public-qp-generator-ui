@@ -1,16 +1,20 @@
 <script>
-  import Card from '../Cards/Card.svelte';
-  import RadioGroup from '../RadioGroup.svelte';
-  import { createEventDispatcher } from 'svelte';
-  import { questionPaperStore } from '$lib/stores/questionPaperStore';
+  import Card from "$lib/components/Cards/Card.svelte";
+  import SelectableCardGroup from "$lib/components/SelectableCardGroup.svelte";
+  import { createEventDispatcher } from "svelte";
+  import { questionPaperStore } from "$lib/stores/questionPaperStore";
 
-  export let examTitle = '';
-  export let examMode = 'Online';
+  export let examTitle = "";
+  export let examMode = "Online";
   export let isValid = false;
 
   const dispatch = createEventDispatcher();
 
-  const examModes = ['Online', 'Offline', 'Hybrid'];
+  const examModes = [
+    { value: "Offline", label: "Offline", description: "Pen & paper", icon: "menu_book" },
+    { value: "Online", label: "Online", description: "Digital test", icon: "computer" },
+    { value: "Hybrid", label: "Hybrid", description: "Both formats", icon: "wifi" }
+  ];
 
   $: {
     isValid = !!examTitle && !!examMode;
@@ -20,26 +24,20 @@
   }
 
   function handleInput() {
-    dispatch('change', { examTitle, examMode, isValid });
+    dispatch("change", { examTitle, examMode, isValid });
   }
 </script>
 
-<Card title="Exam details">
-  <!-- <div class="absolute right-4 top-4">
-    <label class="block text-sm font-medium text-gray-700 mb-1 ">
-      Exam type : <span class="text-blue-700 bg-blue-100 p-1 rounded-lg"> MCQ </span>
-    </label>
-  </div> -->
 
-  <div class="flex gap-6 w-full justify-between">
-    <div class="flex-1" >
-      <label class="block  text-sm font-medium text-gray-700  mb-1">
+  <div class="grid grid-cols-12 gap-6 w-full ">
+    <div class="col-span-6">
+      <label class="block text-sm font-medium text-gray-700 mb-1">
         Exam title <span class="text-red-600">*</span>
       </label>
       <input
         type="text"
         required
-        class="w-full p-2 text-sm border broder-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500 
+        class="w-full p-2 text-sm border broder-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500
         {!examTitle.trim() ? 'border-red-300' : 'border-gray-300'}"
         bind:value={examTitle}
         placeholder="Enter exam title"
@@ -49,15 +47,15 @@
         <p class="mt-1 text-xs text-red-600">Exam title is required</p>
       {/if}
     </div>
-  
-    <div class="mb-2 py-1 flex-1">
-      <label class="block  text-sm font-medium text-gray-700 mb-1">
+
+    <div class="col-span-6">
+      <label class="block text-sm font-medium text-gray-700 mb-1">
         Exam mode
       </label>
-      <RadioGroup options={examModes} bind:selected={examMode} on:change={handleInput} />
+      <SelectableCardGroup
+        options={examModes}
+        bind:selected={examMode}
+        on:change={handleInput}
+      />
     </div>
-
   </div>
-
-  
-</Card>
