@@ -32,11 +32,11 @@
       {type}
       {name}
       id=" "
-      class="block w-full rounded-md border-0 py-2 px-3 sm:py-1.5 sm:px-2 text-darkGray shadow-sm ring-accent focus:outline-none focused:ring-accent ring-1 ring-inset disabled:bg-gray-100 disabled:cursor-not-allowed
+      class="block w-full rounded-md border-0 py-2 px-3 sm:py-1.5 sm:px-2 text-darkGray  ring-primary focus:outline-none focused:ring-primary ring-1 ring-inset disabled:bg-gray-100 disabled:cursor-not-allowed
 			{validationErrors ? 'ring-red-500' : 'ring-gray-300'} 
 			placeholder:text-gray-70 outline-none
 			focus:ring-2 focus:ring-inset
-			{validationErrors ? 'focus:ring-red-500' : 'focus:ring-accent'} 
+			{validationErrors ? 'focus:ring-red-500' : 'focus:ring-primary'} 
 			text-xs sm:text-sm sm:leading-6"
       {placeholder}
       on:input={handleInputValue}

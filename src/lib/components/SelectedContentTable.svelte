@@ -6,11 +6,15 @@
   import Toggle from "$lib/components/Toggle.svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
   import { createEventDispatcher } from "svelte";
+  import Input from "$lib/components/Input.svelte";
 
   const dispatch = createEventDispatcher();
 
   export let totalQuestions;
   export let examData = null; // Receive exam data from parent
+  export let savingDraft = false;
+  export let draftSaveError = "";
+  export let draftSaveSuccess = "";
 
   // Subscribe to stores
   let storeData = {};
@@ -34,9 +38,6 @@
   let previewData = null;
 
   // Draft saving state
-  let savingDraft = false;
-  let draftSaveError = "";
-  let draftSaveSuccess = "";
   let allocationError = "";
 
   // Get hierarchical selections from store
@@ -524,28 +525,13 @@
         draftPayload.qtn_codes_to_exclude = examData.qtn_codes_to_exclude;
       }
 
-      // Call the API
-      const response = await api.questionPapers.create(draftPayload);
-
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      // Show success message
-      draftSaveSuccess = `Draft "${draftPayload.exam_name}" saved successfully! Exam Code: ${response.data.data?.exam_code || "N/A"}`;
-
-      // Dispatch success event with all the details
-      dispatch("draftSaved", {
-        examData: response.data,
-        examCode: response.data.data?.exam_code,
-        examName: draftPayload.exam_name,
-        message: draftSaveSuccess,
+      // Dispatch event to parent to handle the API call
+      dispatch("saveDraft", {
+        payload: draftPayload,
       });
     } catch (error) {
       draftSaveError =
         error.message || "Failed to save draft. Please try again.";
-    } finally {
-      savingDraft = false;
     }
   }
 
@@ -703,12 +689,14 @@
           <span class="text-gray-600 text-sm mr-2 whitespace-nowrap"
             >Required:</span
           >
-          <input
-            type="number"
-            bind:value={totalQuestions}
-            min="1"
-            class="w-20 p-1.5 text-sm border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-medium bg-white"
-          />
+          <div class="w-20">
+            <Input
+              type="number"
+              value={totalQuestions}
+              min="1"
+              on:handleInputData={(e) => totalQuestions = parseInt(e.detail.value) || 0}
+            />
+          </div>
         </div>
         <div>
           <span class="text-gray-600 text-sm">Available:</span>

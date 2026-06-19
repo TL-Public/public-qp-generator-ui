@@ -189,11 +189,11 @@
 
           <!-- Subtitle -->
           {#if $$slots.subtitle}
-            <div class="text-xs opacity-80">
+            <div class="text-xs ">
               <slot name="subtitle" />
             </div>
           {:else if subtitle}
-            <p class="text-xs opacity-80">
+            <p class="text-xs ">
               {subtitle}
             </p>
           {/if}
@@ -226,7 +226,7 @@
           on:click|stopPropagation={handleClose}
           aria-label="Close notification"
         >
-          <X size={20} class="opacity-70 hover:opacity-100" />
+          <X size={20} class="opacity-90 hover:opacity-100" />
         </button>
       </div>
     {/if}

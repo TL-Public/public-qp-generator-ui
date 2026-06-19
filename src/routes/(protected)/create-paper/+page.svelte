@@ -43,6 +43,7 @@
   // let examSubject = "3000";
   let examMediumName = "";
   let examSubjectName = "";
+  let examCode = ""; // Track current exam code if saved as draft
 
   // Initialize validation states
   let examDetailsValid = true;
@@ -72,6 +73,11 @@
   // Allocation confirmation state
   let isAllocationConfirmed = false;
   let confirmedAllocationData = null;
+
+  // Draft saving state
+  let isSavingDraft = false;
+  let draftSaveError = "";
+  let draftSaveSuccess = "";
 
   // Navigation state
   let currentView = "config";
@@ -215,6 +221,7 @@ let generationResult = {
     allQuestions = [];
     isAllocationConfirmed = false;
     confirmedAllocationData = null;
+    examCode = "";
     selectedContentStore.clearAll();
   }
 
@@ -222,7 +229,9 @@ let generationResult = {
     allQuestions = [];
     isAllocationConfirmed = false;
     confirmedAllocationData = null;
+    examCode = "";
   }
+  
 
   function handleExamConfigValidation(event) {
     examConfigValid = event.detail.isValid;
@@ -319,6 +328,44 @@ let generationResult = {
     const payloadResult = apiPayloadStore.getApiPayload();
   }
 
+  /**
+   * Handle saving draft from SelectedContentTable
+   */
+  async function handleSaveDraft(event) {
+    const { payload } = event.detail;
+    isSavingDraft = true;
+    draftSaveError = "";
+    draftSaveSuccess = "";
+
+    try {
+      let response;
+      if (examCode) {
+        // Update existing draft
+        response = await api.questionPapers.update(examCode, payload);
+      } else {
+        // Create new draft
+        response = await api.questionPapers.create(payload);
+      }
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      // Store the exam code from response
+      const responseData = response.data.data || response.data;
+      if (responseData.exam_code) {
+        examCode = responseData.exam_code;
+      }
+
+      draftSaveSuccess = `Draft "${payload.exam_name}" saved successfully! Exam Code: ${examCode || "N/A"}`;
+    } catch (error) {
+      draftSaveError =
+        error.message || "Failed to save draft. Please try again.";
+    } finally {
+      isSavingDraft = false;
+    }
+  }
+
   function handleCreatePaper(event) {
     event.preventDefault();
 
@@ -400,7 +447,14 @@ let generationResult = {
       };
 
       // Make the API call
-      const response = await api.questionPapers.create(apiPayload);
+      let response;
+      if (examCode) {
+        // Update existing draft and finalize
+        response = await api.questionPapers.update(examCode, apiPayload);
+      } else {
+        // Create new and finalize
+        response = await api.questionPapers.create(apiPayload);
+      }
 
       if (response.error) {
         throw new Error(response.error);
@@ -752,6 +806,10 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
                     on:allocationConfirmed={(data) => {
                       handleAllocationConfirmed(data);
                     }}
+                    on:saveDraft={handleSaveDraft}
+                    bind:savingDraft={isSavingDraft}
+                    bind:draftSaveError={draftSaveError}
+                    bind:draftSaveSuccess={draftSaveSuccess}
                   />
                 </Card>
                 {#if allocationResult.message}

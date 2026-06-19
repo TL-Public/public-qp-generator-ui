@@ -3,7 +3,7 @@
 </script>
 
 <div class="flex w-full items-center justify-between py-2">
-  <span class="text-dark font-semibold text-lg">
+  <span class="text-dark font-semibold text-lg capitalize">
     {stepTitle}
   </span>
   <div class="flex-grow mx-4 h-px bg-gray-200"></div>

@@ -4,6 +4,8 @@
   import DataTable from "$lib/components/DataTable.svelte";
   import { FileText, FileJson, Printer, Eye } from "@lucide/svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
+  import Button from "$lib/components/Button.svelte";
+  import { goto } from "$app/navigation";
 
   // Props with default values
   export let examTitle = "";
@@ -270,6 +272,14 @@
     viewWindow.document.write(htmlContent);
     viewWindow.document.close();
   }
+
+  function handleFinish() {
+   goto("/create-paper?step=1");
+  }
+  function handleBack() {
+   goto("/create-paper?step=2");
+  }
+
 </script>
 
 
@@ -294,3 +304,11 @@
 
 </div>
 {/if}
+
+<div class="w-full justify-end flex mt-4">
+<div class="flex gap-4">
+
+  <Button on:click={handleBack} btnType="secondary" >Back</Button>
+  <Button on:click={handleFinish} >Finish</Button>
+</div>
+</div>

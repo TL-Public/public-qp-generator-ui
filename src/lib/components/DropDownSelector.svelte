@@ -79,7 +79,7 @@
     <div bind:this={dropDownRef}>
       <button
         type="button"
-        class="flex justify-between items-center w-full bg-white rounded-md border-0 py-2 px-3 sm:py-1.5 sm:px-2 text-dark-gray shadow-sm outline-none ring-1 ring-inset placeholder:text-gray-70 focus:ring-2 focus:ring-inset focus:ring-blue-40 text-xs sm:text-sm sm:leading-6 placeholder:text-xs placeholder:sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+        class="flex justify-between items-center w-full bg-white rounded-md border border-stroke py-2 px-3 sm:py-1.5 sm:px-2 text-dark-gray  outline-none placeholder:text-gray-70 focus:ring focus:ring-inset focus:ring-primary text-xs sm:text-sm sm:leading-6 placeholder:text-xs placeholder:sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
         class:ring-red-500={validationErrors}
         class:ring-gray-300={!validationErrors}
         id="menu-button"
