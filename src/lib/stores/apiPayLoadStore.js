@@ -3,7 +3,7 @@ import { writable, derived, get } from 'svelte/store';
 // Create the main store
 const createApiPayloadStore = () => {
   const { subscribe, set, update } = writable({
-    is_ai_selected: false,
+    is_ai_selected: true,
     exam_name: '',
     exam_type_code: '1000', // Default value
     subject_code: '',

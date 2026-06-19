@@ -274,7 +274,7 @@
   }
 
   function handleFinish() {
-   goto("/create-paper?step=1");
+   goto("/home");
   }
   function handleBack() {
    goto("/create-paper?step=2");
@@ -285,6 +285,16 @@
 
 <!-- <Card>
 </Card> -->
+{#if generationResult.message}
+<div class="mb-3">
+  <InlineNotification
+    title={generationResult.message}
+    kind={generationResult.type}
+  />
+
+</div>
+{/if}
+
 {#if papers.length > 0}
   <DataTable
     tableData={papers}
@@ -295,20 +305,12 @@
   />
 {/if}
 
-{#if generationResult.message}
-<div class="mt-3">
-  <InlineNotification
-    title={generationResult.message}
-    kind={generationResult.type}
-  />
 
-</div>
-{/if}
 
 <div class="w-full justify-end flex mt-4">
 <div class="flex gap-4">
 
-  <Button on:click={handleBack} btnType="secondary" >Back</Button>
+  <!-- <Button on:click={handleBack} btnType="secondary" >Back</Button> -->
   <Button on:click={handleFinish} >Finish</Button>
 </div>
 </div>

@@ -99,7 +99,7 @@
     }
 
     const result = [];
-    console.log("storeData in buildHierarchyFromStore", storeData);
+    
     // Convert Map to array and process each chapter
     for (const [chapterCode, chapterData] of storeData.hierarchy) {
       // Use metadata if available for better chapter names
@@ -367,10 +367,7 @@
   function handleApplyAllocation() {
     allocationError = "";
     const preview = generateAllocationPreview();
-    console.log(
-      "preview of generateAllcoation preview in SlectedContent Table",
-      preview,
-    );
+ 
     if (preview) {
       // NEW: Immediately update API store with allocation data forward directly to next step
       apiPayloadStore.updateFromAllocationData(preview);
@@ -670,15 +667,24 @@
 
 <div class="space-y-4">
   <!-- Header with Configuration -->
-  <div class="bg-gray-50 p-4 rounded-lg">
+  <div class="border border-stroke p-4 rounded-lg">
     <!-- AI/Manual Toggle -->
     <div class="flex items-center justify-between mb-4">
-      <p class="flex flex-col text-sm font-medium text-gray-700">
-        Auto allocate questions
-        <span class="text-xs text-gray-500 font-normal"
+    {#if $apiPayloadStore.is_ai_selected}
+    <p class="flex flex-col text-sm font-medium text-gray-700">
+      Auto allocate questions
+      <span class="text-xs text-gray-500 font-normal"
           >Automatically distribute questions across selected content</span
         >
       </p>
+      {:else}
+      <p class="flex flex-col text-sm font-medium text-gray-700">
+        Manual allocation
+        <span class="text-xs text-gray-500 font-normal"
+          >Manually specify how many questions to allocate for each item</span
+        >
+      </p>
+      {/if}
       <Toggle bind:checked={$apiPayloadStore.is_ai_selected} />
     </div>
 
