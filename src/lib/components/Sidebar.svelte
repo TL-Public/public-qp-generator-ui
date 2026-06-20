@@ -8,20 +8,20 @@
     goto(userId ? `/myProfile/${userId}` : "/home");
   }
 
-  export async function handleLogout() {
-    try {
-      const res = await fetch("/apis/logout", { method: "POST" });
-      if (res.ok) {
-        authStore.set({});
-        await goto("/", { invalidateAll: true });
-      } else {
-        alert("Logout failed.");
-      }
-    } catch (err) {
-      console.error("Logout error:", err);
-      alert("Logout failed.");
-    }
-  }
+  // export async function handleLogout() {
+  //   try {
+  //     const res = await fetch("/apis/logout", { method: "POST" });
+  //     if (res.ok) {
+  //       authStore.set({});
+  //       await goto("/", { invalidateAll: true });
+  //     } else {
+  //       alert("Logout failed.");
+  //     }
+  //   } catch (err) {
+  //     console.error("Logout error:", err);
+  //     alert("Logout failed.");
+  //   }
+  // }
 </script>
 
 <script>
@@ -107,6 +107,11 @@
     }
     expandedItems = expandedItems; // Trigger reactivity
   }
+
+   async function handleLogout() {
+      await authStore.logout();
+      goto('/login');
+    }
 
   // Auto-expand if child route is active, and auto-collapse when navigating away
   // Explicitly depend on route to ensure it runs when route changes

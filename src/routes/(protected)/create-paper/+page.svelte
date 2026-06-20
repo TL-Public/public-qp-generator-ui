@@ -34,7 +34,7 @@
   // Exam details state
   let examMode = "Online";
   let examTitle = "";
-   let examClass = "";
+  let examClass = "";
   let examMedium = "";
   let examSubject = "";
   // let examTitle = "New title";
@@ -86,14 +86,14 @@
   let nestedContentActiveTab = "selected-content";
 
   let allocationResult = {
-  message: "",
-  type: "success", // or "error"
-};
+    message: "",
+    type: "success", // or "error"
+  };
 
-let generationResult = {
-  message: "",
-  type: "success", // or "error"
-}
+  let generationResult = {
+    message: "",
+    type: "success", // or "error"
+  };
 
   // Step Configuration
   const STEPS = {
@@ -231,7 +231,6 @@ let generationResult = {
     confirmedAllocationData = null;
     examCode = "";
   }
-  
 
   function handleExamConfigValidation(event) {
     examConfigValid = event.detail.isValid;
@@ -253,15 +252,15 @@ let generationResult = {
     if (examConfigValid) currentStep = "difficulty";
   }
 
-
   // Simplify - use one handler that checks for the navigateToReview flag
   function handleAllocationConfirmed(event) {
     allocationResult.message = "";
     allocationResult.type = "success";
     const data = event.detail || event;
-   
+
     if (!data) {
-      allocationResult.message = "Invalid allocation data received. Please try again.";
+      allocationResult.message =
+        "Invalid allocation data received. Please try again.";
       allocationResult.type = "error";
       return;
     }
@@ -273,7 +272,8 @@ let generationResult = {
       !allocationData.selectedItems ||
       !Array.isArray(allocationData.selectedItems)
     ) {
-      allocationResult.message = "Invalid allocation data format. Please try again.";
+      allocationResult.message =
+        "Invalid allocation data format. Please try again.";
       allocationResult.type = "error";
       return;
     }
@@ -336,7 +336,6 @@ let generationResult = {
     isSavingDraft = true;
     draftSaveError = "";
     draftSaveSuccess = "";
-
     try {
       let response;
       if (examCode) {
@@ -356,7 +355,6 @@ let generationResult = {
       if (responseData.exam_code) {
         examCode = responseData.exam_code;
       }
-
       draftSaveSuccess = `Draft "${payload.exam_name}" saved successfully! Exam Code: ${examCode || "N/A"}`;
     } catch (error) {
       draftSaveError =
@@ -370,7 +368,8 @@ let generationResult = {
     event.preventDefault();
 
     if (!isAllocationConfirmed) {
-      allocationResult.message = "Please confirm your question allocation first.";
+      allocationResult.message =
+        "Please confirm your question allocation first.";
       allocationResult.type = "error";
       return;
     }
@@ -513,8 +512,6 @@ let generationResult = {
     }
   }
 
-
-
   function handleSubmit(event) {
     event.preventDefault();
     // Add any form submission logic here
@@ -617,7 +614,7 @@ let generationResult = {
 
   async function handleClassSubjectSelect(event) {
     const { standard, subject_code, medium_code } = event.detail;
-console.log('standard',standard, 'subject_code', subject_code, 'medium_code', medium_code);
+   
     if (allQuestions.length > 0) {
       currentStep = "allocation";
     }
@@ -682,14 +679,8 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
   });
 </script>
 
-
 <div class="mb-4 max-w-5xl mx-auto">
-<StepIndicator
-  totalSteps={3}
-  currentStep={currentStepIndex}
-  {stepTitle}
-/>
-
+  <StepIndicator totalSteps={3} currentStep={currentStepIndex} {stepTitle} />
 </div>
 <!-- Template remains the same as before -->
 <div class="flex min-h-screen max-w-5xl mx-auto">
@@ -731,7 +722,7 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
   </div> -->
 
   <!-- Main content -->
-   
+
   <div class="flex-1 mx-auto w-full max-w-7xl">
     <div class=" rounded-lg">
       <!-- <div class="px-8 py-4 border-b border-gray-200">
@@ -742,7 +733,7 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
         {#if currentView === "config"}
           <form on:submit|preventDefault={handleSubmit}>
             <!-- Exam Details -->
-            <Card className="!p-8" >
+            <Card className="!p-8">
               <div class=" space-y-8">
                 <div class="space-y-6">
                   <ExamDetailsForm
@@ -806,14 +797,18 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
                     on:allocationConfirmed={(data) => {
                       handleAllocationConfirmed(data);
                     }}
-                    on:saveDraft={handleSaveDraft}
+                    on:draftSaved={handleSaveDraft}
                     bind:savingDraft={isSavingDraft}
-                    bind:draftSaveError={draftSaveError}
-                    bind:draftSaveSuccess={draftSaveSuccess}
+                    bind:draftSaveError
+                    bind:draftSaveSuccess
                   />
                 </Card>
                 {#if allocationResult.message}
-                  <InlineNotification  title={`Allocation ${allocationResult.type === "error" ? "Error" : "Successful"}`} subtitle={allocationResult.message} kind={allocationResult.type} />
+                  <InlineNotification
+                    title={`Allocation ${allocationResult.type === "error" ? "Error" : "Successful"}`}
+                    subtitle={allocationResult.message}
+                    kind={allocationResult.type}
+                  />
                 {/if}
               </div>
             {/if}
@@ -854,7 +849,6 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
             />
           </div>
         {:else if currentView === "generate"}
-
           <div class="w-full">
             <GeneratePapers
               {examTitle}
@@ -865,7 +859,7 @@ console.log('standard',standard, 'subject_code', subject_code, 'medium_code', me
               {numberOfVersions}
               questions={allQuestions}
               allocationData={confirmedAllocationData}
-              generationResult={generationResult}
+              {generationResult}
             />
           </div>
         {/if}

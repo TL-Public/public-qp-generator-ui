@@ -38,6 +38,11 @@
   export let activeTab = "selected-content";
   export let fetchedQuestions = [];
 
+  // Draft saving props (forwarded to SelectedContentTable)
+  export let savingDraft = false;
+  export let draftSaveError = "";
+  export let draftSaveSuccess = "";
+
   let navigationHistory = [];
 
   $: if (browser && $page.url.hash) {
@@ -651,6 +656,9 @@
               }}
               on:allocationConfirmed={handleAllocationConfirmed}
               on:draftSaved
+              bind:savingDraft
+              bind:draftSaveError
+              bind:draftSaveSuccess
             />
           </div>
         </TabPanel>
