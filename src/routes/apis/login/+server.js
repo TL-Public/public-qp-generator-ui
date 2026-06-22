@@ -6,8 +6,8 @@ export async function POST({ params, request, cookies, fetch: eventFetch }) {
     const body = await request.json();
    
 
-    const endpoint = PUBLIC_API_BASE_URL + "/login";
-    console.log('Login endoint in Server side', endpoint)
+    const endpoint = PUBLIC_API_BASE_URL + "/v1/login";
+   
     const options = {
       method: "POST",
       headers: {
@@ -20,8 +20,8 @@ export async function POST({ params, request, cookies, fetch: eventFetch }) {
     const res = await eventFetch(endpoint, options);
     if (res.status == 200) {
         const user = await res.json();
-        console.log('Login response in Server side', user);
-      cookies.set("access_token", user.access_token, {
+        
+      cookies.set("accessToken", user.access_token, {
         httpOnly: true,
         sameSite: "strict",
         secure: process.env.NODE_ENV === "production",
@@ -31,7 +31,7 @@ export async function POST({ params, request, cookies, fetch: eventFetch }) {
       });
       // Refresh token: 14 days
    
-      cookies.set("token_type", user.token_type, {
+      cookies.set("tokenType", user.token_type, {
         httpOnly: true,
         sameSite: "strict",
         secure: process.env.NODE_ENV === "production",
@@ -39,7 +39,7 @@ export async function POST({ params, request, cookies, fetch: eventFetch }) {
         path: "/",
         maxAge: 60 * 60 * 24 * 7,
       });
-      cookies.set("username", user.username, {
+      cookies.set("userName", user.username, {
         httpOnly: true,
         sameSite: "strict",
         secure: process.env.NODE_ENV === "production",
@@ -47,7 +47,7 @@ export async function POST({ params, request, cookies, fetch: eventFetch }) {
         path: "/",
         maxAge: 60 * 60 * 24 * 7,
       });
-      cookies.set("user_id", String(user.user_id), {
+      cookies.set("userId", String(user.user_id), {
         httpOnly: true,
         sameSite: "strict",
         secure: process.env.NODE_ENV === "production",
@@ -55,7 +55,7 @@ export async function POST({ params, request, cookies, fetch: eventFetch }) {
         path: "/",
         maxAge: 60 * 60 * 24 * 7,
       });
-      cookies.set("role_name", user.role_name, {
+      cookies.set("roleName", user.role_name, {
         httpOnly: true,
         sameSite: "strict",
         secure: process.env.NODE_ENV === "production",
@@ -63,7 +63,7 @@ export async function POST({ params, request, cookies, fetch: eventFetch }) {
         path: "/",
         maxAge: 60 * 60 * 24 * 7,
       });
-      cookies.set("role_code", user.role_code, {
+      cookies.set("roleCode", user.role_code, {
         httpOnly: true,
         sameSite: "strict",
         secure: process.env.NODE_ENV === "production",
@@ -74,7 +74,11 @@ export async function POST({ params, request, cookies, fetch: eventFetch }) {
 
       return json$1(
         {
-          user,
+          userName: user.username,
+          roleName: user.role_name,
+          roleCode: user.role_code,
+          // role: user.role,
+          userId: user.user_id,
         },
         {
           status: 200,

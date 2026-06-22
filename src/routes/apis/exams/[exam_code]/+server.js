@@ -6,9 +6,11 @@ export async function GET({ params, request, cookies, fetch }) {
   let res;
   try {
     const authHeader = getHeaders(cookies);
+    const examCode = params.exam_code;
 
-    let endpoint = PUBLIC_API_BASE_URL + "/v1/exams";
+    let endpoint = PUBLIC_API_BASE_URL + "/v1/exams/" + examCode;
 
+    
     let queryparams = request.url.split("?");
 
     if (queryparams?.length > 1) {
@@ -26,9 +28,9 @@ export async function GET({ params, request, cookies, fetch }) {
     }
 
     if (res.status == 200) {
-      let exams = await res.json();
+      let examDetails = await res.json();
 
-      return json(exams);
+      return json(examDetails);
     }
 
     return new Response("", { status: res.status });
@@ -39,13 +41,14 @@ export async function GET({ params, request, cookies, fetch }) {
 }
 
 
-export async function POST({ params, request, cookies, fetch }) {
+export async function PUT({ params, request, cookies, fetch }) {
   let res;
   try {
     const authHeader = getHeaders(cookies);
     const body = await request.json();
-
-    let endpoint = PUBLIC_API_BASE_URL + "/v1/exams";
+    const examCode = params.exam_code;
+    
+    let endpoint = PUBLIC_API_BASE_URL + "/v1/exams/" + examCode;
 
     let queryparams = request.url.split("?");
 
@@ -53,7 +56,7 @@ export async function POST({ params, request, cookies, fetch }) {
       endpoint += "?" + queryparams[1];
     }
     const options = {
-      method: "POST",
+      method: "PUT",
       headers: { ...authHeader, "Content-Type": "application/json" },
       body: JSON.stringify(body),
     };
@@ -64,7 +67,7 @@ export async function POST({ params, request, cookies, fetch }) {
       return res;
     }
 
-    if (res.status == 201) {
+    if (res.status == 200) {
       let examResponse = await res.json();
 
       return json(examResponse);

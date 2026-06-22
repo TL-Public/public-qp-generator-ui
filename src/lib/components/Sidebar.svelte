@@ -8,12 +8,14 @@
     goto(userId ? `/myProfile/${userId}` : "/home");
   }
 
+
+
   export async function handleLogout() {
     try {
       const res = await fetch("/apis/logout", { method: "POST" });
       if (res.ok) {
         authStore.set({});
-        await goto("/", { invalidateAll: true });
+        await goto("/login", { invalidateAll: true });
       } else {
         alert("Logout failed.");
       }
@@ -254,7 +256,7 @@
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm text-white truncate">
-            {$authStore?.username || "-"}
+            {$authStore?.userName || "-"}
           </p>
           <span class="text-xs font-medium text-slate-400 truncate"
             >{$authStore?.roleName || '-'}</span

@@ -16,7 +16,7 @@
 
    
     // Admin check using correct authStore properties
-    $: isAdmin = !!(isAuthenticatedFromStore && roleCodeFromStore === '100');
+    $: isAdmin = !!(roleCodeFromStore === '100');
 
    // Filter features based on user role
     $: filteredFeatures = features.filter(feature => {
@@ -76,48 +76,8 @@
         { label: 'Draft', value: '13', icon: '📝' },
     ];
 
-    // Check authStore on mount
-    onMount(() => {
-        console.log('Home page mounted');
-        console.log('AuthStore on mount:', $authStore);
-        
-        // If not authenticated, redirect to login
-        if (!$authStore?.isAuthenticated) {
-            console.warn('User not authenticated, checking localStorage...');
-            
-            // Try to restore from localStorage
-            if (typeof window !== 'undefined') {
-                const token = localStorage.getItem('token');
-                const user = localStorage.getItem('user');
-                
-                console.log('Token in localStorage:', !!token);
-                console.log('User in localStorage:', !!user);
-                
-                if (!token) {
-                    console.log('No token found, redirecting to login');
-                    goto('/auth/login');
-                }
-            }
-        }
-    });
 
-    function navigateTo(route) {
-        // Additional auth check before navigation
-        if (!isAuthenticatedFromStore && route !== '/auth/login') {
-            console.warn('Not authenticated, redirecting to login');
-            goto('/auth/login');
-            return;
-        }
-        
-        // Check admin access for admin route
-        if (route === '/admin' && !isAdmin) {
-            console.warn('Not authorized for admin access');
-            alert('You do not have permission to access the admin panel.');
-            return;
-        }
-        
-        goto(route);
-    }
+   
 </script>
 
 <main class="min-h-screen bg-gray-50">

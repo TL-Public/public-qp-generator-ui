@@ -66,6 +66,7 @@
   import { checkSidebarRules } from "$lib/utils/helper.js";
   // import { injectGAHead } from '$lib/utils/helper.js';
 
+  $: console.log('$authStore in layout.svelte',$authStore)
   export let data;
 
   $: isAuthenticated = data?.session?.isAuthenticated;
@@ -114,7 +115,7 @@
 
     {
       name: "My Profile",
-      link: $authStore?.userId ? `/updateProfile/${$authStore?.userId}` : "/home",
+      link: $authStore?.userId ? `/updateProfile/${$authStore?.userId}` : "/unauthorized",
       key: "PROFILE",
       icon: User,
     },

@@ -3,19 +3,18 @@
 import { redirect } from "@sveltejs/kit";
 export async function handle({ event, resolve }) {
   // List of routes that don't require authentication
-  const accessToken = event.cookies.get('access_token');
-  const userName = event.cookies.get('username');
-  const roleName = event.cookies.get('role_name');
-  const role = event.cookies.get('role');
-  const role_code = event.cookies.get('role_code');
+  const accessToken = event.cookies.get('accessToken');
+  const userName = event.cookies.get('userName');
+  const roleName = event.cookies.get('roleName');
+  // const role = event.cookies.get('role');
+  const roleCode = event.cookies.get('roleCode');
 
 
   let sessionData ={
     isAuthenticated: !!accessToken,
-    accessToken,
     userName,
-    role,
-    role_code,
+    // role,
+    roleCode,
     roleName
   }
   event.locals.sessionData = sessionData;

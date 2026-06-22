@@ -3,12 +3,7 @@
     import { authStore } from '$lib/stores/authStore';
     import { onMount } from 'svelte';
 
-    onMount(() => {
-        // If user is already authenticated, redirect to protected home
-        if ($authStore?.isAuthenticated) {
-            goto('/');
-        }
-    });
+
 </script>
 
 <main class="min-h-screen bg-gray-50">
