@@ -231,7 +231,7 @@ function createNestedStructure(chaptersTopics) {
         queryParams.end_date = searchFilters.end_date;
       }
 
-      console.log('Search query parameters:', queryParams);
+     
 
       const response = await api.viewPapers.getAll(queryParams);
 

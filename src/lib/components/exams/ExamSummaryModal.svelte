@@ -1,6 +1,6 @@
 <script>
-  import api from "$lib/utils/api.js";
   import { createEventDispatcher } from "svelte";
+  import Button from "../Button.svelte";
   const dispatch = createEventDispatcher();
 
   export let loading = false;
@@ -8,10 +8,9 @@
   export let papers = [];
   export let paperDetails = null;
   export let examTitle = "";
-  export let subject = "" ; 
-  export let numberOfQuestions= "" ; 
-  export let standard = "" ; 
-
+  export let subject = "";
+  export let numberOfQuestions = "";
+  export let standard = "";
 
   let selectedFormat = "pdf";
   let hideAnswers = false;
@@ -25,7 +24,6 @@
       questionsOnly: hideAnswers,
     });
   }
-
 </script>
 
 
@@ -80,7 +78,7 @@
             <pre class="text-sm whitespace-pre-wrap">{JSON.stringify(
                 paperDetails,
                 null,
-                2
+                2,
               )}</pre>
           </div>
         </div>
@@ -88,12 +86,13 @@
         <div class="space-y-6">
           <h2 class="text-xl font-semibold">View Paper Options</h2>
 
-          <div>
-            <p>Exam Title: {examTitle}</p>
+          <div class=" flex  w-full gap-4">
+            <span>Exam Title: {examTitle}</span>
+           
             <!-- <p>Number of questions:{numberOfQuestions} </p> -->
-            <p>Subject: {subject}</p>
-            <p>Standard: {standard}</p>
-            
+            <span>Subject: {subject}</span>
+         
+            <span>Standard: {standard}</span>
           </div>
 
           <div class="grid gap-4">
@@ -102,13 +101,13 @@
                 <div class="flex items-center justify-between">
                   <h3 class="font-medium">Paper ID: {paperId}</h3>
                   <div class="flex items-center space-x-3">
-                    <select
+                    <!-- <select
                       bind:value={selectedFormat}
                       class="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     >
                       <option value="pdf">Download PDF</option>
                       <option value="json">View as JSON</option>                      
-                    </select>
+                    </select> -->
 
                     <label
                       class="flex items-center space-x-2 text-sm text-gray-600"
@@ -121,12 +120,10 @@
                       <span>Questions Only</span>
                     </label>
 
-                    <button
-                      on:click={() => handlePaperAction(paperId)}
-                      class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                    >
-                      {selectedFormat === "json" ? "View" : "Download"}
-                    </button>
+                    <Button on:click={() => handlePaperAction(paperId)}>
+                      <!-- {selectedFormat === "json" ? "View" : "Download"} -->
+                       Download
+                    </Button>
                   </div>
                 </div>
               </div>
