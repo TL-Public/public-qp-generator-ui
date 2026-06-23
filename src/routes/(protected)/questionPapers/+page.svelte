@@ -28,18 +28,38 @@
   let statusError = null;
   let hasSelectedStatus = false;
 
+  async function updateStatusInUrl(statusValue) {
+    const params = new URLSearchParams($page.url.searchParams);
+    if (statusValue) {
+      params.set('status', statusValue);
+      params.set('page', '1');
+    } else {
+      params.delete('status');
+      params.delete('page');
+    }
+    await goto(`${$page.url.pathname}?${params.toString()}`, { 
+      keepFocus: true, 
+      replaceState: true,
+      noScroll: true 
+    });
+  }
+
   function handleStatusSelection(event) {
     const { selectedOption } = event.detail;
     selectedStatus = selectedOption;
+    statusError = null;
+    updateStatusInUrl(selectedOption.value);
   }
 
   $: console.log('selectedStatus is',selectedStatus)
 
   function handleStatusCancel() {
     selectedStatus = null;
+    statusError = null;
+    updateStatusInUrl(null);
   }
 
-  // Sync status and page from URL
+  // // Sync status and page from URL
   $: {
     const statusParam = $page.url.searchParams.get('status');
     const pageParam = $page.url.searchParams.get('page');
@@ -51,7 +71,6 @@
           selectedStatus = option;
         }
         hasSelectedStatus = true;
-        hasSearched = true;
         
         const urlPage = parseInt(pageParam) || 1;
         if (currentPage !== urlPage) {
@@ -59,14 +78,6 @@
         }
       }
     }
-  }
-
-  // Auto-fetch when status or page changes
-  $: if (hasSelectedStatus && selectedStatus?.value) {
-    // Dependency on currentPage is implicit here if used inside searchPapers
-    // but let's make it explicit to be sure it re-runs on page change
-    const _page = currentPage; 
-    searchPapers();
   }
 
   // Advanced search filters - updated to match API parameters
@@ -127,7 +138,8 @@
   let hasSearched = false;
 
   // Function to submit selected status
-  async function submitSelectedStatus() {
+  async function submitSelectedStatus(e) {
+    if (e) e.preventDefault();
     statusError = null;
     errorMessage = '';
 
@@ -136,12 +148,10 @@
       return;
     }
 
-    // Update URL with selected status
-    const params = new URLSearchParams($page.url.searchParams);
-    params.set('status', selectedStatus.value);
-    params.set('page', '1');
-    
-    await goto(`${$page.url.pathname}?${params.toString()}`, { keepFocus: true, replaceState: true });
+    hasSearched = true;
+    currentPage = 1;
+    await updateStatusInUrl(selectedStatus.value);
+    await searchPapers();
   }
 
   // Function to create nested structure for display
@@ -239,14 +249,12 @@ function createNestedStructure(chaptersTopics) {
         throw new Error(response.error);
       }
 
-      console.log('Search API Response:', response.data);
       
       // Update state with response data
       exams = response.data.exams || [];
       totalResults = response.data.total || 0;
       totalPages = Math.ceil(totalResults / itemsPerPage);
       
-      console.log('Updated exams:', exams, 'Total:', totalResults);
 
     } catch (err) {
       console.error('Error in searchPapers:', err);
@@ -264,6 +272,14 @@ function createNestedStructure(chaptersTopics) {
     const unsubscribe = authStore.subscribe(value => {
       isAdmin = value?.roleCode === '100';
     });
+
+    // Handle initial load from URL
+    const statusParam = $page.url.searchParams.get('status');
+    if (statusParam) {
+      hasSearched = true;
+      await searchPapers();
+    }
+
     return unsubscribe;
   });
 
@@ -312,11 +328,13 @@ function createNestedStructure(chaptersTopics) {
   }
 
   // Pagination functions
-  function goToPage(pageNumber) {
+  async function goToPage(pageNumber) {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
+      currentPage = pageNumber;
       const params = new URLSearchParams($page.url.searchParams);
       params.set('page', pageNumber.toString());
-      goto(`${$page.url.pathname}?${params.toString()}`, { replaceState: true, noScroll: true });
+      await goto(`${$page.url.pathname}?${params.toString()}`, { replaceState: true, noScroll: true });
+      await searchPapers();
     }
   }
 
@@ -330,14 +348,13 @@ function createNestedStructure(chaptersTopics) {
   }
 
   function handleEdit(paperId) {
-    console.log('Editing paper:', paperId);
+   
     if (paperId) {
       goto(`/edit/${paperId}`);
     }
   }
 
   function toggleSort(field) {
-    console.log('Toggling sort:', { currentField: sortField, newField: field, currentDirection: sortDirection });
     if (sortField === field) {
       sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -411,7 +428,7 @@ function createNestedStructure(chaptersTopics) {
   let summaryLoading = false ; 
   
   async function handlePaperSummary(examCode) {
-    console.log(examCode);
+
     try {
       showExamSummaryModal = true ; 
       examSummaryData = null ; 
@@ -422,7 +439,7 @@ function createNestedStructure(chaptersTopics) {
       }
       if(response.data?.design){
         examSummaryData = response.data.design ; 
-        console.log("the response data design",response.data.design) ; 
+       
       } else {
         throw new Error('No exam design data found') ; 
       }

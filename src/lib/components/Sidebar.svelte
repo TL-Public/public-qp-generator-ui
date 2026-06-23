@@ -110,6 +110,11 @@
     expandedItems = expandedItems; // Trigger reactivity
   }
 
+   async function handleLogout() {
+      await authStore.logout();
+      goto('/login');
+    }
+
   // Auto-expand if child route is active, and auto-collapse when navigating away
   // Explicitly depend on route to ensure it runs when route changes
   $: if (route && filteredSidebarList) {
