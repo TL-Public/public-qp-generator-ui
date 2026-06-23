@@ -241,6 +241,7 @@ function createNestedStructure(chaptersTopics) {
         queryParams.end_date = searchFilters.end_date;
       }
 
+     
 
       const response = await api.viewPapers.getAll(queryParams);
 
