@@ -5,10 +5,10 @@
   import Toggle from "$lib/components/Toggle.svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
   import Input from "$lib/components/Input.svelte";
-  import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
+  // import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
 
   const selectedContentStore = getContext('selectedContentStore');
-
+  const apiPayloadStore = getContext('apiPayloadStore');
   const dispatch = createEventDispatcher();
 
 

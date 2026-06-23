@@ -2,10 +2,8 @@
   import Card from "$lib/components/Cards/Card.svelte";
   import SelectableCardGroup from "$lib/components/SelectableCardGroup.svelte";
   import { createEventDispatcher, getContext } from "svelte";
-  import { questionPaperStore } from "$lib/stores/questionPaperStore";
-  
-  // const questionPaperStore = getContext('questionPaperStore');
-
+  // import {apiPayloadStore} from "$lib/stores/apiPayLoadStore";
+  const apiPayloadStore = getContext('apiPayloadStore');
 
   export let examTitle = "";
   export let examMode = "Online";
@@ -22,7 +20,7 @@
   $: {
     isValid = !!examTitle && !!examMode;
     if (isValid) {
-      questionPaperStore.updateExamDetails({ examTitle, examMode });
+      apiPayloadStore.updateExamDetails({ examTitle, examMode });
     }
   }
 

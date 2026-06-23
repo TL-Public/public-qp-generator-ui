@@ -10,7 +10,7 @@
   import GeneratePapers from "$lib/components/GeneratePapers.svelte";
 
   import { api } from "$lib/utils/api";
-  import { apiPayloadStore } from "$lib/stores/apiPayLoadStore";
+  import { createApiPayloadStore } from "$lib/stores/apiPayLoadStore";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
@@ -25,9 +25,9 @@
 
   // Initialize stores for this page instance
   const selectedContentStore = createSelectedContentStore();
+  const apiPayloadStore = createApiPayloadStore();
   setContext('selectedContentStore', selectedContentStore);
-
-
+  setContext('apiPayloadStore', apiPayloadStore);
 
    // Initialize state variables
   let allQuestions = [];

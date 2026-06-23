@@ -6,6 +6,7 @@
 
   import { api } from "$lib/utils/api.js";
   const selectedContentStore = getContext('selectedContentStore');
+
   // import SelectionSidebar from "./SelectionSidebar.svelte";
   import SelectionSidebar from "$lib/components/SelectionSideBar.svelte";
   import SelectionSummaryModal from "$lib/components/SelectionSummaryModal.svelte";

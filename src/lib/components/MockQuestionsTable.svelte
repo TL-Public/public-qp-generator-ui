@@ -1,9 +1,9 @@
 <script>
   import { createEventDispatcher, getContext } from 'svelte';
-  import { apiPayloadStore } from '$lib/stores/apiPayLoadStore.js';
+  // import { apiPayloadStore } from '$lib/stores/apiPayLoadStore.js';
   
   const selectedContentStore = getContext('selectedContentStore');
-
+  const apiPayloadStore = getContext('apiPayloadStore');
   const dispatch = createEventDispatcher();
 
   

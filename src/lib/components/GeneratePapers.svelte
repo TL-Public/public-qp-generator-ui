@@ -2,7 +2,6 @@
   import Card from "$lib/components/Cards/Card.svelte";
   import { getContext } from "svelte";
   import DataTable from "$lib/components/DataTable.svelte";
-  import { questionPaperStore } from "$lib/stores/questionPaperStore";
   
   // const questionPaperStore = getContext('questionPaperStore');
 
@@ -12,6 +11,7 @@
   import InlineNotification from "$lib/components/InlineNotification.svelte";
   import Button from "$lib/components/Button.svelte";
   import { goto } from "$app/navigation";
+  import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
 
   // Props with default values
   export let examTitle = "";
@@ -29,7 +29,7 @@
   export let generatedPapersData = null;
 
   // Access the store to get generated papers if not passed as prop
-  $: displayData = generatedPapersData || $questionPaperStore.generatedPapers;
+  $: displayData = generatedPapersData || $apiPayloadStore.generatedPapers;
 
   $: papers = displayData?.questionPapers
     ? displayData.questionPapers.map((paper, index) => ({
