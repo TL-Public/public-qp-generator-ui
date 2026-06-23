@@ -350,7 +350,7 @@ function createNestedStructure(chaptersTopics) {
   function handleEdit(paperId) {
    
     if (paperId) {
-      goto(`/edit/${paperId}`);
+      goto(`/questionPapers/${paperId}/edit`);
     }
   }
 

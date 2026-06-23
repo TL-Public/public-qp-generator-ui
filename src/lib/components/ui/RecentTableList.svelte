@@ -93,7 +93,7 @@
 
   function handleEdit(examCode) {
     if (examCode) {
-      goto(`/edit/${examCode}`);
+      goto(`/questionPapers/${examCode}/edit`);
     }
   }
 
