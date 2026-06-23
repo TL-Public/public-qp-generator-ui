@@ -39,7 +39,7 @@
   const actionConfigObject = [
     {
       actionName: "view",
-      label: "View",
+      label: "View Papers",
       isHidden: (data) => data.status === "draft",
     },
     {
