@@ -48,7 +48,7 @@
     const { selectedOption } = event.detail;
     selectedStatus = selectedOption;
     statusError = null;
-    updateStatusInUrl(selectedOption.value);
+    // updateStatusInUrl(selectedOption.value); // Prevent automatic fetch on dropdown selection
   }
 
   $: console.log('selectedStatus is',selectedStatus)
@@ -56,7 +56,7 @@
   function handleStatusCancel() {
     selectedStatus = null;
     statusError = null;
-    updateStatusInUrl(null);
+    // updateStatusInUrl(null); // Prevent automatic fetch on cancel
   }
 
   // // Sync status and page from URL

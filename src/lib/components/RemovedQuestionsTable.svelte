@@ -1,8 +1,10 @@
 <script>
-  import { createEventDispatcher } from "svelte";
-  import { selectedContentStore } from "$lib/stores/selectedContentStore.js";
+  import { createEventDispatcher, getContext } from "svelte";
+  
+  const selectedContentStore = getContext('selectedContentStore');
 
   const dispatch = createEventDispatcher();
+
 
   // Subscribe to removed questions from the store
   let removedQuestions = [];

@@ -11,24 +11,43 @@
 
   import { api } from "$lib/utils/api";
   import { questionPaperStore } from "$lib/stores/questionPaperStore";
+  import { apiPayloadStore } from "$lib/stores/apiPayLoadStore";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
 
-  import VerticalStepper from "$lib/components/VerticalStepper.svelte";
-  import { v4 as uuidv4 } from "uuid";
 
   import NestedContentTable from "$lib/components/NestedContentTable.svelte";
   import { mockQuestionsData } from "$lib/utils/mockData.js";
-  import { selectedContentStore } from "$lib/stores/selectedContentStore.js";
-  import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
-  import { onDestroy } from "svelte";
+  import { createSelectedContentStore } from "$lib/stores/selectedContentStore.js";
+
+  import { onDestroy, setContext } from "svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
+
+  // Initialize stores for this page instance
+  const selectedContentStore = createSelectedContentStore();
+  setContext('selectedContentStore', selectedContentStore);
+
+
+
+  // Initialize handlers
+  
+  // Use reactive state for handlers to ensure they have access to current values
+  $: examState = {
+    examTitle, examMode, examClass, examSubject, examMedium,
+    totalTime, totalQuestions, numberOfSets, numberOfVersions
+  };
+ 
+
+
+
+
+
 
   // Initialize state variables
   let allQuestions = [];
   let activeTab = "groups";
-  let paperId = uuidv4();
+
   let fetchedQuestions = [];
 
   // Exam details state
@@ -684,43 +703,7 @@
 </div>
 <!-- Template remains the same as before -->
 <div class="flex min-h-screen max-w-5xl mx-auto">
-  <!-- Stepper -->
-  <!-- <div
-    class="w-48 flex-shrink-0 p-2 bg-white sticky top-0 h-screen overflow-y-auto"
-  >
-    <VerticalStepper
-      steps={[
-        {
-          id: "examDetails",
-          label: "Exam Details",
-          completed: completedSteps.examDetails,
-        },
-        {
-          id: "examConfig",
-          label: "Paper Configuration",
-          completed: completedSteps.examConfig,
-        },
-        {
-          id: "difficulty",
-          label: "Difficulty Distribution",
-          completed: completedSteps.difficulty,
-        },
-        {
-          id: "classSubject",
-          label: "Class & Subject",
-          completed: completedSteps.classSubject,
-        },
-        {
-          id: "allocation",
-          label: "Question Allocation",
-          completed: completedSteps.allocation,
-        },
-        { id: "review", label: "Review", completed: completedSteps.review },
-      ]}
-      {currentStep}
-    />
-  </div> -->
-
+ 
   <!-- Main content -->
 
   <div class="flex-1 mx-auto w-full max-w-7xl">

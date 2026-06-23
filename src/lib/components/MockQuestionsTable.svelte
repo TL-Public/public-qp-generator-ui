@@ -1,9 +1,11 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  import { selectedContentStore } from '$lib/stores/selectedContentStore.js';
+  import { createEventDispatcher, getContext } from 'svelte';
   import { apiPayloadStore } from '$lib/stores/apiPayLoadStore.js';
+  
+  const selectedContentStore = getContext('selectedContentStore');
 
   const dispatch = createEventDispatcher();
+
   
   export let questions = [];
   

@@ -1,8 +1,11 @@
 <script>
   import Card from "$lib/components/Cards/Card.svelte";
   import SelectableCardGroup from "$lib/components/SelectableCardGroup.svelte";
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, getContext } from "svelte";
   import { questionPaperStore } from "$lib/stores/questionPaperStore";
+  
+  // const questionPaperStore = getContext('questionPaperStore');
+
 
   export let examTitle = "";
   export let examMode = "Online";

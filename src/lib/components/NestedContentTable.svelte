@@ -1,26 +1,26 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, getContext } from "svelte";
   import { browser } from "$app/environment";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
 
   import { api } from "$lib/utils/api.js";
-  import { selectedContentStore } from "$lib/stores/selectedContentStore.js";
+  const selectedContentStore = getContext('selectedContentStore');
   // import SelectionSidebar from "./SelectionSidebar.svelte";
   import SelectionSidebar from "$lib/components/SelectionSideBar.svelte";
-  import SelectionSummaryModal from "./SelectionSummaryModal.svelte";
+  import SelectionSummaryModal from "$lib/components/SelectionSummaryModal.svelte";
 
-  import Tabs from "./TabTable/Tabs.svelte";
-  import Tab from "./TabTable/Tab.svelte";
-  import TabPanel from "./TabTable/TabPanel.svelte";
-  import MockQuestionsTable from "./MockQuestionsTable.svelte";
-  import SelectedContentTable from "./SelectedContentTable.svelte";
-  import ContentHierarchyTable from "./ContentHierarchyTable.svelte";
+  import Tabs from "$lib/components/TabTable/Tabs.svelte";
+  import Tab from "$lib/components/TabTable/Tab.svelte";
+  import TabPanel from "$lib/components/TabTable/TabPanel.svelte";
+  import MockQuestionsTable from "$lib/components/MockQuestionsTable.svelte";
+  import SelectedContentTable from "$lib/components/SelectedContentTable.svelte";
+  import ContentHierarchyTable from "$lib/components/ContentHierarchyTable.svelte";
   import {
     decodeHTMLEntities,
     cleanQuestionText,
   } from "$lib/utils/textUtils.js";
-  import RemovedQuestionsTable from "./RemovedQuestionsTable.svelte";
+  import RemovedQuestionsTable from "$lib/components/RemovedQuestionsTable.svelte";
 
   export let examClass = "";
   export let examSubject = ""; // exam subject code
@@ -544,7 +544,7 @@
         {selections}
         {expandedChapters}
         {expandedTopics}
-        selectionSidebar={SelectionSidebar}
+       
         on:toggleChapter={(e) => toggleChapter(e, e.detail.chapterId)}
         on:toggleTopic={(e) => toggleTopic(e, e.detail.topicId)}
         on:checkboxChange={(e) =>

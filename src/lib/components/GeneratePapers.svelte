@@ -1,7 +1,13 @@
 <script>
   import Card from "$lib/components/Cards/Card.svelte";
-  import { questionPaperStore } from "$lib/stores/questionPaperStore";
+  import { getContext } from "svelte";
   import DataTable from "$lib/components/DataTable.svelte";
+  import { questionPaperStore } from "$lib/stores/questionPaperStore";
+  
+  // const questionPaperStore = getContext('questionPaperStore');
+
+
+  // Props with default values
   import { FileText, FileJson, Printer, Eye } from "@lucide/svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
   import Button from "$lib/components/Button.svelte";

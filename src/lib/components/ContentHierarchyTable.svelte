@@ -68,9 +68,9 @@
 </script>
 
 <div class="w-full">
-  {#if selectionSidebar}
+  <!-- {#if selectionSidebar}
     <svelte:component this={selectionSidebar} on:highlightItem />
-  {/if}
+  {/if} -->
 
   <table class="min-w-full divide-y divide-gray-200">
     <thead class="bg-gray-50 sticky top-0 z-10">

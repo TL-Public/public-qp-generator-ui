@@ -1,14 +1,16 @@
 <script>
-  import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
-  import { selectedContentStore } from "$lib/stores/selectedContentStore.js";
+  import { createEventDispatcher, getContext } from "svelte";
   import { api } from "$lib/utils/api.js";
   import AllocationPreviewModal from "./AllocationPreviewModal.svelte";
   import Toggle from "$lib/components/Toggle.svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
-  import { createEventDispatcher } from "svelte";
   import Input from "$lib/components/Input.svelte";
+  import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
+
+  const selectedContentStore = getContext('selectedContentStore');
 
   const dispatch = createEventDispatcher();
+
 
   export let totalQuestions;
   export let examData = null; // Receive exam data from parent

@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 
 // Create the main store
-const createApiPayloadStore = () => {
+export const createApiPayloadStore = () => {
   const { subscribe, set, update } = writable({
     is_ai_selected: true,
     exam_name: '',
@@ -276,10 +276,11 @@ const createApiPayloadStore = () => {
 
     // Debug method
     debug: () => {
-      const storeData = get({ subscribe });
+      const storeData = get(store);
       return storeData;
     }
   };
 };
 
 export const apiPayloadStore = createApiPayloadStore();
+
