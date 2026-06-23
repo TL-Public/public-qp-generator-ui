@@ -30,21 +30,7 @@
 
 
 
-  // Initialize handlers
-  
-  // Use reactive state for handlers to ensure they have access to current values
-  $: examState = {
-    examTitle, examMode, examClass, examSubject, examMedium,
-    totalTime, totalQuestions, numberOfSets, numberOfVersions
-  };
- 
-
-
-
-
-
-
-  // Initialize state variables
+   // Initialize state variables
   let allQuestions = [];
   let activeTab = "groups";
 
