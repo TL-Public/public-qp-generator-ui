@@ -5,7 +5,7 @@ import { goto } from "$app/navigation";
 
 // UTILITY TO GET HEADERS
 export function getHeaders(cookies, contentType = "application/json") {
-  const authToken = cookies.get("access_token");
+  const authToken = cookies.get("accessToken");
   if (authToken) {
     const headers = {
       "Content-Type": contentType,

@@ -1,5 +1,5 @@
 <script>
-  import api from "$lib/utils/api.js";
+  import { apiClient } from "$lib/utils/api.js";
   import { onMount, createEventDispatcher } from "svelte";
   import Modal from "$lib/components/Modal.svelte";
   import DataTable from "$lib/components/DataTable.svelte";
@@ -20,7 +20,6 @@
 
   // Add these variables to match search page pattern
   let examPapers = [];
-  let paperDetailsList = [];
   let detailsLoading = false;
   let selectedPaperDetails = null;
   let errorMessage = "";
@@ -100,14 +99,16 @@
 
   onMount(async () => {
     try {
-      const response = await api.viewPapers.getAll({
-        status: "closed",
-        limit: 20,
+      const response = await apiClient({ 
+        url: "/apis/exams?status=closed&limit=20" 
       });
-      if (response.error || !response.data) {
-        throw new Error("Api response error", response.error);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      exams = response.data.exams || [];
+      
+      const data = await response.json();
+      exams = data.exams || [];
     } catch (error) {
       console.error("Failed to fetch exams:", error);
       exams = [];
@@ -118,14 +119,26 @@
 
   async function viewExamByCode(examCode) {
     try {
-      const response = await api.viewPapers.getByCode(examCode);
-      if (!response || response.error) {
-        throw new Error(response.error);
+      const response = await apiClient({ 
+        url: `/apis/exams/${examCode}` 
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
-      return response;
+      
+      const data = await response.json();
+      console.log('data from view paper details')
+      // Normalization as per api.js
+      if (data && data.design && !Array.isArray(data.design.papers)) {
+        data.design.papers = [];
+      }
+      
+      return { data, error: null };
     } catch (error) {
       console.error("Failed to fetch api", error);
-      throw new Error(error);
+      return { data: null, error: error.message };
     }
   }
 
@@ -137,47 +150,21 @@
     const exam = exams.find((e) => e.exam_code === examCode);
     selectedPaper = exam;
     showViewModal = true;
-    paperDetailsList = [];
-    detailsLoading = false;
+    detailsLoading = true;
     errorMessage = "";
 
     try {
-      const response = await api.viewPapers.getByCode(examCode);
+      const response = await viewExamByCode(examCode);
       if (response.error) throw new Error(response.error);
 
       if (response.data?.design?.papers) {
         examPapers = response.data.design.papers;
-        await fetchAllPaperDetails();
       } else {
         examPapers = [];
-        paperDetailsList = [];
       }
     } catch (error) {
       errorMessage = error.message || "Failed to fetch exam design.";
       examPapers = [];
-      paperDetailsList = [];
-    }
-  }
-
-  // Add fetchAllPaperDetails function to match search page
-  async function fetchAllPaperDetails() {
-    detailsLoading = true;
-    try {
-      const results = await Promise.all(
-        examPapers.map(async (paperId) => {
-          // Using userQuestionPaper instead of adminPapers as per your request
-          const response = await api.userQuestionPaper.getByCode(paperId);
-
-          if (response.error) {
-            throw new Error(response.error);
-          }
-          return response.data;
-        }),
-      );
-      paperDetailsList = results;
-    } catch (error) {
-      errorMessage = error.message || "Failed to fetch paper details";
-      paperDetailsList = [];
     } finally {
       detailsLoading = false;
     }
@@ -189,7 +176,9 @@
       showExamSummaryModal = true;
       examSummaryData = null;
       summaryLoading = true;
-      const response = await api.viewPapers.getByCode(examCode);
+      
+      const response = await viewExamByCode(examCode);
+      
       if (response.error) {
         throw new Error(response.error);
       }
@@ -212,54 +201,76 @@
   async function handleViewPaper(paper) {
     selectedPaper = paper;
     showViewModal = true;
-    paperDetailsList = [];
-    detailsLoading = false;
+    errorMessage = "";
+    detailsLoading = true;
 
     try {
-      const response = await api.viewPapers.getByCode(paper.exam_code);
+      const response = await viewExamByCode(paper.exam_code);
+      
       if (response.error) throw new Error(response.error);
 
       if (response.data?.design?.papers) {
         examPapers = response.data.design.papers;
-        await fetchAllPaperDetails();
       } else {
         examPapers = [];
-        paperDetailsList = [];
       }
     } catch (error) {
       errorMessage = error.message || "Failed to fetch exam design.";
       examPapers = [];
-      paperDetailsList = [];
+    } finally {
+      detailsLoading = false;
     }
   }
   // Add handlePaperView function to match search page
   async function handlePaperView(event) {
     const { paperId, format, questionsOnly } = event.detail;
-
+    console.log('paperId, format, questionsOnly', paperId, format, questionsOnly)
     try {
-      const response = await api.userQuestionPaper.getByCode(paperId, {
-        format,
+      // Include paper_id in query params as required by backend
+      const queryParams = new URLSearchParams({
+        paper_id: paperId
+      });
+      
+      if (format === 'pdf') {
+        queryParams.set('format', 'pdf');
+      }
+      
+      if (questionsOnly) {
+        queryParams.set('questions_only', 'true');
+      }
+
+      const url = `/apis/qn_papers/${paperId}?${queryParams.toString()}`;
+        
+      const response = await apiClient({ 
+        url,
+        options: {
+          headers: {
+            "Accept": format === 'pdf' ? "application/pdf" : "application/json"
+          }
+        }
       });
 
-      if (response.error) {
-        throw new Error(response.error);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
       if (format === "pdf") {
-        const blob = new Blob([response.data], { type: "application/pdf" });
-        const url = window.URL.createObjectURL(blob);
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url;
+        a.href = downloadUrl;
         a.download = `paper_${paperId}${questionsOnly ? "_questions_only" : ""}.pdf`;
         a.click();
-        window.URL.revokeObjectURL(url);
+        window.URL.revokeObjectURL(downloadUrl);
       } else {
-        selectedPaperDetails = response.data;
+        selectedPaperDetails = await response.json();
       }
     } catch (error) {
       errorMessage = error.message || "Failed to fetch paper details";
     }
   }
+
 
   // Helper function to format date
   function formatDate(dateString) {
@@ -466,10 +477,10 @@
 </div>
 
 <!-- Footer with count -->
-{#if !isLoading && sortedData.length > 0}
+{#if !isLoading && tableData.length > 0}
   <div class="px-4 py-2 bg-gray-50 border-t border-gray-200">
     <p class="text-xs text-gray-500 text-center sm:text-left">
-      Showing {sortedData.length} recent exams
+      Showing {tableData.length} recent exams
     </p>
   </div>
 {/if}
