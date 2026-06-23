@@ -15,7 +15,9 @@ export const createApiPayloadStore = () => {
     no_of_sets: 1,
     standard: '',
     qtn_codes_to_exclude: [],
-    chapters_topics: []
+    chapters_topics: [],
+    generatedPapers: [],
+    generationTimestamp: ''
   });
 
   return {
@@ -272,6 +274,13 @@ export const createApiPayloadStore = () => {
         qtn_codes_to_exclude: [],
         chapters_topics: []
       });
+    },
+    updateGeneratedPapers: (generatedData) => {
+      update(state => ({
+        ...state,
+        generatedPapers: generatedData,
+        generationTimestamp: new Date().toISOString()
+      }));
     },
 
     // Debug method

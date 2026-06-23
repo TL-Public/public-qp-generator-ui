@@ -10,7 +10,6 @@
   import GeneratePapers from "$lib/components/GeneratePapers.svelte";
 
   import { api } from "$lib/utils/api";
-  import { questionPaperStore } from "$lib/stores/questionPaperStore";
   import { apiPayloadStore } from "$lib/stores/apiPayLoadStore";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
@@ -246,7 +245,7 @@
     };
 
     if (examConfigValid) {
-      questionPaperStore.updateExamConfig({
+      apiPayloadStore.updateExamConfig({
         total_time: totalTime,
         total_questions: totalQuestions,
         no_of_versions: numberOfVersions,
@@ -322,9 +321,9 @@
     }
 
     // Update the legacy store for backward compatibility
-    if (typeof questionPaperStore.updateAllocationData === "function") {
-      questionPaperStore.updateAllocationData(allocationData);
-    }
+    // if (typeof questionPaperStore.updateAllocationData === "function") {
+    //   questionPaperStore.updateAllocationData(allocationData);
+    // }
 
     // Trigger navigation to review
     shouldNavigateToReview = true;
@@ -491,8 +490,8 @@
         apiResponse: response.data, // Store full API response for reference
       };
       // Update the store
-      if (typeof questionPaperStore.updateGeneratedPapers === "function") {
-        questionPaperStore.updateGeneratedPapers(generatedPapersData);
+      if (typeof apiPayloadStore.updateGeneratedPapers === "function") {
+        apiPayloadStore.updateGeneratedPapers(generatedPapersData);
       }
 
       // Navigate to the generate view
@@ -594,28 +593,28 @@
     );
   }
 
-  function handleExamDetailsSubmit(event) {
-    const { examTitle, examMode } = event.detail;
-    questionPaperStore.updateExamDetails({ examTitle, examMode });
-    if (examDetailsValid) {
-      currentStep = "examConfig";
-    }
-  }
+  // function handleExamDetailsSubmit(event) {
+  //   const { examTitle, examMode } = event.detail;
+  //   questionPaperStore.updateExamDetails({ examTitle, examMode });
+  //   if (examDetailsValid) {
+  //     currentStep = "examConfig";
+  //   }
+  // }
 
-  function handleExamConfigSubmit(event) {
-    const { totalTime, totalQuestions, numberOfVersions, numberOfSets } =
-      event.detail;
-    questionPaperStore.updateExamConfig({
-      totalTime,
-      totalQuestions,
-      numberOfVersions,
-      numberOfSets,
-    });
+  // function handleExamConfigSubmit(event) {
+  //   const { totalTime, totalQuestions, numberOfVersions, numberOfSets } =
+  //     event.detail;
+  //   questionPaperStore.updateExamConfig({
+  //     totalTime,
+  //     totalQuestions,
+  //     numberOfVersions,
+  //     numberOfSets,
+  //   });
 
-    if (examConfigValid) {
-      currentStep = "difficulty";
-    }
-  }
+  //   if (examConfigValid) {
+  //     currentStep = "difficulty";
+  //   }
+  // }
 
   async function handleClassSubjectSelect(event) {
     const { standard, subject_code, medium_code } = event.detail;
@@ -629,54 +628,54 @@
     if (subject_code) examSubject = subject_code;
     if (medium_code) examMedium = medium_code;
 
-    questionPaperStore.updateClassSubject({
+    apiPayloadStore.updateClassSubject({
       subject_code: subject_code || examSubject,
       medium_code: medium_code || examMedium,
       examClass: standard || examClass,
     });
   }
 
-  function handleQuestionsRemoved(event) {
-    const removedIds = event.detail;
-    questionPaperStore.updateExcludedQuestions(removedIds);
-  }
+  // function handleQuestionsRemoved(event) {
+  //   const removedIds = event.detail;
+  //   questionPaperStore.updateExcludedQuestions(removedIds);
+  // }
 
   function handleFetchQuestions(event) {
     fetchedQuestions = event.detail.questions;
   }
 
-  function handleForceApiStoreUpdate() {
-    // Update API store with current exam details
-    apiPayloadStore.updateExamDetails({
-      examTitle,
-      examMode,
-    });
+  // function handleForceApiStoreUpdate() {
+  //   // Update API store with current exam details
+  //   apiPayloadStore.updateExamDetails({
+  //     examTitle,
+  //     examMode,
+  //   });
 
-    apiPayloadStore.updateExamConfig({
-      totalTime,
-      totalQuestions,
-      numberOfVersions,
-      numberOfSets,
-    });
+  //   apiPayloadStore.updateExamConfig({
+  //     totalTime,
+  //     totalQuestions,
+  //     numberOfVersions,
+  //     numberOfSets,
+  //   });
 
-    apiPayloadStore.updateClassSubject({
-      subject_code: examSubject,
-      medium_code: examMedium,
-      examClass,
-    });
+  //   apiPayloadStore.updateClassSubject({
+  //     subject_code: examSubject,
+  //     medium_code: examMedium,
+  //     examClass,
+  //   });
 
-    // Update excluded questions if any
-    if (allQuestions?.length > 0) {
-      const excludedQuestions = allQuestions
-        .filter((q) => q.isRemoved === true)
-        .map((q) => q.id || q.code)
-        .filter(Boolean);
+  //   // Update excluded questions if any
+  //   if (allQuestions?.length > 0) {
+  //     const excludedQuestions = allQuestions
+  //       .filter((q) => q.isRemoved === true)
+  //       .map((q) => q.id || q.code)
+  //       .filter(Boolean);
 
-      if (excludedQuestions.length > 0) {
-        apiPayloadStore.updateExcludedQuestions(excludedQuestions);
-      }
-    }
-  }
+  //     if (excludedQuestions.length > 0) {
+  //       apiPayloadStore.updateExcludedQuestions(excludedQuestions);
+  //     }
+  //   }
+  // }
 
   onDestroy(() => {
     // Clean up API store when component is destroyed
