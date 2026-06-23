@@ -241,6 +241,7 @@ function createNestedStructure(chaptersTopics) {
         queryParams.end_date = searchFilters.end_date;
       }
 
+     
 
       const response = await api.viewPapers.getAll(queryParams);
 
@@ -269,7 +270,7 @@ function createNestedStructure(chaptersTopics) {
   // Subscribe to auth store to check admin status
   onMount(async () => {
     const unsubscribe = authStore.subscribe(value => {
-      isAdmin = value.roleCode === '100';
+      isAdmin = value?.roleCode === '100';
     });
 
     // Handle initial load from URL

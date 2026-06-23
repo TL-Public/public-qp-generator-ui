@@ -1,6 +1,36 @@
 import { authStore } from "../stores/authStore";
+import { browser } from '$app/environment';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ; 
+
+
+let isRedirecting = false;
+
+/**
+ * Enhanced fetch wrapper that handles 401 responses
+ */
+export async function apiClient({ fetcher = fetch, url, options = {} }) {
+  try {
+    const response = await fetcher(url, options);
+    
+    if (response.status === 401 ) {
+      if (browser && !isRedirecting) {
+        isRedirecting = true;
+        const currentPath = window.location.pathname + window.location.search;
+        const redirectTo = encodeURIComponent(currentPath);
+        window.location.href = `/?redirectTo=${redirectTo}`;
+      }
+
+      
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('API call failed:', error);
+    throw error;
+  }
+}
+
 
 /**
  * Get the authentication token from localStorage
@@ -16,7 +46,7 @@ const getAuthToken = () => localStorage.getItem("token");
  */
 export async function apiCall(endpoint, options = {}) {
   try {
-    const token = localStorage.getItem("token");
+ const token = localStorage.getItem("token");
     const acceptHeader = options.headers?.Accept || "application/json";
 
     const defaultHeaders = {

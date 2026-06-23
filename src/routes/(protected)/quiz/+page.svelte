@@ -42,9 +42,7 @@
       isAuthenticated = auth.isAuthenticated;
       userRole = auth.role;
 
-      if (!isAuthenticated) {
-        goto("/login");
-      }
+     
     });
 
     return unsubscribe;

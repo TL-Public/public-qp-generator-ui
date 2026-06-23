@@ -60,16 +60,10 @@
   }
 
   onMount(() => {
-    console.log('Page mounted');
-    console.log('User ID from route:', userId);
-    console.log('Auth store data:', $authStore);
+
 
     // Check if user is authenticated
-    if (!authData.isAuthenticated) {
-      console.warn('User not authenticated, redirecting to login');
-      goto('/auth/login');
-      return;
-    }
+   
 
     // Check authorization
     if (!canUpdatePassword) {

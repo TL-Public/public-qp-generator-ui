@@ -34,10 +34,10 @@
   let passwordSuccess = '';
 
   // Get correct data from auth store
-  $: isAuthenticatedFromStore = $authStore.isAuthenticated;
-  $: userNameFromStore = $authStore.username;
-  $: roleCodeFromStore = $authStore.roleCode;
-  $: roleFromStore = $authStore.role;
+  $: isAuthenticatedFromStore = $authStore?.isAuthenticated ? true: false;;
+  $: userNameFromStore = $authStore?.username;
+  $: roleCodeFromStore = $authStore?.roleCode;
+  $: roleFromStore = $authStore?.role;
   
   // Enhanced debug logging
   // $: {

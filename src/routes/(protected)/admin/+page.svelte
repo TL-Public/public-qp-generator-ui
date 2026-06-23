@@ -12,7 +12,7 @@
 </script>
 
 <main class="min-h-screen bg-gray-50">
-  {#if $authStore.isAuthenticated && $authStore.roleCode === '100'}
+  {#if $authStore?.isAuthenticated  && $authStore?.roleCode === '100'}
     <div class="w-full px-4 sm:px-6 lg:px-4 py-4">
       <!-- <div class="mb-8">
         <h1 class="large-header mb-1">Admin Dashboard</h1>
