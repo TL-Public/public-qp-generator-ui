@@ -39,7 +39,7 @@
   const actionConfigObject = [
     {
       actionName: "view",
-      label: "View",
+      label: "View Papers",
       isHidden: (data) => data.status === "draft",
     },
     {
@@ -93,7 +93,7 @@
 
   function handleEdit(examCode) {
     if (examCode) {
-      goto(`/edit/${examCode}`);
+      goto(`/questionPapers/${examCode}/edit`);
     }
   }
 

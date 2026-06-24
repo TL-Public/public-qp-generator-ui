@@ -13,12 +13,18 @@
 
   import VerticalStepper from '$lib/components/VerticalStepper.svelte';
   
-  import { onMount, tick } from 'svelte';
+  import { onMount, tick, setContext } from 'svelte';
   import NestedContentTable from '$lib/components/NestedContentTable.svelte';
   import { mockQuestionsData } from '$lib/utils/mockData.js';
-  import { selectedContentStore } from '$lib/stores/selectedContentStore.js';
+  import { createSelectedContentStore } from '$lib/stores/selectedContentStore.js';
   import { apiPayloadStore } from '$lib/stores/apiPayLoadStore.js';
   import { page } from '$app/stores';
+
+  // Initialize stores for this page instance
+  const selectedContentStore = createSelectedContentStore();
+  setContext('selectedContentStore', selectedContentStore);
+
+
 
   // Initialize state variables
   let allQuestions = [];

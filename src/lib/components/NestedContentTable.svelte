@@ -1,26 +1,27 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, getContext } from "svelte";
   import { browser } from "$app/environment";
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
 
-  import { api } from "$lib/utils/api.js";
-  import { selectedContentStore } from "$lib/stores/selectedContentStore.js";
+  import { apiClient } from "$lib/utils/api.js";
+  const selectedContentStore = getContext("selectedContentStore");
+
   // import SelectionSidebar from "./SelectionSidebar.svelte";
   import SelectionSidebar from "$lib/components/SelectionSideBar.svelte";
-  import SelectionSummaryModal from "./SelectionSummaryModal.svelte";
+  import SelectionSummaryModal from "$lib/components/SelectionSummaryModal.svelte";
 
-  import Tabs from "./TabTable/Tabs.svelte";
-  import Tab from "./TabTable/Tab.svelte";
-  import TabPanel from "./TabTable/TabPanel.svelte";
-  import MockQuestionsTable from "./MockQuestionsTable.svelte";
-  import SelectedContentTable from "./SelectedContentTable.svelte";
-  import ContentHierarchyTable from "./ContentHierarchyTable.svelte";
+  import Tabs from "$lib/components/TabTable/Tabs.svelte";
+  import Tab from "$lib/components/TabTable/Tab.svelte";
+  import TabPanel from "$lib/components/TabTable/TabPanel.svelte";
+  import MockQuestionsTable from "$lib/components/MockQuestionsTable.svelte";
+  import SelectedContentTable from "$lib/components/SelectedContentTable.svelte";
+  import ContentHierarchyTable from "$lib/components/ContentHierarchyTable.svelte";
   import {
     decodeHTMLEntities,
     cleanQuestionText,
   } from "$lib/utils/textUtils.js";
-  import RemovedQuestionsTable from "./RemovedQuestionsTable.svelte";
+  import RemovedQuestionsTable from "$lib/components/RemovedQuestionsTable.svelte";
 
   export let examClass = "";
   export let examSubject = ""; // exam subject code
@@ -77,8 +78,6 @@
     }
     dispatch("backToContentSelection");
   }
-  //  NEW: Add prop for navigation control
-  export let navigateToReview = false;
 
   const dispatch = createEventDispatcher();
 
@@ -130,8 +129,6 @@
     };
   }
 
-
-
   // this function will load take the chapters and topics
   // fetched from the store and then will be used in api calls
   // the response we will recieve will be of an aray with all questions
@@ -145,19 +142,17 @@
       if (chapters && chapters.length > 0) {
         const chapterCodes = chapters.map((c) => c.code).join(",");
         apiCalls.push(
-          api.questions.getByGroupCodes({
-            type: "chapter",
-            codes: chapterCodes,
-          }),
+          apiClient({
+            url: `/apis/questions?type=chapter&codes=${chapterCodes}`,
+          })
         );
       }
       if (topics && topics.length > 0) {
         const topicCodes = topics.map((t) => t.code).join(",");
         apiCalls.push(
-          api.questions.getByGroupCodes({
-            type: "topic",
-            codes: topicCodes,
-          }),
+          apiClient({
+            url: `/apis/questions?type=topic&codes=${topicCodes}`,
+          })
         );
       }
       if (apiCalls.length === 0) {
@@ -166,11 +161,15 @@
       }
       const responses = await Promise.all(apiCalls);
       let allQuestions = [];
-      for (const response of responses) {
-        if (response.error) throw new Error(response.error) || "API ERROR";
-        if (response.data && response.data.qns) {
+      for (const res of responses) {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        if (data && data.qns) {
           // Clean each question's text fields
-          const cleanedQuestions = response.data.qns.map(cleanQuestionText);
+          const cleanedQuestions = data.qns.map(cleanQuestionText);
           allQuestions = [...allQuestions, ...cleanedQuestions];
         }
       }
@@ -187,17 +186,23 @@
     isLoading = true;
     error = null;
     try {
-      const response = await api.chapterTopics.getAll({
+      const queryParams = new URLSearchParams({
         standard: examClass,
         subject_code: examSubject,
         medium_code: examMedium,
+      }).toString();
+
+      const res = await apiClient({
+        url: `/apis/chapters_topics?${queryParams}`,
       });
 
-      if (response.error) {
-        throw new Error(response.error);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
       }
 
-      chaptersData = response.data.data;
+      const data = await res.json();
+      chaptersData = data.data || data;
     } catch (err) {
       error = err.message;
     } finally {
@@ -224,7 +229,6 @@
     }
     expandedTopics = expandedTopics;
   }
-
 
   // function to fetch the questions and map with table
   async function handleFetchQuestions(event) {
@@ -345,7 +349,6 @@
 
   function handleCheckboxChange(event, item, type) {
     event.stopPropagation();
-
 
     const isChecked = event.target.checked;
 
@@ -533,7 +536,12 @@
   {:else if error}
     <div class="text-red-600 p-4">{error}</div>
   {:else if chaptersData.length === 0}
-    <div class="flex justify-center py-8 w-full border border-stroke rounded-lg text-subtext">No content available for the selected Class, Subject and Medium combination</div>
+    <div
+      class="flex justify-center py-8 w-full border border-stroke rounded-lg text-subtext"
+    >
+      No content available for the selected Class, Subject and Medium
+      combination
+    </div>
   {:else}
     <div
       id={showQuestions ? "questions-table" : "content-selection"}
@@ -544,7 +552,6 @@
         {selections}
         {expandedChapters}
         {expandedTopics}
-        selectionSidebar={SelectionSidebar}
         on:toggleChapter={(e) => toggleChapter(e, e.detail.chapterId)}
         on:toggleTopic={(e) => toggleTopic(e, e.detail.topicId)}
         on:checkboxChange={(e) =>
@@ -556,7 +563,7 @@
   {/if}
 
   <!-- Selection Mode Footer -->
-  {#if selections.length >0}
+  {#if selections.length > 0}
     <div class="mt-4">
       {#if selections.length > 0}
         <div class="flex justify-end">

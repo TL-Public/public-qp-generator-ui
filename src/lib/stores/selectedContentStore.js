@@ -1,15 +1,15 @@
 import { writable } from 'svelte/store';
 
-function createSelectedContentStore() {
+export function createSelectedContentStore(initialData = {}) {
   const { subscribe, set, update } = writable({
     // Hierarchical structure: chapters -> topics -> subtopics
     hierarchy: new Map(), // Map<chapterCode, ChapterData>
     // Flat list for easy access and backward compatibility
-    selections: [],
+    selections: initialData.selections || [],
     // Add questions property for backward compatibility
-    questions: [],
+    questions: initialData.questions || [],
     // Removed questions array
-    removedQuestions: [], // Add this line
+    removedQuestions: initialData.removedQuestions || [], // Add this line
     // Quick lookup maps
     chapterMap: new Map(),
     topicMap: new Map(),
@@ -863,4 +863,4 @@ function getDefaultQuestionsToAdd(type, questionCount) {
   return 0; // Default to 0 as per user request
 }
 
-export const selectedContentStore = createSelectedContentStore();
+export const selectedContentStore = createSelectedContentStore(); // Deprecated: Use createSelectedContentStore() and context instead

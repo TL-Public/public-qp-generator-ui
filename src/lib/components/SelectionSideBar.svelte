@@ -1,6 +1,6 @@
 <script>
-  import { selectedContentStore } from '$lib/stores/selectedContentStore.js';
-  import { createEventDispatcher } from 'svelte';
+  import { getContext, createEventDispatcher } from 'svelte';
+  const selectedContentStore = getContext('selectedContentStore');
 
   const dispatch = createEventDispatcher();
   let isOpen = false;

@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 
 // Create the main store
-const createApiPayloadStore = () => {
+export const createApiPayloadStore = () => {
   const { subscribe, set, update } = writable({
     is_ai_selected: true,
     exam_name: '',
@@ -15,7 +15,9 @@ const createApiPayloadStore = () => {
     no_of_sets: 1,
     standard: '',
     qtn_codes_to_exclude: [],
-    chapters_topics: []
+    chapters_topics: [],
+    generatedPapers: [],
+    generationTimestamp: ''
   });
 
   return {
@@ -273,13 +275,21 @@ const createApiPayloadStore = () => {
         chapters_topics: []
       });
     },
+    updateGeneratedPapers: (generatedData) => {
+      update(state => ({
+        ...state,
+        generatedPapers: generatedData,
+        generationTimestamp: new Date().toISOString()
+      }));
+    },
 
     // Debug method
     debug: () => {
-      const storeData = get({ subscribe });
+      const storeData = get(store);
       return storeData;
     }
   };
 };
 
 export const apiPayloadStore = createApiPayloadStore();
+

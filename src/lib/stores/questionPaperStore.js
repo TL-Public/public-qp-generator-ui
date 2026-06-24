@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
 
-const createQuestionPaperStore = () => {
+export const createQuestionPaperStore = () => {
   const store = writable({
     exam_name: '',
     exam_type_code: 'MCQ',
@@ -126,3 +126,4 @@ const createQuestionPaperStore = () => {
 };
 
 export const questionPaperStore = createQuestionPaperStore();
+

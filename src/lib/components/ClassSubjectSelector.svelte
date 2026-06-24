@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import Card from './Cards/Card.svelte';
   import Dropdown from './Dropdown.svelte';
-  import { api } from '$lib/utils/api';
+  import { apiClient } from '$lib/utils/api';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
@@ -73,18 +73,20 @@
   async function fetchMediums() {
     try {
       loading.mediums = true;
-      const response = await api.mediums.getAll();
+      const res = await apiClient({ url: '/apis/mediums' });
       
-      if (response.error) throw new Error(response.error);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+      }
 
+      const responseData = await res.json();
       // Map the medium data to dropdown options
-      const mediumsData = response.data?.data || [];
+      const mediumsData = responseData.data || [];
       mediumOptions = mediumsData.map(medium => ({
         value: medium.medium_code,  // Use medium_code as the value
         label: medium.medium_name
       }));
-
-     
 
     } catch (err) {
       console.error('Error in fetchMediums:', err);
@@ -99,18 +101,21 @@
   async function fetchSubjects() {
     try {
       loading.subjects = true;
-      const response = await api.subjects.getAll();
+      const res = await apiClient({ url: '/apis/subjects' });
       
-      if (response.error) throw new Error(response.error);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+      }
 
-      const allSubjects = response.data?.data || [];
+      const responseData = await res.json();
+      const allSubjects = responseData.data || [];
       subjectOptions = allSubjects.map(subject => ({
         value: subject.subject_code,    // Use subject_code as the value
         label: subject.subject_name,
         standard: subject.standard,
         mediumCode: subject.medium_code // Store medium_code for reference
       }));
-
 
     } catch (err) {
       console.error('Error fetching subjects:', err);
