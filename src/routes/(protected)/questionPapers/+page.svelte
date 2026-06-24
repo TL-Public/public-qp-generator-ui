@@ -252,12 +252,14 @@
 
       const queryString = new URLSearchParams(queryParams).toString();
       const res = await apiClient({
-        url: `/apis/exams?${queryString}`
+        url: `/apis/exams?${queryString}`,
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${res.status}`,
+        );
       }
 
       const responseData = await res.json();
@@ -411,12 +413,14 @@
 
     try {
       const res = await apiClient({
-        url: `/apis/exams/${paper.exam_code}`
+        url: `/apis/exams/${paper.exam_code}`,
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${res.status}`,
+        );
       }
 
       const responseData = await res.json();
@@ -444,11 +448,13 @@
       examSummaryData = null;
       summaryLoading = true;
       const res = await apiClient({
-        url: `/apis/exams/${examCode}`
+        url: `/apis/exams/${examCode}`,
       });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${res.status}`,
+        );
       }
       const responseData = await res.json();
       if (responseData?.design) {
@@ -471,26 +477,31 @@
       const results = await Promise.all(
         examPapers.map(async (paperId) => {
           const queryParams = new URLSearchParams({
-            paper_id: paperId
+            paper_id: paperId,
           });
-          if (selectedFormat === 'pdf') {
-            queryParams.set('format', 'pdf');
+          if (selectedFormat === "pdf") {
+            queryParams.set("format", "pdf");
           }
           if (hideAnswers) {
-            queryParams.set('questions_only', 'true');
+            queryParams.set("questions_only", "true");
           }
           const res = await apiClient({
             url: `/apis/qn_papers/${paperId}?${queryParams.toString()}`,
             options: {
               headers: {
-                "Accept": selectedFormat === 'pdf' ? "application/pdf" : "application/json"
-              }
-            }
+                Accept:
+                  selectedFormat === "pdf"
+                    ? "application/pdf"
+                    : "application/json",
+              },
+            },
           });
 
           if (!res.ok) {
             const errorData = await res.json().catch(() => ({}));
-            throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+            throw new Error(
+              errorData.detail || `HTTP error! status: ${res.status}`,
+            );
           }
           return await res.json();
         }),
@@ -509,26 +520,28 @@
 
     try {
       const queryParams = new URLSearchParams({
-        paper_id: paperId
+        paper_id: paperId,
       });
-      if (format === 'pdf') {
-        queryParams.set('format', 'pdf');
+      if (format === "pdf") {
+        queryParams.set("format", "pdf");
       }
       if (questionsOnly) {
-        queryParams.set('questions_only', 'true');
+        queryParams.set("questions_only", "true");
       }
       const res = await apiClient({
         url: `/apis/qn_papers/${paperId}?${queryParams.toString()}`,
         options: {
           headers: {
-            "Accept": format === 'pdf' ? "application/pdf" : "application/json"
-          }
-        }
+            Accept: format === "pdf" ? "application/pdf" : "application/json",
+          },
+        },
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${res.status}`,
+        );
       }
 
       if (format === "pdf") {
@@ -562,13 +575,15 @@
       const res = await apiClient({
         url: `/apis/exams/${examToDelete}`,
         options: {
-          method: "DELETE"
-        }
+          method: "DELETE",
+        },
       });
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${res.status}`,
+        );
       }
 
       successMessage = `Question paper with exam code '${examToDelete}' deleted successfully.`;
@@ -623,50 +638,290 @@
   }
 </script>
 
-<main class="min-h-screen bg-gray-50">
-  <div class="w-full px-4 sm:px-4 lg:px-4 py-4">
-    <!-- Step 1: Status Selection -->
-    <div class="bg-white rounded-lg border border-stroke p-6 mb-8">
-      <div class="flex items-center justify-between mb-6">
-        <div>
-          <h2 class="text-lg font-semibold text-dark">
-            Search Question Papers
-          </h2>
-          <p class="text-sm text-gray-600">
-            Select a status to view and manage your question papers
-          </p>
+<div class="w-full py-4">
+  <!-- Step 1: Status Selection -->
+  <div class="bg-white rounded-lg border border-stroke p-6 mb-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-lg font-semibold text-dark">Search Question Papers</h2>
+        <p class="text-sm text-gray-600">
+          Select a status to view and manage your question papers
+        </p>
+      </div>
+      <!-- <div class="hidden sm:block">
+        <div class="flex items-center space-x-2 text-sm text-gray-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Paper Management</span>
         </div>
-        <!-- <div class="hidden sm:block">
-          <div class="flex items-center space-x-2 text-sm text-gray-500">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span>Paper Management</span>
-          </div>
-        </div> -->
+      </div> -->
+    </div>
+
+    <div class="flex flex-col sm:flex-row sm:items-end gap-4">
+      <div class="flex-1 max-w-xs">
+        <DropDownSelector
+          title="Paper Status"
+          options={statusOptions}
+          selectedItemName={selectedStatus?.name || ""}
+          on:handleDispatchFilterData={handleStatusSelection}
+          on:handleCancelSelection={handleStatusCancel}
+          placeholder="Choose paper status..."
+        />
       </div>
 
-      <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-        <div class="flex-1 max-w-xs">
-          <DropDownSelector
-            title="Paper Status"
-            options={statusOptions}
-            selectedItemName={selectedStatus?.name || ""}
-            on:handleDispatchFilterData={handleStatusSelection}
-            on:handleCancelSelection={handleStatusCancel}
-            placeholder="Choose paper status..."
-          />
-        </div>
+      <div class="flex gap-2">
+        <Button
+          type="button"
+          on:click={submitSelectedStatus}
+          disabled={loading || selectedStatus === null}
+          btnType="primary"
+        >
+          {#if loading}
+            <div class="flex items-center">
+              <svg
+                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              Loading...
+            </div>
+          {:else}
+            <div class="flex items-center">
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              Search Papers
+            </div>
+          {/if}
+        </Button>
 
-        <div class="flex gap-2">
+        {#if hasSelectedStatus}
+          <Button type="button" btnType="tertiary" on:click={resetAll}>
+            Reset All
+          </Button>
           <Button
             type="button"
-            on:click={submitSelectedStatus}
-            disabled={loading || selectedStatus === null}
-            btnType="primary"
+            btnType="tertiary"
+            on:click={toggleAdvancedSearch}
+          >
+            {#if showAdvancedSearch}
+              Hide Advanced Search
+            {:else}
+              Show Advanced Search
+            {/if}
+          </Button>
+        {/if}
+      </div>
+    </div>
+
+    {#if statusError}
+      <div class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg
+              class="h-5 w-5 text-red-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Error</h3>
+            <p class="text-sm text-red-700 mt-1">{statusError}</p>
+          </div>
+        </div>
+      </div>
+    {/if}
+  </div>
+
+  <!-- Step 2: Search Filters (Only shown after status is selected) -->
+  {#if showAdvancedSearch}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h3 class="text-lg font-semibold text-dark">Advanced Search</h3>
+          <p class="text-sm text-gray-600 mt-1">
+            Refine your search with additional filters for {formatStatus(
+              selectedStatus?.value,
+            ).toLowerCase()} papers
+          </p>
+        </div>
+        <div class="flex items-center space-x-2 text-sm text-gray-500">
+          <span
+            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+          >
+            {formatStatus(selectedStatus?.value)} Papers
+          </span>
+        </div>
+      </div>
+
+      <!-- Search Filters -->
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
+        <div class="flex items-center mb-4">
+          <svg
+            class="w-5 h-5 text-gray-400 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
+            />
+          </svg>
+          <h4 class="text-sm font-medium text-dark">Search Filters</h4>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <!-- Exam Name -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-2"
+              >Exam Name</label
+            >
+            <input
+              type="text"
+              bind:value={searchFilters.exam_name}
+              on:input={handleFilterChange}
+              placeholder="Search exam name..."
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <!-- Subject -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-2"
+              >Subject</label
+            >
+            <input
+              type="text"
+              bind:value={searchFilters.subject}
+              on:input={handleFilterChange}
+              placeholder="Search subject..."
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <!-- Medium -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-2"
+              >Medium</label
+            >
+            <input
+              type="text"
+              bind:value={searchFilters.medium}
+              on:input={handleFilterChange}
+              placeholder="Search medium..."
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <!-- Standard/Class -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-2"
+              >Standard/Class</label
+            >
+            <input
+              type="text"
+              bind:value={searchFilters.standard}
+              on:input={handleFilterChange}
+              placeholder="Search class..."
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <!-- Start Date -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-2"
+              >Start Date</label
+            >
+            <input
+              type="date"
+              bind:value={searchFilters.start_date}
+              on:change={handleFilterChange}
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <!-- End Date -->
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-2"
+              >End Date</label
+            >
+            <input
+              type="date"
+              bind:value={searchFilters.end_date}
+              on:change={handleFilterChange}
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-end">
+          <button
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+            on:click={clearAllFilters}
+          >
+            <div class="flex items-center justify-center">
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+              Clear Filters
+            </div>
+          </button>
+          <button
+            type="button"
+            class="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
+            on:click={searchPapers}
           >
             {#if loading}
-              <div class="flex items-center">
+              <div class="flex items-center justify-center">
                 <svg
                   class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                   fill="none"
@@ -686,10 +941,10 @@
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Loading...
+                Searching...
               </div>
             {:else}
-              <div class="flex items-center">
+              <div class="flex items-center justify-center">
                 <svg
                   class="w-4 h-4 mr-2"
                   fill="none"
@@ -703,195 +958,53 @@
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
-                Search Papers
+                Search
               </div>
             {/if}
-          </Button>
-
-          {#if hasSelectedStatus}
-            <Button type="button" btnType="tertiary" on:click={resetAll}>
-              Reset All
-            </Button>
-            <Button
-              type="button"
-              btnType="tertiary"
-              on:click={toggleAdvancedSearch}
-            >
-              {#if showAdvancedSearch}
-                Hide Advanced Search
-              {:else}
-                Show Advanced Search
-              {/if}
-            </Button>
-          {/if}
+          </button>
         </div>
       </div>
-
-      {#if statusError}
-        <div class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg
-                class="h-5 w-5 text-red-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <h3 class="text-sm font-medium text-red-800">Error</h3>
-              <p class="text-sm text-red-700 mt-1">{statusError}</p>
-            </div>
-          </div>
-        </div>
-      {/if}
     </div>
+  {/if}
 
-    <!-- Step 2: Search Filters (Only shown after status is selected) -->
-    {#if showAdvancedSearch}
+  <!-- Step 3: Results Section (Only shown after search) -->
+  {#if hasSearched}
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <!-- Header Section -->
       <div
-        class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8"
+        class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200"
       >
-        <div class="flex items-center justify-between mb-6">
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between"
+        >
           <div>
-            <h3 class="text-lg font-semibold text-dark">Advanced Search</h3>
+            <h3 class="text-base font-semibold text-dark">
+              Search Results ({formatStatus(selectedStatus?.value)} Papers)
+            </h3>
             <p class="text-sm text-gray-600 mt-1">
-              Refine your search with additional filters for {formatStatus(
-                selectedStatus?.value,
-              ).toLowerCase()} papers
+              Found {totalResults}
+              {totalResults === 1 ? "paper" : "papers"}
             </p>
           </div>
-          <div class="flex items-center space-x-2 text-sm text-gray-500">
+          <div class="mt-3 sm:mt-0">
             <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
             >
-              {formatStatus(selectedStatus?.value)} Papers
+              Page {currentPage} of {totalPages}
             </span>
           </div>
         </div>
+      </div>
 
-        <!-- Search Filters -->
-        <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
-          <div class="flex items-center mb-4">
-            <svg
-              class="w-5 h-5 text-gray-400 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"
-              />
-            </svg>
-            <h4 class="text-sm font-medium text-dark">Search Filters</h4>
-          </div>
-
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4"
-          >
-            <!-- Exam Name -->
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-2"
-                >Exam Name</label
-              >
-              <input
-                type="text"
-                bind:value={searchFilters.exam_name}
-                on:input={handleFilterChange}
-                placeholder="Search exam name..."
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Subject -->
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-2"
-                >Subject</label
-              >
-              <input
-                type="text"
-                bind:value={searchFilters.subject}
-                on:input={handleFilterChange}
-                placeholder="Search subject..."
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Medium -->
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-2"
-                >Medium</label
-              >
-              <input
-                type="text"
-                bind:value={searchFilters.medium}
-                on:input={handleFilterChange}
-                placeholder="Search medium..."
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Standard/Class -->
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-2"
-                >Standard/Class</label
-              >
-              <input
-                type="text"
-                bind:value={searchFilters.standard}
-                on:input={handleFilterChange}
-                placeholder="Search class..."
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <!-- Start Date -->
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-2"
-                >Start Date</label
-              >
-              <input
-                type="date"
-                bind:value={searchFilters.start_date}
-                on:change={handleFilterChange}
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <!-- End Date -->
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-2"
-                >End Date</label
-              >
-              <input
-                type="date"
-                bind:value={searchFilters.end_date}
-                on:change={handleFilterChange}
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex flex-col sm:flex-row gap-3 justify-end">
-            <button
-              type="button"
-              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
-              on:click={clearAllFilters}
-            >
-              <div class="flex items-center justify-center">
+      <!-- Content Area -->
+      <div>
+        <!-- Success and Error Messages -->
+        {#if errorMessage}
+          <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
                 <svg
-                  class="w-4 h-4 mr-2"
+                  class="h-5 w-5 text-red-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -900,492 +1013,378 @@
                     stroke-linecap="round"
                     stroke-linejoin="round"
                     stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                Clear Filters
               </div>
-            </button>
-            <button
-              type="button"
-              class="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-              on:click={searchPapers}
-            >
-              {#if loading}
-                <div class="flex items-center justify-center">
-                  <svg
-                    class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Searching...
-                </div>
-              {:else}
-                <div class="flex items-center justify-center">
-                  <svg
-                    class="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                  Search
-                </div>
-              {/if}
-            </button>
-          </div>
-        </div>
-      </div>
-    {/if}
-
-    <!-- Step 3: Results Section (Only shown after search) -->
-    {#if hasSearched}
-      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <!-- Header Section -->
-        <div
-          class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200"
-        >
-          <div
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <h3 class="text-base font-semibold text-dark">
-                Search Results ({formatStatus(selectedStatus?.value)} Papers)
-              </h3>
-              <p class="text-sm text-gray-600 mt-1">
-                Found {totalResults}
-                {totalResults === 1 ? "paper" : "papers"}
-              </p>
-            </div>
-            <div class="mt-3 sm:mt-0">
-              <span
-                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-              >
-                Page {currentPage} of {totalPages}
-              </span>
+              <div class="ml-3">
+                <p class="text-sm text-red-700">{errorMessage}</p>
+              </div>
             </div>
           </div>
-        </div>
+        {/if}
 
-        <!-- Content Area -->
-        <div>
-          <!-- Success and Error Messages -->
-          {#if errorMessage}
-            <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-              <div class="flex">
-                <div class="flex-shrink-0">
-                  <svg
-                    class="h-5 w-5 text-red-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div class="ml-3">
-                  <p class="text-sm text-red-700">{errorMessage}</p>
-                </div>
-              </div>
-            </div>
-          {/if}
-
-          {#if successMessage}
-            <div
-              class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4"
-            >
-              <div class="flex">
-                <div class="flex-shrink-0">
-                  <svg
-                    class="h-5 w-5 text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div class="ml-3">
-                  <p class="text-sm text-green-700">{successMessage}</p>
-                </div>
-              </div>
-            </div>
-          {/if}
-
-          <!-- Results table -->
-          {#if loading}
-            <div class="text-center py-12">
-              <svg
-                class="animate-spin mx-auto h-8 w-8 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  class="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
+        {#if successMessage}
+          <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg
+                  class="h-5 w-5 text-green-400"
+                  fill="none"
                   stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  class="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <p class="text-gray-500 mt-2">Searching papers...</p>
-            </div>
-          {:else if exams.length === 0}
-            <div class="text-center py-12">
-              <svg
-                class="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <h3 class="mt-2 text-sm font-medium text-dark">
-                No papers found
-              </h3>
-              <p class="mt-1 text-sm text-gray-500">
-                No papers match your search criteria. Try adjusting your
-                filters.
-              </p>
-            </div>
-          {:else}
-            <div class="border-y border-y-stroke overflow-hidden">
-              <div class="overflow-x-auto">
-                <table
-                  class="min-w-full divide-y divide-gray-200"
-                  style="table-layout: fixed; width: 100%;"
+                  viewBox="0 0 24 24"
                 >
-                  <thead class="bg-gray-50">
-                    <tr>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-green-700">{successMessage}</p>
+              </div>
+            </div>
+          </div>
+        {/if}
+
+        <!-- Results table -->
+        {#if loading}
+          <div class="text-center py-12">
+            <svg
+              class="animate-spin mx-auto h-8 w-8 text-blue-600"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            <p class="text-gray-500 mt-2">Searching papers...</p>
+          </div>
+        {:else if exams.length === 0}
+          <div class="text-center py-12">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-dark">No papers found</h3>
+            <p class="mt-1 text-sm text-gray-500">
+              No papers match your search criteria. Try adjusting your filters.
+            </p>
+          </div>
+        {:else}
+          <div class="border-y border-y-stroke overflow-hidden">
+            <div class="overflow-x-auto">
+              <table
+                class="min-w-full divide-y divide-gray-200"
+                style="table-layout: fixed; width: 100%;"
+              >
+                <thead class="bg-gray-50">
+                  <tr>
+                    {#each headers as header}
+                      <th
+                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                        style="width: {getColumnWidth(
+                          header.key,
+                        )}; min-width: {header.key === 'actions'
+                          ? '120px'
+                          : 'auto'};"
+                        on:click={() =>
+                          !["actions"].includes(header.key) &&
+                          toggleSort(header.key)}
+                      >
+                        <div class="flex items-center space-x-1">
+                          <span class="text-xs">{header.label}</span>
+                          {#if !["actions"].includes(header.key)}
+                            <span class="text-gray-400">
+                              {sortField === header.key
+                                ? sortDirection === "asc"
+                                  ? "↑"
+                                  : "↓"
+                                : "↕"}
+                            </span>
+                          {/if}
+                        </div>
+                      </th>
+                    {/each}
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {#each exams as paper}
+                    <tr class="hover:bg-gray-50 transition-colors duration-150">
                       {#each headers as header}
-                        <th
-                          class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
+                        <td
+                          class="px-4 py-4 text-xs {header.key === 'actions' ||
+                          header.key === 'exam_name'
+                            ? ''
+                            : 'whitespace-nowrap'}"
                           style="width: {getColumnWidth(
                             header.key,
-                          )}; min-width: {header.key === 'actions'
-                            ? '120px'
-                            : 'auto'};"
-                          on:click={() =>
-                            !["actions"].includes(header.key) &&
-                            toggleSort(header.key)}
+                          )}; {header.key === 'actions'
+                            ? 'min-width: 120px;'
+                            : ''} {header.key === 'exam_name'
+                            ? 'word-wrap: break-word; overflow-wrap: break-word;'
+                            : ''}"
                         >
-                          <div class="flex items-center space-x-1">
-                            <span class="text-xs">{header.label}</span>
-                            {#if !["actions"].includes(header.key)}
-                              <span class="text-gray-400">
-                                {sortField === header.key
-                                  ? sortDirection === "asc"
-                                    ? "↑"
-                                    : "↓"
-                                  : "↕"}
-                              </span>
-                            {/if}
-                          </div>
-                        </th>
-                      {/each}
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    {#each exams as paper}
-                      <tr
-                        class="hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        {#each headers as header}
-                          <td
-                            class="px-4 py-4 text-xs {header.key ===
-                              'actions' || header.key === 'exam_name'
-                              ? ''
-                              : 'whitespace-nowrap'}"
-                            style="width: {getColumnWidth(
-                              header.key,
-                            )}; {header.key === 'actions'
-                              ? 'min-width: 120px;'
-                              : ''} {header.key === 'exam_name'
-                              ? 'word-wrap: break-word; overflow-wrap: break-word;'
-                              : ''}"
-                          >
-                            {#if header.key === "exam_name"}
-                              <div class="w-full">
-                                <button
-                                  type="button"
-                                  class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-left font-medium transition-colors duration-150 w-full"
-                                  title="Click to view paper details: {paper[
-                                    header.key
-                                  ]}"
-                                  on:click={() => handleViewPaper(paper)}
-                                >
-                                  <div
-                                    class="break-words"
-                                    style="word-wrap: break-word; overflow-wrap: break-word;"
-                                  >
-                                    {paper[header.key]}
-                                  </div>
-                                  <div class="text-xs text-red-600 mt-1">
-                                    ({paper["total_questions"]} Questions)
-                                  </div>
-                                </button>
-                              </div>
-                            {:else if header.key === "exam_code"}
+                          {#if header.key === "exam_name"}
+                            <div class="w-full">
                               <button
                                 type="button"
-                                class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-left font-medium transition-colors duration-150"
-                                on:click={() =>
-                                  handlePaperSummary(paper[header.key])}
+                                class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-left font-medium transition-colors duration-150 w-full"
+                                title="Click to view paper details: {paper[
+                                  header.key
+                                ]}"
+                                on:click={() => handleViewPaper(paper)}
                               >
-                                {paper[header.key]}
+                                <div
+                                  class="break-words"
+                                  style="word-wrap: break-word; overflow-wrap: break-word;"
+                                >
+                                  {paper[header.key]}
+                                </div>
+                                <div class="text-xs text-red-600 mt-1">
+                                  ({paper["total_questions"]} Questions)
+                                </div>
                               </button>
-                            {:else if header.key === "actions"}
-                              <div class="flex items-center space-x-2">
+                            </div>
+                          {:else if header.key === "exam_code"}
+                            <button
+                              type="button"
+                              class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-left font-medium transition-colors duration-150"
+                              on:click={() =>
+                                handlePaperSummary(paper[header.key])}
+                            >
+                              {paper[header.key]}
+                            </button>
+                          {:else if header.key === "actions"}
+                            <div class="flex items-center space-x-2">
+                              <button
+                                type="button"
+                                class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
+                                on:click={() => handleViewPaper(paper)}
+                              >
+                                View
+                              </button>
+                              {#if isAdmin}
                                 <button
                                   type="button"
-                                  class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
-                                  on:click={() => handleViewPaper(paper)}
+                                  class="text-red-600 hover:text-red-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
+                                  on:click={() => handleDelete(paper.exam_code)}
                                 >
-                                  View
+                                  Delete
                                 </button>
-                                {#if isAdmin}
-                                  <button
-                                    type="button"
-                                    class="text-red-600 hover:text-red-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
-                                    on:click={() =>
-                                      handleDelete(paper.exam_code)}
-                                  >
-                                    Delete
-                                  </button>
-                                {/if}
-                                <!-- Only show Edit button for draft status -->
-                                {#if paper.status === "draft"}
-                                  <button
-                                    type="button"
-                                    class="text-green-600 hover:text-green-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
-                                    on:click={() => handleEdit(paper.exam_code)}
-                                  >
-                                    Edit
-                                  </button>
-                                {/if}
-                              </div>
-                            {:else if header.key === "created_at"}
-                              <span
-                                class="text-xs text-gray-600"
-                                title={paper[header.key]}
-                              >
-                                {formatDate(paper[header.key])}
-                              </span>
-                            {:else if header.key === "status"}
-                              <!-- Use alternative name for status display -->
-                              <span
-                                class="inline-flex word-wrap items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusStyling(
-                                  paper[header.key],
-                                )}"
-                              >
-                                {formatStatus(paper[header.key])}
-                              </span>
-                            {:else if header.key === "subject"}
-                              <span
-                                class="text-xs text-gray-600"
-                                title={paper[header.key]}
-                              >
-                                {paper["subject"]}, {paper["standard"]}, {paper[
-                                  "medium"
-                                ]}
-                              </span>
-                            {:else if header.key === "number_of_sets"}
-                              <div
-                                class="text-xs text-gray-600"
-                                title={paper[header.key]}
-                              >
-                                No Of Sets - {paper["number_of_sets"]}
-                              </div>
-                              <div
-                                class="text-xs text-gray-600"
-                                title={paper[header.key]}
-                              >
-                                No Of Versions - {paper["number_of_versions"]}
-                              </div>
-                            {:else if header.key === "exam_type"}
-                              <div
-                                class="text-xs text-gray-600"
-                                title={paper[header.key]}
-                              >
-                                {paper["exam_type"]}, {paper["exam_mode"]}
-                              </div>
-                            {:else}
-                              <div class="text-dark" title={paper[header.key]}>
-                                <span class="word-wrap"
-                                  >{paper[header.key] || "N/A"}</span
+                              {/if}
+                              <!-- Only show Edit button for draft status -->
+                              {#if paper.status === "draft"}
+                                <button
+                                  type="button"
+                                  class="text-green-600 hover:text-green-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
+                                  on:click={() => handleEdit(paper.exam_code)}
                                 >
-                              </div>
-                            {/if}
-                          </td>
-                        {/each}
-                      </tr>
-                    {/each}
-                  </tbody>
-                </table>
+                                  Edit
+                                </button>
+                              {/if}
+                            </div>
+                          {:else if header.key === "created_at"}
+                            <span
+                              class="text-xs text-gray-600"
+                              title={paper[header.key]}
+                            >
+                              {formatDate(paper[header.key])}
+                            </span>
+                          {:else if header.key === "status"}
+                            <!-- Use alternative name for status display -->
+                            <span
+                              class="inline-flex word-wrap items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusStyling(
+                                paper[header.key],
+                              )}"
+                            >
+                              {formatStatus(paper[header.key])}
+                            </span>
+                          {:else if header.key === "subject"}
+                            <span
+                              class="text-xs text-gray-600"
+                              title={paper[header.key]}
+                            >
+                              {paper["subject"]}, {paper["standard"]}, {paper[
+                                "medium"
+                              ]}
+                            </span>
+                          {:else if header.key === "number_of_sets"}
+                            <div
+                              class="text-xs text-gray-600"
+                              title={paper[header.key]}
+                            >
+                              No Of Sets - {paper["number_of_sets"]}
+                            </div>
+                            <div
+                              class="text-xs text-gray-600"
+                              title={paper[header.key]}
+                            >
+                              No Of Versions - {paper["number_of_versions"]}
+                            </div>
+                          {:else if header.key === "exam_type"}
+                            <div
+                              class="text-xs text-gray-600"
+                              title={paper[header.key]}
+                            >
+                              {paper["exam_type"]}, {paper["exam_mode"]}
+                            </div>
+                          {:else}
+                            <div class="text-dark" title={paper[header.key]}>
+                              <span class="word-wrap"
+                                >{paper[header.key] || "N/A"}</span
+                              >
+                            </div>
+                          {/if}
+                        </td>
+                      {/each}
+                    </tr>
+                  {/each}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Enhanced Pagination Controls -->
+          {#if totalPages > 1}
+            <div
+              class="mt-6 flex items-center justify-between border-t border-gray-200 p-4"
+            >
+              <!-- Left side: Page info -->
+              <div class="text-sm text-gray-700">
+                Page <span class="font-medium">{currentPage}</span> of
+                <span class="font-medium">{totalPages}</span>
+                <span class="text-gray-500 ml-2"
+                  >({totalResults} total results)</span
+                >
+              </div>
+
+              <!-- Center: Page navigation -->
+              <div class="flex items-center space-x-1">
+                <!-- First page -->
+                <button
+                  type="button"
+                  class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
+                  1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
+                  disabled={currentPage === 1}
+                  on:click={() => goToPage(1)}
+                >
+                  First
+                </button>
+
+                <!-- Previous page -->
+                <button
+                  type="button"
+                  class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
+                  1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
+                  disabled={currentPage === 1}
+                  on:click={() => goToPage(currentPage - 1)}
+                >
+                  Previous
+                </button>
+
+                <!-- Page numbers -->
+                {#each Array.from( { length: Math.min(5, totalPages) }, (_, i) => {
+                    const start = Math.max(1, currentPage - 2);
+                    const end = Math.min(totalPages, start + 4);
+                    const adjustedStart = Math.max(1, end - 4);
+                    return adjustedStart + i;
+                  }, ).filter((page) => page <= totalPages) as page}
+                  <button
+                    type="button"
+                    class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
+                    page
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
+                    on:click={() => goToPage(page)}
+                  >
+                    {page}
+                  </button>
+                {/each}
+
+                <!-- Next page -->
+                <button
+                  type="button"
+                  class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
+                  totalPages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
+                  disabled={currentPage === totalPages}
+                  on:click={() => goToPage(currentPage + 1)}
+                >
+                  Next
+                </button>
+
+                <!-- Last page -->
+                <button
+                  type="button"
+                  class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
+                  totalPages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
+                  disabled={currentPage === totalPages}
+                  on:click={() => goToPage(totalPages)}
+                >
+                  Last
+                </button>
+              </div>
+
+              <!-- Right side: Jump to page -->
+              <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-700">Jump to:</span>
+                <form
+                  on:submit|preventDefault={handleJumpToPage}
+                  class="flex items-center space-x-1"
+                >
+                  <input
+                    type="number"
+                    bind:value={jumpToPage}
+                    min="1"
+                    max={totalPages}
+                    placeholder="Page"
+                    class="w-16 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <button
+                    type="submit"
+                    class="px-3 py-1 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-150"
+                  >
+                    Go
+                  </button>
+                </form>
               </div>
             </div>
-
-            <!-- Enhanced Pagination Controls -->
-            {#if totalPages > 1}
-              <div
-                class="mt-6 flex items-center justify-between border-t border-gray-200 p-4"
-              >
-                <!-- Left side: Page info -->
-                <div class="text-sm text-gray-700">
-                  Page <span class="font-medium">{currentPage}</span> of
-                  <span class="font-medium">{totalPages}</span>
-                  <span class="text-gray-500 ml-2"
-                    >({totalResults} total results)</span
-                  >
-                </div>
-
-                <!-- Center: Page navigation -->
-                <div class="flex items-center space-x-1">
-                  <!-- First page -->
-                  <button
-                    type="button"
-                    class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                    1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                    disabled={currentPage === 1}
-                    on:click={() => goToPage(1)}
-                  >
-                    First
-                  </button>
-
-                  <!-- Previous page -->
-                  <button
-                    type="button"
-                    class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                    1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                    disabled={currentPage === 1}
-                    on:click={() => goToPage(currentPage - 1)}
-                  >
-                    Previous
-                  </button>
-
-                  <!-- Page numbers -->
-                  {#each Array.from( { length: Math.min(5, totalPages) }, (_, i) => {
-                      const start = Math.max(1, currentPage - 2);
-                      const end = Math.min(totalPages, start + 4);
-                      const adjustedStart = Math.max(1, end - 4);
-                      return adjustedStart + i;
-                    }, ).filter((page) => page <= totalPages) as page}
-                    <button
-                      type="button"
-                      class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                      page
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                      on:click={() => goToPage(page)}
-                    >
-                      {page}
-                    </button>
-                  {/each}
-
-                  <!-- Next page -->
-                  <button
-                    type="button"
-                    class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                    totalPages
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                    disabled={currentPage === totalPages}
-                    on:click={() => goToPage(currentPage + 1)}
-                  >
-                    Next
-                  </button>
-
-                  <!-- Last page -->
-                  <button
-                    type="button"
-                    class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                    totalPages
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                    disabled={currentPage === totalPages}
-                    on:click={() => goToPage(totalPages)}
-                  >
-                    Last
-                  </button>
-                </div>
-
-                <!-- Right side: Jump to page -->
-                <div class="flex items-center space-x-2">
-                  <span class="text-sm text-gray-700">Jump to:</span>
-                  <form
-                    on:submit|preventDefault={handleJumpToPage}
-                    class="flex items-center space-x-1"
-                  >
-                    <input
-                      type="number"
-                      bind:value={jumpToPage}
-                      min="1"
-                      max={totalPages}
-                      placeholder="Page"
-                      class="w-16 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <button
-                      type="submit"
-                      class="px-3 py-1 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-150"
-                    >
-                      Go
-                    </button>
-                  </form>
-                </div>
-              </div>
-            {/if}
           {/if}
-        </div>
+        {/if}
       </div>
-    {/if}
-  </div>
-</main>
+    </div>
+  {/if}
+</div>
 
 <!-- All existing modals remain the same -->
 {#if showViewModal}
