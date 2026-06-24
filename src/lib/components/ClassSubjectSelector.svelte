@@ -1,8 +1,6 @@
 <script>
-  import { onMount } from 'svelte';
   import Card from './Cards/Card.svelte';
   import Dropdown from './Dropdown.svelte';
-  import { apiClient } from '$lib/utils/api';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
@@ -13,6 +11,14 @@
   export let examMediumName = '';
   export let examSubjectName = '';
   export let isValid = false;
+
+  export let mediumOptions = [];
+  export let subjectOptions = [];
+  export let loading = {
+    mediums: false,
+    subjects: false
+  };
+  export let error = null;
 
   // ✅ Hardcoded class options 1 to 12
   const classOptions = [
@@ -30,14 +36,6 @@
     { value: '12', label: 'Class 12' }
   ];
 
-  let mediumOptions = [];
-  let subjectOptions = [];
-  let loading = {
-    mediums: false,
-    subjects: false
-  };
-  let error = null;
-
   // Watch for changes and dispatch selected values
   $: {
     if (examClass && examMedium && examSubject) {
@@ -47,8 +45,6 @@
       
       if (selectedSubject) examSubjectName = selectedSubject.label;
       if (selectedMedium) examMediumName = selectedMedium.label;
-
-    
 
       // Dispatch the event with the codes
       const selectionData = {
@@ -66,70 +62,9 @@
     isValid = examClass !== '' && examMedium !== '' && examSubject !== '';
   }
 
-  let mediumError = false;
-  let subjectError = false;
-
-  // Fetch mediums using the /mediums API
-  async function fetchMediums() {
-    try {
-      loading.mediums = true;
-      const res = await apiClient({ url: '/apis/mediums' });
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
-      }
-
-      const responseData = await res.json();
-      // Map the medium data to dropdown options
-      const mediumsData = responseData.data || [];
-      mediumOptions = mediumsData.map(medium => ({
-        value: medium.medium_code,  // Use medium_code as the value
-        label: medium.medium_name
-      }));
-
-    } catch (err) {
-      console.error('Error in fetchMediums:', err);
-      error = 'Failed to load mediums';
-      mediumOptions = [];
-    } finally {
-      loading.mediums = false;
-    }
+  function handleRetrySubjects() {
+    dispatch('retrySubjects');
   }
-
-  // Fetch subjects using the /subjects API when class and medium are selected
-  async function fetchSubjects() {
-    try {
-      loading.subjects = true;
-      const res = await apiClient({ url: '/apis/subjects' });
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
-      }
-
-      const responseData = await res.json();
-      const allSubjects = responseData.data || [];
-      subjectOptions = allSubjects.map(subject => ({
-        value: subject.subject_code,    // Use subject_code as the value
-        label: subject.subject_name,
-        standard: subject.standard,
-        mediumCode: subject.medium_code // Store medium_code for reference
-      }));
-
-    } catch (err) {
-      console.error('Error fetching subjects:', err);
-      error = 'Failed to load subjects';
-      subjectOptions = [];
-    } finally {
-      loading.subjects = false;
-    }
-  }
-
-  onMount(() => {
-    fetchMediums();
-    fetchSubjects();
-  });
 </script>
 
 
@@ -167,7 +102,7 @@
       <div class="text-sm text-red-600">{error}</div>
       <button 
         class="mt-2 text-sm text-blue-600 hover:text-blue-800"
-        on:click={fetchSubjects}
+        on:click={handleRetrySubjects}
       >
         Try again
       </button>
