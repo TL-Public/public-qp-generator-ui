@@ -2,6 +2,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
   import { onMount } from "svelte";
+  import { browser } from "$app/environment";
   import { apiClient } from "$lib/utils/api.js";
   import { authStore } from "$lib/stores/authStore";
   import Modal from "$lib/components/Modal.svelte";
@@ -59,24 +60,34 @@
     // updateStatusInUrl(null); // Prevent automatic fetch on cancel
   }
 
-  // // Sync status and page from URL
-  $: {
-    const statusParam = $page.url.searchParams.get("status");
-    const pageParam = $page.url.searchParams.get("page");
+  // Sync status and page from URL using a reactive statement that only depends
+  // on $page.url to prevent reactive loops.
+  $: if (browser) handleUrlChange($page.url);
+
+  async function handleUrlChange(url) {
+    const statusParam = url.searchParams.get("status");
+    const pageParam = url.searchParams.get("page");
 
     if (statusParam) {
       const option = statusOptions.find((opt) => opt.value === statusParam);
       if (option) {
-        if (selectedStatus?.value !== option.value) {
-          selectedStatus = option;
-        }
+        selectedStatus = option;
         hasSelectedStatus = true;
 
         const urlPage = parseInt(pageParam) || 1;
-        if (currentPage !== urlPage) {
-          currentPage = urlPage;
-        }
+        currentPage = urlPage;
+        hasSearched = true;
+        await searchPapers();
       }
+    } else {
+      // Reset if status is removed from URL (e.g. back button to root)
+      selectedStatus = null;
+      hasSelectedStatus = false;
+      hasSearched = false;
+      exams = [];
+      totalResults = 0;
+      totalPages = 0;
+      currentPage = 1;
     }
   }
 
@@ -151,7 +162,6 @@
     hasSearched = true;
     currentPage = 1;
     await updateStatusInUrl(selectedStatus.value);
-    await searchPapers();
   }
 
   // Function to create nested structure for display
@@ -268,17 +278,10 @@
   }
 
   // Subscribe to auth store to check admin status
-  onMount(async () => {
+  onMount(() => {
     const unsubscribe = authStore.subscribe((value) => {
       isAdmin = value?.roleCode === "100";
     });
-
-    // Handle initial load from URL
-    const statusParam = $page.url.searchParams.get("status");
-    if (statusParam) {
-      hasSearched = true;
-      await searchPapers();
-    }
 
     return unsubscribe;
   });
@@ -337,7 +340,6 @@
         replaceState: true,
         noScroll: true,
       });
-      await searchPapers();
     }
   }
 
