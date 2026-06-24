@@ -108,9 +108,8 @@
     expandedItems = expandedItems; // Trigger reactivity
   }
 
-  async function handleLogout() {
-    await authStore.logout();
-    goto("/login");
+  async function handleLogoutAction() {
+    await handleLogout();
   }
 
   // Auto-expand if child route is active, and auto-collapse when navigating away
@@ -267,7 +266,7 @@
     </button>
 
     <button
-      on:click={handleLogout}
+      on:click={handleLogoutAction}
       class="w-full flex items-center space-x-3 px-4 py-2 mt-2 text-slate-300 hover:bg-red-400 hover:text-white rounded-lg transition-all duration-200"
     >
       <svelte:component this={LogOut} size={18} />

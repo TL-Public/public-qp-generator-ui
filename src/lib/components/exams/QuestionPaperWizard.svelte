@@ -171,24 +171,29 @@
 
     try {
       // Fetch mediums and subjects first to map names to codes
-      const [examRes, mediumsRes, subjectsRes] =
-        await Promise.all([
-          apiClient({ url: `/apis/exams/${examCode}` }),
-          apiClient({ url: "/apis/mediums" }),
-          apiClient({ url: "/apis/subjects" }),
-        ]);
+      const [examRes, mediumsRes, subjectsRes] = await Promise.all([
+        apiClient({ url: `/apis/exams/${examCode}` }),
+        apiClient({ url: "/apis/mediums" }),
+        apiClient({ url: "/apis/subjects" }),
+      ]);
 
       if (!examRes.ok) {
         const errorData = await examRes.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${examRes.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${examRes.status}`,
+        );
       }
       if (!mediumsRes.ok) {
         const errorData = await mediumsRes.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${mediumsRes.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${mediumsRes.status}`,
+        );
       }
       if (!subjectsRes.ok) {
         const errorData = await subjectsRes.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${subjectsRes.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${subjectsRes.status}`,
+        );
       }
 
       const examResponse = await examRes.json();
@@ -461,7 +466,9 @@
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${response.status}`,
+        );
       }
 
       const responseDataRaw = await response.json();
@@ -527,7 +534,9 @@
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${response.status}`,
+        );
       }
 
       const responseDataRaw = await response.json();
@@ -648,12 +657,12 @@
   });
 </script>
 
-<div class="mb-4 max-w-5xl mx-auto">
+<div class="mb-4">
   <StepIndicator totalSteps={3} currentStep={currentStepIndex} {stepTitle} />
 </div>
 
-<div class="flex min-h-screen max-w-5xl mx-auto">
-  <div class="flex-1 mx-auto w-full max-w-7xl">
+<div class="flex">
+  <div class="flex-1 mx-auto w-full">
     <div class="rounded-lg">
       <div class="">
         {#if isLoading}
