@@ -5,7 +5,7 @@
   import { page } from "$app/stores";
 
   import { api } from "$lib/utils/api.js";
-  const selectedContentStore = getContext('selectedContentStore');
+  const selectedContentStore = getContext("selectedContentStore");
 
   // import SelectionSidebar from "./SelectionSidebar.svelte";
   import SelectionSidebar from "$lib/components/SelectionSideBar.svelte";
@@ -78,8 +78,6 @@
     }
     dispatch("backToContentSelection");
   }
-  //  NEW: Add prop for navigation control
-  export let navigateToReview = false;
 
   const dispatch = createEventDispatcher();
 
@@ -130,8 +128,6 @@
       getTopics: topicSelections,
     };
   }
-
-
 
   // this function will load take the chapters and topics
   // fetched from the store and then will be used in api calls
@@ -225,7 +221,6 @@
     }
     expandedTopics = expandedTopics;
   }
-
 
   // function to fetch the questions and map with table
   async function handleFetchQuestions(event) {
@@ -346,7 +341,6 @@
 
   function handleCheckboxChange(event, item, type) {
     event.stopPropagation();
-
 
     const isChecked = event.target.checked;
 
@@ -534,7 +528,12 @@
   {:else if error}
     <div class="text-red-600 p-4">{error}</div>
   {:else if chaptersData.length === 0}
-    <div class="flex justify-center py-8 w-full border border-stroke rounded-lg text-subtext">No content available for the selected Class, Subject and Medium combination</div>
+    <div
+      class="flex justify-center py-8 w-full border border-stroke rounded-lg text-subtext"
+    >
+      No content available for the selected Class, Subject and Medium
+      combination
+    </div>
   {:else}
     <div
       id={showQuestions ? "questions-table" : "content-selection"}
@@ -545,7 +544,6 @@
         {selections}
         {expandedChapters}
         {expandedTopics}
-       
         on:toggleChapter={(e) => toggleChapter(e, e.detail.chapterId)}
         on:toggleTopic={(e) => toggleTopic(e, e.detail.topicId)}
         on:checkboxChange={(e) =>
@@ -557,7 +555,7 @@
   {/if}
 
   <!-- Selection Mode Footer -->
-  {#if selections.length >0}
+  {#if selections.length > 0}
     <div class="mt-4">
       {#if selections.length > 0}
         <div class="flex justify-end">

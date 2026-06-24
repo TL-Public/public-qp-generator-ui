@@ -7,10 +7,9 @@
   import Input from "$lib/components/Input.svelte";
   // import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
 
-  const selectedContentStore = getContext('selectedContentStore');
-  const apiPayloadStore = getContext('apiPayloadStore');
+  const selectedContentStore = getContext("selectedContentStore");
+  const apiPayloadStore = getContext("apiPayloadStore");
   const dispatch = createEventDispatcher();
-
 
   export let totalQuestions;
   export let examData = null; // Receive exam data from parent
