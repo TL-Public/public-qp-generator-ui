@@ -8,6 +8,9 @@
   import StepIndicator from "$lib/components/quiz/StepIndicator.svelte";
 
   import GeneratePapers from "$lib/components/GeneratePapers.svelte";
+  import Portal from "$lib/components/Portal.svelte";
+  import PortalBackdrop from "$lib/components/PortalBackdrop.svelte";
+  import ResetConfirmationModal from "$lib/components/exams/ResetConfirmationModal.svelte";
 
   import { apiClient } from "$lib/utils/api";
   import { createApiPayloadStore } from "$lib/stores/apiPayLoadStore";
@@ -516,14 +519,62 @@
     }
   }
 
+  let showResetConfirm = false;
+
   function handleReset() {
+    showResetConfirm = true;
+  }
+
+  function confirmReset() {
     allQuestions = [];
-    examData.isAllocationConfirmed = false;
-    examData.confirmedAllocationData = null;
-    if (!isEditMode) {
-      examData.examCode = "";
-    }
+    fetchedQuestions = [];
+    examData = {
+      examMode: "Online",
+      examTitle: "",
+      examClass: "",
+      examMedium: "",
+      examSubject: "",
+      examMediumName: "",
+      examSubjectName: "",
+      examCode: examId || "",
+      totalTime: 40,
+      totalQuestions: 40,
+      numberOfSets: 1,
+      numberOfVersions: 1,
+      easy: 40,
+      medium: 40,
+      hard: 20,
+      isAllocationConfirmed: false,
+      confirmedAllocationData: null,
+    };
     selectedContentStore.clearAll();
+    
+    // Clear validation states
+    examDetailsValid = true;
+    classSubjectValid = true;
+    examConfigValid = true;
+    difficultyValid = true;
+    
+    // Reset wizard view/tabs
+    currentView = "config";
+    showQuestions = false;
+    nestedContentActiveTab = "selected-content";
+    
+    // Reset notifications/results
+    allocationResult = {
+      message: "",
+      type: "success",
+    };
+    generatedPapersData = {};
+    generationResult = {
+      message: "",
+      type: "success",
+    };
+    generationInProgress = false;
+    draftSaveError = "";
+    draftSaveSuccess = "";
+
+    showResetConfirm = false;
   }
 
   function handleExamConfigValidation(event) {
@@ -980,3 +1031,14 @@
     </div>
   </div>
 </div>
+
+{#if showResetConfirm}
+  <Portal>
+    <PortalBackdrop>
+      <ResetConfirmationModal
+        on:close={() => (showResetConfirm = false)}
+        on:confirm={confirmReset}
+      />
+    </PortalBackdrop>
+  </Portal>
+{/if}
