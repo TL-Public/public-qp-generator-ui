@@ -4,7 +4,7 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
 
-  import { api } from "$lib/utils/api.js";
+  import { apiClient } from "$lib/utils/api.js";
   const selectedContentStore = getContext("selectedContentStore");
 
   // import SelectionSidebar from "./SelectionSidebar.svelte";
@@ -142,19 +142,17 @@
       if (chapters && chapters.length > 0) {
         const chapterCodes = chapters.map((c) => c.code).join(",");
         apiCalls.push(
-          api.questions.getByGroupCodes({
-            type: "chapter",
-            codes: chapterCodes,
-          }),
+          apiClient({
+            url: `/apis/questions?type=chapter&codes=${chapterCodes}`,
+          })
         );
       }
       if (topics && topics.length > 0) {
         const topicCodes = topics.map((t) => t.code).join(",");
         apiCalls.push(
-          api.questions.getByGroupCodes({
-            type: "topic",
-            codes: topicCodes,
-          }),
+          apiClient({
+            url: `/apis/questions?type=topic&codes=${topicCodes}`,
+          })
         );
       }
       if (apiCalls.length === 0) {
@@ -163,11 +161,15 @@
       }
       const responses = await Promise.all(apiCalls);
       let allQuestions = [];
-      for (const response of responses) {
-        if (response.error) throw new Error(response.error) || "API ERROR";
-        if (response.data && response.data.qns) {
+      for (const res of responses) {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        if (data && data.qns) {
           // Clean each question's text fields
-          const cleanedQuestions = response.data.qns.map(cleanQuestionText);
+          const cleanedQuestions = data.qns.map(cleanQuestionText);
           allQuestions = [...allQuestions, ...cleanedQuestions];
         }
       }
@@ -184,17 +186,23 @@
     isLoading = true;
     error = null;
     try {
-      const response = await api.chapterTopics.getAll({
+      const queryParams = new URLSearchParams({
         standard: examClass,
         subject_code: examSubject,
         medium_code: examMedium,
+      }).toString();
+
+      const res = await apiClient({
+        url: `/apis/chapters_topics?${queryParams}`,
       });
 
-      if (response.error) {
-        throw new Error(response.error);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
       }
 
-      chaptersData = response.data.data;
+      const data = await res.json();
+      chaptersData = data.data || data;
     } catch (err) {
       error = err.message;
     } finally {

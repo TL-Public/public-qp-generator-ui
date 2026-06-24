@@ -7,7 +7,7 @@ export async function GET({ params, request, cookies, fetch }) {
   try {
     const authHeader = getHeaders(cookies);
 
-    let endpoint = PUBLIC_API_BASE_URL + "/v1/questions";
+    let endpoint = PUBLIC_API_BASE_URL + "/v1/chapters_topics";
 
     let queryparams = request.url.split("?");
 
@@ -26,9 +26,9 @@ export async function GET({ params, request, cookies, fetch }) {
     }
 
     if (res.status == 200) {
-      let questions = await res.json();
+      let chaptersTopics = await res.json();
 
-      return json(questions);
+      return json(chaptersTopics);
     }
 
     return new Response("", { status: res.status });

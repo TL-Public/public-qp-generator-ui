@@ -9,7 +9,7 @@
 
   import GeneratePapers from "$lib/components/GeneratePapers.svelte";
 
-  import { api } from "$lib/utils/api";
+  import { apiClient } from "$lib/utils/api";
   import { createApiPayloadStore } from "$lib/stores/apiPayLoadStore";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
@@ -171,26 +171,39 @@
 
     try {
       // Fetch mediums and subjects first to map names to codes
-      const [examResponse, mediumsResponse, subjectsResponse] =
+      const [examRes, mediumsRes, subjectsRes] =
         await Promise.all([
-          api.viewPapers.getByCode(examCode),
-          api.mediums.getAll(),
-          api.subjects.getAll(),
+          apiClient({ url: `/apis/exams/${examCode}` }),
+          apiClient({ url: "/apis/mediums" }),
+          apiClient({ url: "/apis/subjects" }),
         ]);
 
-      if (examResponse.error) {
-        throw new Error(examResponse.error);
+      if (!examRes.ok) {
+        const errorData = await examRes.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${examRes.status}`);
+      }
+      if (!mediumsRes.ok) {
+        const errorData = await mediumsRes.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${mediumsRes.status}`);
+      }
+      if (!subjectsRes.ok) {
+        const errorData = await subjectsRes.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${subjectsRes.status}`);
       }
 
-      if (!examResponse.data || !examResponse.data.design) {
+      const examResponse = await examRes.json();
+      const mediumsResponse = await mediumsRes.json();
+      const subjectsResponse = await subjectsRes.json();
+
+      if (!examResponse || !examResponse.design) {
         throw new Error("Invalid response: missing design data");
       }
 
-      const design = examResponse.data.design;
+      const design = examResponse.design;
 
       // Get mediums and subjects data for mapping
-      const mediumsData = mediumsResponse.data?.data || [];
-      const subjectsData = subjectsResponse.data?.data || [];
+      const mediumsData = mediumsResponse.data || [];
+      const subjectsData = subjectsResponse.data || [];
 
       // Populate form fields from design data
       examTitle = design.exam_name || "";
@@ -265,7 +278,7 @@
 
       // If there are chapters_topics in the design, update the store and pre-select them in selectedContentStore
       const chaptersTopics =
-        design.chapters_topics || examResponse.data?.chapters_topics || [];
+        design.chapters_topics || examResponse.chapters_topics || [];
       if (
         chaptersTopics &&
         Array.isArray(chaptersTopics) &&
@@ -427,16 +440,32 @@
     try {
       let response;
       if (examCode) {
-        response = await api.questionPapers.update(examCode, payload);
+        response = await apiClient({
+          url: `/apis/exams/${examCode}`,
+          options: {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        });
       } else {
-        response = await api.questionPapers.create(payload);
+        response = await apiClient({
+          url: "/apis/exams",
+          options: {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        });
       }
 
-      if (response.error) {
-        throw new Error(response.error);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
-      const responseData = response.data?.data || response.data;
+      const responseDataRaw = await response.json();
+      const responseData = responseDataRaw.data || responseDataRaw;
       if (responseData?.exam_code && !isEditMode) {
         examCode = responseData.exam_code;
       }
@@ -477,20 +506,32 @@
 
       let response;
       if (examCode) {
-        response = await api.questionPapers.update(examCode, apiPayload);
+        response = await apiClient({
+          url: `/apis/exams/${examCode}`,
+          options: {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(apiPayload),
+          },
+        });
       } else {
-        response = await api.questionPapers.create(apiPayload);
+        response = await apiClient({
+          url: "/apis/exams",
+          options: {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(apiPayload),
+          },
+        });
       }
 
-      if (response.error) {
-        throw new Error(response.error);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
-      if (!response.data) {
-        throw new Error("No data received from server");
-      }
-
-      const responseData = response.data.data || response.data;
+      const responseDataRaw = await response.json();
+      const responseData = responseDataRaw.data || responseDataRaw;
       generatedPapersData = {
         examInfo: {
           exam_name: responseData.exam_name,
@@ -509,7 +550,7 @@
         questionsToExclude: responseData.questions_to_exclude || [],
         generatedAt: new Date().toISOString(),
         originalPayload: apiPayload,
-        apiResponse: response.data,
+        apiResponse: responseDataRaw,
       };
 
       if (typeof apiPayloadStore.updateGeneratedPapers === "function") {
