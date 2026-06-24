@@ -1,7 +1,8 @@
 <script>
-  import Card from "./Cards/Card.svelte";
-  import DifficultyDistribution from "./DifficultyDistribution.svelte";
+  import Card from "$lib/components/Cards/Card.svelte";
+  import DifficultyDistribution from "$lib/components/DifficultyDistribution.svelte";
   import InfoCard from "$lib/components/quiz/InfoCard.svelte";
+  import Button from "$lib/components/Button.svelte";
 
   // Props
   export let examTitle = "";
@@ -20,6 +21,7 @@
   export let hard = "";
   export let isReviewPageEnabled = true;
   export let allocationData = null;
+  export let generationInProgress = false;
 
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
@@ -42,7 +44,9 @@
   <Card>
     <div class="space-y-6">
       <!-- Header -->
-      <div class="flex items-center justify-between border-b border-stroke pb-4">
+      <div
+        class="flex items-center justify-between border-b border-stroke pb-4"
+      >
         <h2 class="text-base font-semibold text-gray-700">
           Exam Configuration
         </h2>
@@ -130,8 +134,9 @@
         <!-- Footer with total papers info -->
         <div class="mt-2">
           <div class="flex items-center justify-end">
-            <span class="text-sm text-subtext">Total papers to generate : {numberOfSets * numberOfVersions} paper(s)</span>
-            
+            <span class="text-sm text-subtext"
+              >Total papers to generate : {numberOfSets * numberOfVersions} paper(s)</span
+            >
           </div>
         </div>
       </div>
@@ -153,7 +158,9 @@
   <Card>
     <div class="space-y-4">
       <!-- Header with allocation mode -->
-      <div class="flex items-center justify-between border-b border-stroke pb-3">
+      <div
+        class="flex items-center justify-between border-b border-stroke pb-3"
+      >
         <div class="flex items-center gap-3">
           <h3 class="text-sm font-medium text-dark">
             Question Allocation Summary
@@ -290,18 +297,18 @@
         numberOfVersions} total papers
     </div> -->
     <div class="flex space-x-4">
-      <button
-        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-canvas-muted"
+      <Button
+        btnType="secondary"
         on:click={() => dispatch("back")}
+        disabled={generationInProgress}
       >
         Back
-      </button>
-      <button
-        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+      </Button>
+      <Button
         on:click={() => dispatch("generate")}
+        disabled={generationInProgress}
+        >{generationInProgress ? "Generating..." : "Generate Papers"}</Button
       >
-        Generate Papers
-      </button>
     </div>
   </div>
 </div>

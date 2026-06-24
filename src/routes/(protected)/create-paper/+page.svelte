@@ -15,7 +15,6 @@
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
 
-
   import NestedContentTable from "$lib/components/NestedContentTable.svelte";
   import { mockQuestionsData } from "$lib/utils/mockData.js";
   import { createSelectedContentStore } from "$lib/stores/selectedContentStore.js";
@@ -26,10 +25,10 @@
   // Initialize stores for this page instance
   const selectedContentStore = createSelectedContentStore();
   const apiPayloadStore = createApiPayloadStore();
-  setContext('selectedContentStore', selectedContentStore);
-  setContext('apiPayloadStore', apiPayloadStore);
+  setContext("selectedContentStore", selectedContentStore);
+  setContext("apiPayloadStore", apiPayloadStore);
 
-   // Initialize state variables
+  // Initialize state variables
   let allQuestions = [];
   let activeTab = "groups";
 
@@ -94,10 +93,14 @@
     type: "success", // or "error"
   };
 
+  let generatedPapersData = {};
+
   let generationResult = {
     message: "",
     type: "success", // or "error"
   };
+
+  let generationInProgress = false;
 
   // Step Configuration
   const STEPS = {
@@ -427,6 +430,8 @@
 
   async function handleGeneratePapers() {
     try {
+      generationInProgress = true;
+      generatedPapersData = {};
       generationResult.message = "";
       generationResult.type = "success";
       // Try to update API store one more time before generating
@@ -469,7 +474,7 @@
 
       const responseData = response.data.data || response.data;
       // Store the generated data with updated structure
-      const generatedPapersData = {
+      generatedPapersData = {
         examInfo: {
           exam_name: responseData.exam_name,
           exam_code: responseData.exam_code,
@@ -513,6 +518,8 @@
 
       generationResult.message = errorMessage;
       generationResult.type = "error";
+    } finally {
+      generationInProgress = false;
     }
   }
 
@@ -618,7 +625,7 @@
 
   async function handleClassSubjectSelect(event) {
     const { standard, subject_code, medium_code } = event.detail;
-   
+
     if (allQuestions.length > 0) {
       currentStep = "allocation";
     }
@@ -688,7 +695,6 @@
 </div>
 <!-- Template remains the same as before -->
 <div class="flex min-h-screen max-w-5xl mx-auto">
- 
   <!-- Main content -->
 
   <div class="flex-1 mx-auto w-full max-w-7xl">
@@ -810,12 +816,22 @@
               {easy}
               {medium}
               {hard}
+              {generationInProgress}
               isReviewPageEnabled={true}
               questions={allQuestions}
               on:back={handleBackFromReview}
               on:generate={handleGeneratePapers}
             />
           </div>
+          {#if generationResult.type === "error"}
+            <div class="mt-2">
+              <InlineNotification
+                title={"Question paper generation failed"}
+                subtitle={generationResult.message}
+                kind={generationResult.type}
+              />
+            </div>
+          {/if}
         {:else if currentView === "generate"}
           <div class="w-full">
             <GeneratePapers
@@ -828,6 +844,7 @@
               questions={allQuestions}
               allocationData={confirmedAllocationData}
               {generationResult}
+              {generatedPapersData}
             />
           </div>
         {/if}

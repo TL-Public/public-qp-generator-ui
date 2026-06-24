@@ -2,9 +2,8 @@
   import Card from "$lib/components/Cards/Card.svelte";
   import { getContext } from "svelte";
   import DataTable from "$lib/components/DataTable.svelte";
-  
-  // const questionPaperStore = getContext('questionPaperStore');
 
+  // const questionPaperStore = getContext('questionPaperStore');
 
   // Props with default values
   import { FileText, FileJson, Printer, Eye } from "@lucide/svelte";
@@ -29,7 +28,7 @@
   export let generatedPapersData = null;
 
   // Access the store to get generated papers if not passed as prop
-  $: displayData = generatedPapersData || $apiPayloadStore.generatedPapers;
+  $: displayData = generatedPapersData;
 
   $: papers = displayData?.questionPapers
     ? displayData.questionPapers.map((paper, index) => ({
@@ -280,25 +279,22 @@
   }
 
   function handleFinish() {
-   goto("/home");
+    goto("/home");
   }
   function handleBack() {
-   goto("/create-paper?step=2");
+    goto("/create-paper?step=2");
   }
-
 </script>
-
 
 <!-- <Card>
 </Card> -->
 {#if generationResult.message}
-<div class="mb-3">
-  <InlineNotification
-    title={generationResult.message}
-    kind={generationResult.type}
-  />
-
-</div>
+  <div class="mb-3">
+    <InlineNotification
+      title={generationResult.message}
+      kind={generationResult.type}
+    />
+  </div>
 {/if}
 
 {#if papers.length > 0}
@@ -311,12 +307,9 @@
   />
 {/if}
 
-
-
 <div class="w-full justify-end flex mt-4">
-<div class="flex gap-4">
-
-  <!-- <Button on:click={handleBack} btnType="secondary" >Back</Button> -->
-  <Button on:click={handleFinish} >Finish</Button>
-</div>
+  <div class="flex gap-4">
+    <!-- <Button on:click={handleBack} btnType="secondary" >Back</Button> -->
+    <Button on:click={handleFinish}>Finish</Button>
+  </div>
 </div>
