@@ -21,6 +21,7 @@
 
   import { onDestroy, onMount, tick, setContext } from "svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
+  import { cleanQuestionText } from "$lib/utils/textUtils.js";
 
   // Props
   export let examId = null;
@@ -160,22 +161,181 @@
   // Reference for nested content table
   let nestedContentTableRef;
 
+  // API Options & States
+  let mediumOptions = [];
+  let subjectOptions = [];
+  let classSubjectLoading = { mediums: false, subjects: false };
+  let classSubjectError = null;
+
+  let chaptersData = [];
+  let chaptersLoading = false;
+  let chaptersError = null;
+  let questionIsLoading = false;
+
+  async function fetchMediums() {
+    try {
+      classSubjectLoading.mediums = true;
+      const res = await apiClient({ url: '/apis/mediums' });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+      }
+      const responseData = await res.json();
+      const mediumsData = responseData.data || [];
+      mediumOptions = mediumsData.map(medium => ({
+        value: medium.medium_code,
+        label: medium.medium_name
+      }));
+    } catch (err) {
+      console.error('Error in fetchMediums:', err);
+      classSubjectError = 'Failed to load mediums';
+      mediumOptions = [];
+    } finally {
+      classSubjectLoading.mediums = false;
+    }
+  }
+
+  async function fetchSubjects() {
+    try {
+      classSubjectLoading.subjects = true;
+      const res = await apiClient({ url: '/apis/subjects' });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+      }
+      const responseData = await res.json();
+      const allSubjects = responseData.data || [];
+      subjectOptions = allSubjects.map(subject => ({
+        value: subject.subject_code,
+        label: subject.subject_name,
+        standard: subject.standard,
+        mediumCode: subject.medium_code
+      }));
+    } catch (err) {
+      console.error('Error fetching subjects:', err);
+      classSubjectError = 'Failed to load subjects';
+      subjectOptions = [];
+    } finally {
+      classSubjectLoading.subjects = false;
+    }
+  }
+
+  async function fetchChaptersTopics() {
+    if (!examClass || !examSubject || !examMedium) return;
+    chaptersLoading = true;
+    chaptersError = null;
+    try {
+      const queryParams = new URLSearchParams({
+        standard: examClass,
+        subject_code: examSubject,
+        medium_code: examMedium,
+      }).toString();
+
+      const res = await apiClient({
+        url: `/apis/chapters_topics?${queryParams}`,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      chaptersData = data.data || data;
+    } catch (err) {
+      chaptersError = err.message;
+    } finally {
+      chaptersLoading = false;
+    }
+  }
+
+  // Reactive trigger for loading chapters when selections change
+  $: {
+    if (examClass && examSubject && examMedium) {
+      fetchChaptersTopics();
+    }
+  }
+
+  async function handleFetchQuestionsRequest(event) {
+    const { chapters, topics, onSuccess } = event.detail;
+    questionIsLoading = true;
+    try {
+      const apiCalls = [];
+      if (chapters && chapters.length > 0) {
+        const chapterCodes = chapters.map((c) => c.code).join(",");
+        apiCalls.push(
+          apiClient({
+            url: `/apis/questions?type=chapter&codes=${chapterCodes}`,
+          })
+        );
+      }
+      if (topics && topics.length > 0) {
+        const topicCodes = topics.map((t) => t.code).join(",");
+        apiCalls.push(
+          apiClient({
+            url: `/apis/questions?type=topic&codes=${topicCodes}`,
+          })
+        );
+      }
+      if (apiCalls.length === 0) {
+        fetchedQuestions = [];
+        return;
+      }
+      const responses = await Promise.all(apiCalls);
+      let allQuestionsData = [];
+      for (const res of responses) {
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        if (data && data.qns) {
+          const cleanedQuestions = data.qns.map(cleanQuestionText);
+          allQuestionsData = [...allQuestionsData, ...cleanedQuestions];
+        }
+      }
+
+      if (allQuestionsData.length > 0) {
+        fetchedQuestions = allQuestionsData.map((allQuestion) => {
+          return {
+            id: allQuestion.code,
+            text: allQuestion.text,
+            type: allQuestion.type,
+            marks: allQuestion.marks,
+            difficulty: allQuestion.difficulty_level,
+            parent: {
+              name: allQuestion.grp_type_name,
+              type: allQuestion.grp_type,
+            },
+          };
+        });
+
+        selectedContentStore.setQuestions(fetchedQuestions);
+        if (onSuccess) onSuccess();
+      } else {
+        fetchedQuestions = [];
+      }
+    } catch (err) {
+      alert("Failed to load questions: " + err.message);
+    } finally {
+      questionIsLoading = false;
+    }
+  }
+
   // Fetch exam data on mount if in edit mode
   onMount(async () => {
-    if (!isEditMode) {
-      return;
-    }
-
     isLoading = true;
     loadError = null;
 
     try {
-      // Fetch mediums and subjects first to map names to codes
-      const [examRes, mediumsRes, subjectsRes] = await Promise.all([
-        apiClient({ url: `/apis/exams/${examCode}` }),
-        apiClient({ url: "/apis/mediums" }),
-        apiClient({ url: "/apis/subjects" }),
-      ]);
+      // Always fetch mediums and subjects first
+      await Promise.all([fetchMediums(), fetchSubjects()]);
+
+      if (!isEditMode) {
+        return;
+      }
+
+      const examRes = await apiClient({ url: `/apis/exams/${examCode}` });
 
       if (!examRes.ok) {
         const errorData = await examRes.json().catch(() => ({}));
@@ -183,32 +343,14 @@
           errorData.detail || `HTTP error! status: ${examRes.status}`,
         );
       }
-      if (!mediumsRes.ok) {
-        const errorData = await mediumsRes.json().catch(() => ({}));
-        throw new Error(
-          errorData.detail || `HTTP error! status: ${mediumsRes.status}`,
-        );
-      }
-      if (!subjectsRes.ok) {
-        const errorData = await subjectsRes.json().catch(() => ({}));
-        throw new Error(
-          errorData.detail || `HTTP error! status: ${subjectsRes.status}`,
-        );
-      }
 
       const examResponse = await examRes.json();
-      const mediumsResponse = await mediumsRes.json();
-      const subjectsResponse = await subjectsRes.json();
 
       if (!examResponse || !examResponse.design) {
         throw new Error("Invalid response: missing design data");
       }
 
       const design = examResponse.design;
-
-      // Get mediums and subjects data for mapping
-      const mediumsData = mediumsResponse.data || [];
-      const subjectsData = subjectsResponse.data || [];
 
       // Populate form fields from design data
       examTitle = design.exam_name || "";
@@ -222,26 +364,28 @@
       // Map medium - try code first, then find code by name
       let mediumCode = design.medium_code || "";
       if (!mediumCode && design.medium) {
-        const foundMedium = mediumsData.find(
+        const foundMedium = mediumOptions.find(
           (m) =>
-            m.medium_name?.toLowerCase() === design.medium?.toLowerCase() ||
-            m.medium_name === design.medium,
+            m.label?.toLowerCase() === design.medium?.toLowerCase() ||
+            m.label === design.medium,
         );
-        mediumCode = foundMedium?.medium_code || "";
+        mediumCode = foundMedium?.value || "";
       }
       examMedium = mediumCode;
 
       // Map subject - try code first, then find code by name
       let subjectCode = design.subject_code || "";
       if (!subjectCode && design.subject) {
-        const foundSubject = subjectsData.find(
+        const foundSubject = subjectOptions.find(
           (s) =>
-            (s.subject_name?.toLowerCase() === design.subject?.toLowerCase() ||
-              s.subject_name === design.subject) &&
+            (s.label?.toLowerCase() === design.subject?.toLowerCase() ||
+              s.label === design.subject) &&
             (s.standard === design.standard || !design.standard),
         );
-        subjectCode = foundSubject?.subject_code || "";
+        subjectCode = foundSubject?.value || "";
       }
+      examSubject = subjectCode;
+
       const mappedMediumCode = mediumCode;
       const mappedSubjectCode = subjectCode;
 
@@ -648,9 +792,7 @@
     });
   }
 
-  function handleFetchQuestions(event) {
-    fetchedQuestions = event.detail.questions;
-  }
+
 
   onDestroy(() => {
     selectedContentStore.clearAll();
@@ -717,7 +859,12 @@
                     bind:examMediumName
                     bind:examSubjectName
                     bind:isValid={classSubjectValid}
+                    {mediumOptions}
+                    {subjectOptions}
+                    loading={classSubjectLoading}
+                    error={classSubjectError}
                     on:change={handleClassSubjectSelect}
+                    on:retrySubjects={fetchSubjects}
                   />
                 </div>
                 <hr class="divider-line" />
@@ -755,8 +902,12 @@
                     bind:showQuestions
                     bind:fetchedQuestions
                     bind:activeTab={nestedContentActiveTab}
+                    {chaptersData}
+                    isLoading={chaptersLoading}
+                    error={chaptersError}
+                    questionIsLoading={questionIsLoading}
                     on:select={handleQuestionSelect}
-                    on:fetchQuestions={handleFetchQuestions}
+                    on:fetchQuestionsRequest={handleFetchQuestionsRequest}
                     on:allocationConfirmed={handleAllocationConfirmed}
                     on:draftSaved={handleSaveDraft}
                     bind:savingDraft={isSavingDraft}

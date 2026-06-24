@@ -4,7 +4,6 @@
   import { goto } from "$app/navigation";
   import { page } from "$app/stores";
 
-  import { apiClient } from "$lib/utils/api.js";
   const selectedContentStore = getContext("selectedContentStore");
 
   // import SelectionSidebar from "./SelectionSidebar.svelte";
@@ -44,6 +43,12 @@
   export let draftSaveError = "";
   export let draftSaveSuccess = "";
 
+  // API options & states passed from parent
+  export let chaptersData = [];
+  export let isLoading = false;
+  export let error = null;
+  export let questionIsLoading = false;
+
   let navigationHistory = [];
 
   $: if (browser && $page.url.hash) {
@@ -81,9 +86,6 @@
 
   const dispatch = createEventDispatcher();
 
-  let isLoading = false;
-  let error = null;
-  let chaptersData = [];
   let expandedChapters = new Set();
   let expandedTopics = new Set();
 
@@ -101,16 +103,9 @@
   $: hasContentChanged =
     JSON.stringify(selections) !== JSON.stringify(lastFetchedSelections);
 
-  $: {
-    if (examClass && examSubject && examMedium) {
-      loadChapters();
-    }
-  }
-
   // get the questions from the api
   let selectionTypeForChapterOrCode = "";
   let selectionCodes = [];
-  let questionIsLoading = true;
 
   async function getSelectedChaptersAndTopics() {
     // get the chapters list
@@ -127,87 +122,6 @@
       getChapters: chapterSelections,
       getTopics: topicSelections,
     };
-  }
-
-  // this function will load take the chapters and topics
-  // fetched from the store and then will be used in api calls
-  // the response we will recieve will be of an aray with all questions
-  // this function will be used in handleFetchQuestions.
-  async function loadQuestions(chapters, topics) {
-    error = null;
-    questionIsLoading = true;
-
-    try {
-      const apiCalls = [];
-      if (chapters && chapters.length > 0) {
-        const chapterCodes = chapters.map((c) => c.code).join(",");
-        apiCalls.push(
-          apiClient({
-            url: `/apis/questions?type=chapter&codes=${chapterCodes}`,
-          })
-        );
-      }
-      if (topics && topics.length > 0) {
-        const topicCodes = topics.map((t) => t.code).join(",");
-        apiCalls.push(
-          apiClient({
-            url: `/apis/questions?type=topic&codes=${topicCodes}`,
-          })
-        );
-      }
-      if (apiCalls.length === 0) {
-        // Clear previous questions if needed, e.g., questions = [];
-        return;
-      }
-      const responses = await Promise.all(apiCalls);
-      let allQuestions = [];
-      for (const res of responses) {
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
-        }
-        const data = await res.json();
-        if (data && data.qns) {
-          // Clean each question's text fields
-          const cleanedQuestions = data.qns.map(cleanQuestionText);
-          allQuestions = [...allQuestions, ...cleanedQuestions];
-        }
-      }
-      return allQuestions;
-    } catch (err) {
-      error = err.message;
-    } finally {
-      questionIsLoading = false;
-    }
-  }
-
-  // get the chapters from the api
-  async function loadChapters() {
-    isLoading = true;
-    error = null;
-    try {
-      const queryParams = new URLSearchParams({
-        standard: examClass,
-        subject_code: examSubject,
-        medium_code: examMedium,
-      }).toString();
-
-      const res = await apiClient({
-        url: `/apis/chapters_topics?${queryParams}`,
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
-      }
-
-      const data = await res.json();
-      chaptersData = data.data || data;
-    } catch (err) {
-      error = err.message;
-    } finally {
-      isLoading = false;
-    }
   }
 
   function toggleChapter(event, chapterId) {
@@ -235,39 +149,17 @@
     event.preventDefault();
 
     const response = await getSelectedChaptersAndTopics(); // fetch the selected chapters and topics from store
-
     const { getChapters, getTopics } = response;
-    const allQuestions = await loadQuestions(getChapters, getTopics);
 
-    if (allQuestions && allQuestions.length > 0) {
-      fetchedQuestions = allQuestions.map((allQuestion) => {
-        return {
-          id: allQuestion.code,
-          text: allQuestion.text,
-          type: allQuestion.type,
-          marks: allQuestion.marks,
-          difficulty: allQuestion.difficulty_level,
-          parent: {
-            name: allQuestion.grp_type_name,
-            type: allQuestion.grp_type,
-          },
-        };
-      });
-
-      selectedContentStore.setQuestions(fetchedQuestions);
-      lastFetchedSelections = JSON.parse(JSON.stringify(selections));
-      showQuestions = true;
-
-      activeTab = "selected-content";
-
-      //  Set hash for questions view
-      // if (browser) {
-      //   goto("#questions", { replaceState: true, noScroll: true });
-      // }
-      dispatch("fetchQuestions", { questions: fetchedQuestions });
-    } else {
-      fetchedQuestions = [];
-    }
+    dispatch("fetchQuestionsRequest", {
+      chapters: getChapters,
+      topics: getTopics,
+      onSuccess: () => {
+        lastFetchedSelections = JSON.parse(JSON.stringify(selections));
+        showQuestions = true;
+        activeTab = "selected-content";
+      }
+    });
   }
 
   function handleQuestionRemoved(event) {
