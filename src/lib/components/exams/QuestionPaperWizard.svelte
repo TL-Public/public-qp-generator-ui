@@ -39,15 +39,26 @@
   let allQuestions = [];
   let fetchedQuestions = [];
 
-  // Exam details state
-  let examMode = "Online";
-  let examTitle = "";
-  let examClass = "";
-  let examMedium = "";
-  let examSubject = "";
-  let examMediumName = "";
-  let examSubjectName = "";
-  let examCode = examId || ""; // Tracks current exam code (keeps track of draft ID in create mode)
+  // Encapsulated Exam Config & Details State
+  let examData = {
+    examMode: "Online",
+    examTitle: "",
+    examClass: "",
+    examMedium: "",
+    examSubject: "",
+    examMediumName: "",
+    examSubjectName: "",
+    examCode: examId || "",
+    totalTime: 40,
+    totalQuestions: 40,
+    numberOfSets: 1,
+    numberOfVersions: 1,
+    easy: 40,
+    medium: 40,
+    hard: 20,
+    isAllocationConfirmed: false,
+    confirmedAllocationData: null,
+  };
 
   // Loading state
   let isLoading = false;
@@ -64,16 +75,6 @@
   apiPayloadStore.subscribe((store) => {
     apiStoreData = store;
   });
-
-  // Exam configuration state
-  let totalTime = 40;
-  let totalQuestions = 40;
-  let numberOfSets = 1;
-  let numberOfVersions = 1;
-
-  // Allocation confirmation state
-  let isAllocationConfirmed = false;
-  let confirmedAllocationData = null;
 
   // Draft saving state
   let isSavingDraft = false;
@@ -128,7 +129,7 @@
       currentView = view;
 
       // Restore allocation view state if going back to config
-      if (view === "config" && isAllocationConfirmed) {
+      if (view === "config" && examData.isAllocationConfirmed) {
         showQuestions = true;
         nestedContentActiveTab = "selected-content";
       }
@@ -153,11 +154,6 @@
 
   $: currentStepIndex = STEPS[currentView]?.index || 1;
 
-  // Difficulty distribution
-  let easy = 40;
-  let medium = 40;
-  let hard = 20;
-
   // Reference for nested content table
   let nestedContentTableRef;
 
@@ -175,20 +171,22 @@
   async function fetchMediums() {
     try {
       classSubjectLoading.mediums = true;
-      const res = await apiClient({ url: '/apis/mediums' });
+      const res = await apiClient({ url: "/apis/mediums" });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${res.status}`,
+        );
       }
       const responseData = await res.json();
       const mediumsData = responseData.data || [];
-      mediumOptions = mediumsData.map(medium => ({
+      mediumOptions = mediumsData.map((medium) => ({
         value: medium.medium_code,
-        label: medium.medium_name
+        label: medium.medium_name,
       }));
     } catch (err) {
-      console.error('Error in fetchMediums:', err);
-      classSubjectError = 'Failed to load mediums';
+      console.error("Error in fetchMediums:", err);
+      classSubjectError = "Failed to load mediums";
       mediumOptions = [];
     } finally {
       classSubjectLoading.mediums = false;
@@ -198,37 +196,42 @@
   async function fetchSubjects() {
     try {
       classSubjectLoading.subjects = true;
-      const res = await apiClient({ url: '/apis/subjects' });
+      const res = await apiClient({ url: "/apis/subjects" });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${res.status}`,
+        );
       }
       const responseData = await res.json();
       const allSubjects = responseData.data || [];
-      subjectOptions = allSubjects.map(subject => ({
+      subjectOptions = allSubjects.map((subject) => ({
         value: subject.subject_code,
         label: subject.subject_name,
         standard: subject.standard,
-        mediumCode: subject.medium_code
+        mediumCode: subject.medium_code,
       }));
     } catch (err) {
-      console.error('Error fetching subjects:', err);
-      classSubjectError = 'Failed to load subjects';
+      console.error("Error fetching subjects:", err);
+      classSubjectError = "Failed to load subjects";
       subjectOptions = [];
     } finally {
       classSubjectLoading.subjects = false;
     }
   }
 
+  let lastFetchedKey = "";
+
   async function fetchChaptersTopics() {
-    if (!examClass || !examSubject || !examMedium) return;
+    if (!examData.examClass || !examData.examSubject || !examData.examMedium)
+      return;
     chaptersLoading = true;
     chaptersError = null;
     try {
       const queryParams = new URLSearchParams({
-        standard: examClass,
-        subject_code: examSubject,
-        medium_code: examMedium,
+        standard: examData.examClass,
+        subject_code: examData.examSubject,
+        medium_code: examData.examMedium,
       }).toString();
 
       const res = await apiClient({
@@ -237,7 +240,9 @@
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+        throw new Error(
+          errorData.detail || `HTTP error! status: ${res.status}`,
+        );
       }
 
       const data = await res.json();
@@ -251,7 +256,14 @@
 
   // Reactive trigger for loading chapters when selections change
   $: {
-    if (examClass && examSubject && examMedium) {
+    const currentKey = `${examData.examClass}-${examData.examSubject}-${examData.examMedium}`;
+    if (
+      examData.examClass &&
+      examData.examSubject &&
+      examData.examMedium &&
+      currentKey !== lastFetchedKey
+    ) {
+      lastFetchedKey = currentKey;
       fetchChaptersTopics();
     }
   }
@@ -266,7 +278,7 @@
         apiCalls.push(
           apiClient({
             url: `/apis/questions?type=chapter&codes=${chapterCodes}`,
-          })
+          }),
         );
       }
       if (topics && topics.length > 0) {
@@ -274,7 +286,7 @@
         apiCalls.push(
           apiClient({
             url: `/apis/questions?type=topic&codes=${topicCodes}`,
-          })
+          }),
         );
       }
       if (apiCalls.length === 0) {
@@ -286,7 +298,9 @@
       for (const res of responses) {
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
-          throw new Error(errorData.detail || `HTTP error! status: ${res.status}`);
+          throw new Error(
+            errorData.detail || `HTTP error! status: ${res.status}`,
+          );
         }
         const data = await res.json();
         if (data && data.qns) {
@@ -335,7 +349,9 @@
         return;
       }
 
-      const examRes = await apiClient({ url: `/apis/exams/${examCode}` });
+      const examRes = await apiClient({
+        url: `/apis/exams/${examData.examCode}`,
+      });
 
       if (!examRes.ok) {
         const errorData = await examRes.json().catch(() => ({}));
@@ -353,13 +369,13 @@
       const design = examResponse.design;
 
       // Populate form fields from design data
-      examTitle = design.exam_name || "";
-      examMode = design.exam_mode
+      examData.examTitle = design.exam_name || "";
+      examData.examMode = design.exam_mode
         ? design.exam_mode.charAt(0).toUpperCase() + design.exam_mode.slice(1)
         : "Online";
-      examClass = design.standard || "";
-      examMediumName = design.medium || "";
-      examSubjectName = design.subject || "";
+      examData.examClass = design.standard || "";
+      examData.examMediumName = design.medium || "";
+      examData.examSubjectName = design.subject || "";
 
       // Map medium - try code first, then find code by name
       let mediumCode = design.medium_code || "";
@@ -371,7 +387,7 @@
         );
         mediumCode = foundMedium?.value || "";
       }
-      examMedium = mediumCode;
+      examData.examMedium = mediumCode;
 
       // Map subject - try code first, then find code by name
       let subjectCode = design.subject_code || "";
@@ -384,7 +400,7 @@
         );
         subjectCode = foundSubject?.value || "";
       }
-      examSubject = subjectCode;
+      examData.examSubject = subjectCode;
 
       const mappedMediumCode = mediumCode;
       const mappedSubjectCode = subjectCode;
@@ -396,33 +412,34 @@
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Now set the values - this ensures the dropdowns have their options loaded
-      examMedium = mappedMediumCode;
-      examSubject = mappedSubjectCode;
+      examData.examMedium = mappedMediumCode;
+      examData.examSubject = mappedSubjectCode;
 
       // Populate exam configuration
-      totalTime = design.total_time || 40;
-      totalQuestions = design.total_questions || design.no_of_qns || 40;
-      numberOfSets = design.number_of_sets || design.no_of_sets || 1;
-      numberOfVersions =
+      examData.totalTime = design.total_time;
+      examData.totalQuestions =
+        design.total_questions || design.no_of_qns || 40;
+      examData.numberOfSets = design.number_of_sets || design.no_of_sets || 1;
+      examData.numberOfVersions =
         design.number_of_versions || design.no_of_versions || 1;
 
       // Update API store with fetched data
       apiPayloadStore.updateExamDetails({
-        examTitle: examTitle,
-        examMode: examMode,
+        examTitle: examData.examTitle,
+        examMode: examData.examMode,
       });
 
       apiPayloadStore.updateExamConfig({
-        totalTime: totalTime,
-        totalQuestions: totalQuestions,
-        numberOfVersions: numberOfVersions,
-        numberOfSets: numberOfSets,
+        totalTime: examData.totalTime,
+        totalQuestions: examData.totalQuestions,
+        numberOfVersions: examData.numberOfVersions,
+        numberOfSets: examData.numberOfSets,
       });
 
       apiPayloadStore.updateClassSubject({
-        subject_code: examSubject,
-        medium_code: examMedium,
-        examClass: examClass,
+        subject_code: examData.examSubject,
+        medium_code: examData.examMedium,
+        examClass: examData.examClass,
       });
 
       // If there are chapters_topics in the design, update the store and pre-select them in selectedContentStore
@@ -501,10 +518,10 @@
 
   function handleReset() {
     allQuestions = [];
-    isAllocationConfirmed = false;
-    confirmedAllocationData = null;
+    examData.isAllocationConfirmed = false;
+    examData.confirmedAllocationData = null;
     if (!isEditMode) {
-      examCode = "";
+      examData.examCode = "";
     }
     selectedContentStore.clearAll();
   }
@@ -513,10 +530,10 @@
     examConfigValid = event.detail.isValid;
     if (examConfigValid) {
       apiPayloadStore.updateExamConfig({
-        total_time: totalTime,
-        total_questions: totalQuestions,
-        no_of_versions: numberOfVersions,
-        no_of_sets: numberOfSets,
+        total_time: examData.totalTime,
+        total_questions: examData.totalQuestions,
+        no_of_versions: examData.numberOfVersions,
+        no_of_sets: examData.numberOfSets,
       });
     }
   }
@@ -525,6 +542,7 @@
     allocationResult.message = "";
     allocationResult.type = "success";
     const data = event.detail || event;
+    console.log("event received", event);
     if (!data) {
       allocationResult.message =
         "Invalid allocation data received. Please try again.";
@@ -544,27 +562,27 @@
       return;
     }
 
-    isAllocationConfirmed = true;
-    confirmedAllocationData = allocationData;
+    examData.isAllocationConfirmed = true;
+    examData.confirmedAllocationData = allocationData;
 
     apiPayloadStore.updateFromAllocationData(allocationData);
 
     apiPayloadStore.updateExamDetails({
-      examTitle,
-      examMode,
+      examTitle: examData.examTitle,
+      examMode: examData.examMode,
     });
 
     apiPayloadStore.updateExamConfig({
-      totalTime,
-      totalQuestions,
-      numberOfVersions,
-      numberOfSets,
+      totalTime: examData.totalTime,
+      totalQuestions: examData.totalQuestions,
+      numberOfVersions: examData.numberOfVersions,
+      numberOfSets: examData.numberOfSets,
     });
 
     apiPayloadStore.updateClassSubject({
-      subject_code: examSubject,
-      medium_code: examMedium,
-      examClass,
+      subject_code: examData.examSubject,
+      medium_code: examData.examMedium,
+      examClass: examData.examClass,
     });
 
     if (allQuestions?.length > 0) {
@@ -588,9 +606,9 @@
     draftSaveSuccess = "";
     try {
       let response;
-      if (examCode) {
+      if (examData.examCode) {
         response = await apiClient({
-          url: `/apis/exams/${examCode}`,
+          url: `/apis/exams/${examData.examCode}`,
           options: {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -618,12 +636,12 @@
       const responseDataRaw = await response.json();
       const responseData = responseDataRaw.data || responseDataRaw;
       if (responseData?.exam_code && !isEditMode) {
-        examCode = responseData.exam_code;
+        examData.examCode = responseData.exam_code;
       }
 
       draftSaveSuccess = isEditMode
         ? `Draft "${payload.exam_name}" updated successfully!`
-        : `Draft "${payload.exam_name}" saved successfully! Exam Code: ${examCode || "N/A"}`;
+        : `Draft "${payload.exam_name}" saved successfully! Exam Code: ${examData.examCode || "N/A"}`;
     } catch (error) {
       draftSaveError =
         error.message || "Failed to save draft. Please try again.";
@@ -639,8 +657,13 @@
       generationResult.message = "";
       generationResult.type = "success";
 
-      if (confirmedAllocationData && confirmedAllocationData.selectedItems) {
-        apiPayloadStore.updateFromAllocationData(confirmedAllocationData);
+      if (
+        examData.confirmedAllocationData &&
+        examData.confirmedAllocationData.selectedItems
+      ) {
+        apiPayloadStore.updateFromAllocationData(
+          examData.confirmedAllocationData,
+        );
       }
 
       const payloadResult = apiPayloadStore.getApiPayload();
@@ -656,9 +679,9 @@
       };
 
       let response;
-      if (examCode) {
+      if (examData.examCode) {
         response = await apiClient({
-          url: `/apis/exams/${examCode}`,
+          url: `/apis/exams/${examData.examCode}`,
           options: {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -736,7 +759,7 @@
       classSubjectValid &&
       examConfigValid &&
       difficultyValid &&
-      isAllocationConfirmed
+      examData.isAllocationConfirmed
     ) {
       currentView = "review";
     } else {
@@ -747,7 +770,7 @@
       if (!examConfigValid) errors.push("Exam configuration is invalid");
       if (!difficultyValid)
         errors.push("Difficulty distribution must total 100%");
-      if (!isAllocationConfirmed)
+      if (!examData.isAllocationConfirmed)
         errors.push("Question allocation must be confirmed");
       alert(errors.join("\n"));
     }
@@ -781,18 +804,16 @@
 
   async function handleClassSubjectSelect(event) {
     const { standard, subject_code, medium_code } = event.detail;
-    if (standard) examClass = standard;
-    if (subject_code) examSubject = subject_code;
-    if (medium_code) examMedium = medium_code;
+    if (standard) examData.examClass = standard;
+    if (subject_code) examData.examSubject = subject_code;
+    if (medium_code) examData.examMedium = medium_code;
 
     apiPayloadStore.updateClassSubject({
-      subject_code: subject_code || examSubject,
-      medium_code: medium_code || examMedium,
-      examClass: standard || examClass,
+      subject_code: subject_code || examData.examSubject,
+      medium_code: medium_code || examData.examMedium,
+      examClass: standard || examData.examClass,
     });
   }
-
-
 
   onDestroy(() => {
     selectedContentStore.clearAll();
@@ -848,16 +869,11 @@
               <div class="space-y-8">
                 <div class="space-y-6">
                   <ExamDetailsForm
-                    bind:examTitle
-                    bind:examMode
+                    bind:examData
                     bind:isValid={examDetailsValid}
                   />
                   <ClassSubjectSelector
-                    bind:examClass
-                    bind:examMedium
-                    bind:examSubject
-                    bind:examMediumName
-                    bind:examSubjectName
+                    bind:examData
                     bind:isValid={classSubjectValid}
                     {mediumOptions}
                     {subjectOptions}
@@ -869,43 +885,34 @@
                 </div>
                 <hr class="divider-line" />
                 <ExamConfig
-                  bind:totalTime
-                  bind:numberOfSets
-                  bind:numberOfVersions
+                  bind:examData
                   on:validate={handleExamConfigValidation}
                 />
                 <hr class="divider-line" />
                 <DifficultyDistribution
-                  bind:easy
-                  bind:medium
-                  bind:hard
+                  bind:examData
                   bind:isValid={difficultyValid}
                   isReviewPageEnabled={false}
                 />
               </div>
             </Card>
 
-            {#if examClass && examSubject && examMedium}
+            {#if examData.examClass && examData.examSubject && examData.examMedium}
               <div class="space-y-6 mt-8 w-full">
-                <Card title="Content Selection & Question Allocation">
+                <Card
+                  title="Content Selection & Question Allocation"
+                  className="!p-8"
+                >
                   <NestedContentTable
                     bind:this={nestedContentTableRef}
-                    {examClass}
-                    {examSubject}
-                    {examMedium}
-                    bind:totalQuestions
-                    {examTitle}
-                    bind:examMode
-                    bind:totalTime
-                    bind:numberOfVersions
-                    bind:numberOfSets
+                    bind:examData
                     bind:showQuestions
                     bind:fetchedQuestions
                     bind:activeTab={nestedContentActiveTab}
                     {chaptersData}
                     isLoading={chaptersLoading}
                     error={chaptersError}
-                    questionIsLoading={questionIsLoading}
+                    {questionIsLoading}
                     on:select={handleQuestionSelect}
                     on:fetchQuestionsRequest={handleFetchQuestionsRequest}
                     on:allocationConfirmed={handleAllocationConfirmed}
@@ -940,19 +947,8 @@
         {:else if currentView === "review"}
           <div class="w-full">
             <ReviewPage
-              {examTitle}
-              {examMode}
-              {examClass}
-              examMedium={examMediumName}
-              examSubject={examSubjectName}
-              {totalTime}
-              {totalQuestions}
-              {numberOfSets}
-              {numberOfVersions}
-              allocationData={confirmedAllocationData}
-              {easy}
-              {medium}
-              {hard}
+              bind:examData
+              allocationData={examData.confirmedAllocationData}
               {generationInProgress}
               isReviewPageEnabled={true}
               questions={allQuestions}
@@ -972,14 +968,9 @@
         {:else if currentView === "generate"}
           <div class="w-full">
             <GeneratePapers
-              {examTitle}
-              {examClass}
-              examMedium={examMediumName}
-              examSubject={examSubjectName}
-              {numberOfSets}
-              {numberOfVersions}
+              bind:examData
               questions={allQuestions}
-              allocationData={confirmedAllocationData}
+              allocationData={examData.confirmedAllocationData}
               {generationResult}
               {generatedPapersData}
             />

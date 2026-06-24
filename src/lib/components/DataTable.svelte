@@ -2,7 +2,13 @@
   import { createEventDispatcher } from "svelte";
   import { error } from "@sveltejs/kit";
   import Select from "$lib/components/Select.svelte";
-  import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, ChevronRight } from '@lucide/svelte';
+  import {
+    ArrowUp,
+    ArrowDown,
+    ArrowUpDown,
+    ChevronLeft,
+    ChevronRight,
+  } from "@lucide/svelte";
   // import ErrorMessage from "$lib/components/reusable/ErrorMessage.svelte";
 
   export let showPagination = true;
@@ -638,7 +644,7 @@
                         on:click={() => {
                           handleCreateSortAccordingToObject(header);
                         }}
-                        class="px-4 text-left text-sm font-medium text-gray-600 w-full flex items-center capitalize"
+                        class="px-4 text-left text-xs font-medium text-gray-600 w-full flex items-center uppercase"
                         class:py-2={rowHeight === "compact"}
                         class:py-3={rowHeight === "normal"}
                         class:py-4={rowHeight === "medium"}
@@ -865,7 +871,5 @@
   {/if}
 {:else}
   <!-- <ErrorMessage error={notFoundMessage} /> -->
-   <div>
-    notFoundMessage
-   </div>
+  <div>notFoundMessage</div>
 {/if}

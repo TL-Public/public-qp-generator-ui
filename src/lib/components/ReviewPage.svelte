@@ -5,20 +5,9 @@
   import Button from "$lib/components/Button.svelte";
 
   // Props
-  export let examTitle = "";
-  export let examMode = "";
-  export let examClass = "";
-  export let examMedium = "";
-  export let examSubject = "";
-  export let totalTime = 0;
-  export let totalQuestions = 0;
-  export let numberOfSets = 1;
-  export let numberOfVersions = 1;
+  export let examData = {};
   export let groups = [];
   export let questions = [];
-  export let easy = "";
-  export let medium = "";
-  export let hard = "";
   export let isReviewPageEnabled = true;
   export let allocationData = null;
   export let generationInProgress = false;
@@ -35,7 +24,7 @@
     0,
   );
   $: allocationMode = allocationData?.allocationType || "Manual";
-  $: remaining = totalQuestions - totalAllocated; //   Move const to reactive statement
+  $: remaining = examData.totalQuestions - totalAllocated; //   Move const to reactive statement
 </script>
 
 <div class="space-y-8">
@@ -53,7 +42,7 @@
         <span
           class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-primary"
         >
-          {examMode}
+          {examData.examMode}
         </span>
       </div>
 
@@ -67,19 +56,27 @@
           <div class="space-y-3 flex w-full justify-between">
             <div class="flex flex-col">
               <span class="text-sm text-subtext">Title</span>
-              <span class="text-sm font-medium text-dark">{examTitle}</span>
+              <span class="text-sm font-medium text-dark"
+                >{examData.examTitle}</span
+              >
             </div>
             <div class="flex flex-col">
               <span class="text-sm text-subtext">Class</span>
-              <span class="text-sm font-medium text-dark">{examClass}</span>
+              <span class="text-sm font-medium text-dark"
+                >{examData.examClass}</span
+              >
             </div>
             <div class="flex flex-col">
               <span class="text-sm text-subtext">Medium</span>
-              <span class="text-sm font-medium text-dark">{examMedium}</span>
+              <span class="text-sm font-medium text-dark"
+                >{examData.examMediumName || examData.examMedium}</span
+              >
             </div>
             <div class="flex flex-col">
               <span class="text-sm text-subtext">Subject</span>
-              <span class="text-sm font-medium text-dark">{examSubject}</span>
+              <span class="text-sm font-medium text-dark"
+                >{examData.examSubjectName || examData.examSubject}</span
+              >
             </div>
           </div>
         </div>
@@ -90,7 +87,7 @@
             Paper Details
           </h3>
           <div class="grid grid-cols-3 gap-8">
-            <InfoCard label="Duration (mins)" count={totalTime}>
+            <InfoCard label="Duration (mins)" count={examData.totalTime}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-5 w-5 text-subtext"
@@ -104,7 +101,7 @@
                 />
               </svg>
             </InfoCard>
-            <InfoCard label="Sets" count={numberOfSets}>
+            <InfoCard label="Sets" count={examData.numberOfSets}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-5 w-5 text-subtext"
@@ -116,7 +113,7 @@
                 />
               </svg>
             </InfoCard>
-            <InfoCard label="Versions" count={numberOfVersions}>
+            <InfoCard label="Versions" count={examData.numberOfVersions}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-5 w-5 text-subtext"
@@ -135,7 +132,8 @@
         <div class="mt-2">
           <div class="flex items-center justify-end">
             <span class="text-sm text-subtext"
-              >Total papers to generate : {numberOfSets * numberOfVersions} paper(s)</span
+              >Total papers to generate : {examData.numberOfSets *
+                examData.numberOfVersions} paper(s)</span
             >
           </div>
         </div>
@@ -146,9 +144,7 @@
   <!-- Difficulty Distribution -->
   <Card title="Question Difficulty Distribution">
     <DifficultyDistribution
-      bind:easy
-      bind:medium
-      bind:hard
+      bind:examData
       bind:isValid={difficultyValid}
       {isReviewPageEnabled}
     />
@@ -174,7 +170,7 @@
 
         <div class="text-sm text-gray-600">
           Required Questions: <span class="font-medium text-dark"
-            >{totalQuestions}</span
+            >{examData.totalQuestions}</span
           >
         </div>
       </div>
@@ -249,9 +245,11 @@
                   <td class="px-6 py-4 text-center">
                     <div class="flex items-center justify-center">
                       <span
-                        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-green-800"
+                        class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-canvas-muted text-dark"
                       >
-                        {allocationMode === "Auto" ? "-" : item.questionsToAdd}
+                        {allocationMode === "Auto"
+                          ? "Auto Allocate"
+                          : item.questionsToAdd}
                       </span>
                     </div>
                   </td>

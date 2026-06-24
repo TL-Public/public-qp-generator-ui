@@ -12,15 +12,8 @@
   import { goto } from "$app/navigation";
   import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
 
-  // Props with default values
-  export let examTitle = "";
-  export let examClass = "";
-  export let examMedium = "";
-  export let examSubject = "";
-  export let numberOfSets = 1;
-  export let numberOfVersions = 1;
+  export let examData = {};
   export let questions = [];
-  export let allocationData;
   export let isEdit = false;
   export let generationResult = { message: "", type: "success" }; // New prop for generation result
 
@@ -35,11 +28,11 @@
         questionPaperId: paper.id || `Paper-${index + 1}`,
         eventId: displayData.examInfo?.exam_code || "N/A",
         eventName:
-          displayData.examInfo?.exam_name || examTitle || "Untitled Exam",
+          displayData.examInfo?.exam_name || examData.examTitle || "Untitled Exam",
         subjectName:
-          displayData.examInfo?.subject || examSubject || "Not specified",
-        standard: examClass || "Not specified",
-        medium: displayData.examInfo?.medium || examMedium || "Not specified",
+          displayData.examInfo?.subject || examData.examSubjectName || "Not specified",
+        standard: examData.examClass || "Not specified",
+        medium: displayData.examInfo?.medium || examData.examMediumName || "Not specified",
         questionsCount: paper.qns?.length || 0,
         rawPaper: paper, // Keep reference to original paper data
       }))
