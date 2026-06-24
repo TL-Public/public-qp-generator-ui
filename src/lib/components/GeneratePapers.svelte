@@ -56,8 +56,8 @@
   ];
 
   const actionConfigObject = [
-    { actionName: "PDF", label: "PDF", icon: FileText },
-    { actionName: "JSON", label: "JSON", icon: FileJson },
+    // { actionName: "PDF", label: "PDF", icon: FileText },
+    // { actionName: "JSON", label: "JSON", icon: FileJson },
     { actionName: "Print", label: "Print", icon: Printer },
     { actionName: "View", label: "View", icon: Eye },
   ];
@@ -124,22 +124,23 @@
       return;
     }
 
-    // Create HTML content for PDF using the correct JSON structure
-    const htmlContent = generatePDFContent(paper);
+    // Create HTML content for PDF (with printing enabled)
+    const htmlContent = generatePDFContent(paper, true);
 
-    // Create a new window for PDF generation
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
+    // Create a blob URL of the HTML content
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
 
-    // Trigger print dialog (which can save as PDF)
-    printWindow.focus();
+    // Open in a separate window/tab with noopener/noreferrer to isolate process
+    window.open(url, "_blank", "noopener,noreferrer");
+
+    // Revoke the Object URL after a timeout to free resources
     setTimeout(() => {
-      printWindow.print();
-    }, 500);
+      URL.revokeObjectURL(url);
+    }, 10000);
   }
 
-  function generatePDFContent(paper) {
+  function generatePDFContent(paper, shouldPrint = false) {
     // Get questions from the correct path in the JSON structure
     const questions = paper.rawPaper.qns || [];
 
@@ -250,6 +251,19 @@
           <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #666;">
             Generated on: ${new Date().toLocaleString()}
           </div>
+
+          ${
+            shouldPrint
+              ? `<script>
+            window.addEventListener('load', () => {
+              window.focus();
+              setTimeout(() => {
+                window.print();
+              }, 500);
+            });
+          <\/script>`
+              : ""
+          }
         </body>
       </html>
     `;
