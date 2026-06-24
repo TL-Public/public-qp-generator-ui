@@ -34,13 +34,13 @@
 <script>
   import "../app.css";
   import Header from "$lib/components/Header.svelte";
-  import Footer from '$lib/components/Footer.svelte';
+  import Footer from "$lib/components/Footer.svelte";
   import { page } from "$app/stores";
   import { authStore } from "$lib/stores/authStore";
   import Sidebar from "$lib/components/Sidebar.svelte";
   // import Header2 from "$lib/components/reusable/Header2.svelte";
   import BreadCrumbs from "$lib/components/BreadCrumbs.svelte";
-  import {onMount} from 'svelte'
+  import { onMount } from "svelte";
   import {
     Home,
     FileText,
@@ -57,8 +57,8 @@
     Database,
     BookMarked,
     BookOpen,
-    Upload, 
-    Layers2 ,
+    Upload,
+    Layers2,
     BookA,
     Notebook,
   } from "@lucide/svelte";
@@ -66,31 +66,43 @@
   import { checkSidebarRules } from "$lib/utils/helper.js";
   // import { injectGAHead } from '$lib/utils/helper.js';
 
-  $: console.log('$authStore in layout.svelte',$authStore)
+  $: console.log("$authStore in layout.svelte", $authStore);
   export let data;
 
   $: isAuthenticated = data?.session?.isAuthenticated;
 
   let title;
 
-    // Routes where padding should be removed
-  const noPaddingRoutes = ["/quiz/:exam_code/attempt","/exams/:exam_code/attempt"];
+  // Routes where padding should be removed
+  const noPaddingRoutes = [
+    "/quiz/:exam_code/attempt",
+    "/exams/:exam_code/attempt",
+  ];
 
   // Routes where breadcrumbs should be hidden
-  const hideBreadcrumbsRoutes = ["/forgot-password", "/quiz/:exam_code/attempt", "/exams/:exam_code/attempt","/login"];
+  const hideBreadcrumbsRoutes = [
+    "/forgot-password",
+    "/quiz/:exam_code/attempt",
+    "/exams/:exam_code/attempt",
+    "/login",
+  ];
 
   $: sidebarList = [
     { name: "Dashboard", link: "/home", key: "DASHBOARD", icon: Home },
-   
 
     {
-    name: "Create Paper",
-    link: "/create-paper",
-    key: "CREATE_PAPER",
-    icon: FilePlus,
-  },
-    { name: "View Papers", link: "/questionPapers", key: "VIEW_PAPERS", icon: Search },
-     { name: "Users", link: "/admin", key: "USERS", icon: Users },
+      name: "Create Paper",
+      link: "/create-paper",
+      key: "CREATE_PAPER",
+      icon: FilePlus,
+    },
+    {
+      name: "View Papers",
+      link: "/questionPapers",
+      key: "VIEW_PAPERS",
+      icon: Search,
+    },
+    { name: "Users", link: "/admin", key: "USERS", icon: Users },
 
     //  {
     //   name: "Masterdata",
@@ -115,14 +127,15 @@
 
     {
       name: "My Profile",
-      link: $authStore?.userId ? `/updateProfile/${$authStore?.userId}` : "/unauthorized",
+      link: $authStore?.userId
+        ? `/updateProfile/${$authStore?.userId}`
+        : "/unauthorized",
       key: "PROFILE",
       icon: User,
     },
   ];
 
   const excludedRoutes = ["/questionPapers", "/create-paper"];
-
 
   const staticRouteTitles = {
     "/home": "Dashboard",
@@ -158,10 +171,6 @@
     // { route: '/quiz/:exam_code/attempt', query: { step: 'running' } },
   ];
 
-  
-
-
-
   function checkNoPaddingRules(routes, currentUrl) {
     const currentPath = currentUrl.pathname;
 
@@ -183,23 +192,19 @@
       return regex.test(currentPath);
     });
   }
-  
+
   $: hidesidebar = checkSidebarRules(sidebarHideRules, $page.url);
 
   $: removePadding = checkNoPaddingRules(noPaddingRoutes, $page.url);
 
-  $: hideBreadcrumbs = checkHideBreadcrumbsRules(hideBreadcrumbsRoutes, $page.url);
-
-
+  $: hideBreadcrumbs = checkHideBreadcrumbsRules(
+    hideBreadcrumbsRoutes,
+    $page.url,
+  );
 
   $: filteredSidebarList = (() => {
-       return sidebarList;
-  
+    return sidebarList;
   })();
-
-
-
-
 </script>
 
 <svelte:head>
@@ -218,17 +223,17 @@
     <main
       class={removePadding
         ? "flex-1 min-w-0 bg-gray-50 min-h-screen"
-        : "flex-1 min-w-0 bg-gray-50 p-4 pt-20 md:pt-4 px-8 min-h-screen"}
+        : "flex-1 min-w-0 bg-gray-50 py-8   px-12 sm:px-8 min-h-screen"}
     >
-    {#if !hideBreadcrumbs}
-      <div class="mb-4 md:mb-8">
-        <BreadCrumbs
-          route={$page.route.id}
-          params={$page.params}
-          searchParams={$page.url.searchParams.toString()}
-        />
-      </div>
-    {/if}
+      {#if !hideBreadcrumbs}
+        <div class="mb-4 md:mb-8">
+          <BreadCrumbs
+            route={$page.route.id}
+            params={$page.params}
+            searchParams={$page.url.searchParams.toString()}
+          />
+        </div>
+      {/if}
       <slot></slot>
     </main>
   </div>

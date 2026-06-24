@@ -98,7 +98,7 @@
 
 <!-- Dashboard Content -->
 
-<div class="max-w-7xl mx-auto py-4 sm:py-8">
+<div class=" py-4 sm:py-8">
   <!-- Dashboard Stats - Responsive layout -->
   <div class="mb-6 sm:mb-8">
     <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">

@@ -8,8 +8,6 @@
     goto(userId ? `/myProfile/${userId}` : "/home");
   }
 
-
-
   export async function handleLogout() {
     try {
       const res = await fetch("/apis/logout", { method: "POST" });
@@ -74,9 +72,9 @@
   // Exact route match for nested items (more precise than compareRouteBase)
   function isExactRouteMatch(route1, route2) {
     // Normalize routes by removing leading/trailing slashes
-    const normalizedRoute1 = route1?.replace(/^\/+|\/+$/g, '') || '';
-    const normalizedRoute2 = route2?.replace(/^\/+|\/+$/g, '') || '';
-    
+    const normalizedRoute1 = route1?.replace(/^\/+|\/+$/g, "") || "";
+    const normalizedRoute2 = route2?.replace(/^\/+|\/+$/g, "") || "";
+
     // Exact match comparison
     return normalizedRoute1 === normalizedRoute2;
   }
@@ -110,10 +108,9 @@
     expandedItems = expandedItems; // Trigger reactivity
   }
 
-   async function handleLogout() {
-      await authStore.logout();
-      goto('/login');
-    }
+  async function handleLogoutAction() {
+    await handleLogout();
+  }
 
   // Auto-expand if child route is active, and auto-collapse when navigating away
   // Explicitly depend on route to ensure it runs when route changes
@@ -145,7 +142,7 @@
     //     item?.key?.toLowerCase()?.trim()
     //   );
     // });
-    filteredSidebarList = sidebarList
+    filteredSidebarList = sidebarList;
   }
 
   onMount(() => {
@@ -158,14 +155,12 @@
     });
     return () => unsubscribe(); // Cleanup subscription
   });
-
-  
 </script>
 
 <aside
   class="w-1/5 min-w-60 p-4 border-r border-gray-50 md:block hidden bg-slate-800 text-white shadow-xl"
 >
-  <div class="p-6 border-b border-slate-700">
+  <div class="px-6 py-4 border-b border-slate-700 mb-4">
     <a href="/home" class="flex items-center space-x-3">
       <div
         class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center"
@@ -184,7 +179,7 @@
       <div class="mb-2">
         <div
           class="p-2 rounded-md font-medium text-primary text-sm 2xl:text-base {isItemActive(
-            item
+            item,
           )
             ? 'bg-indigo-600 text-white hover:none'
             : 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
@@ -199,7 +194,7 @@
               this={expandedItems.has(item.key) ? ChevronDown : ChevronRight}
               size={16}
               class="shrink-0 chevron-icon transition-transform duration-300 {expandedItems.has(
-                item.key
+                item.key,
               )
                 ? 'rotate-0'
                 : ''}"
@@ -216,7 +211,7 @@
                 href={child.link}
                 class="flex items-center gap-3 p-2 rounded-md text-sm nested-item {isExactRouteMatch(
                   child.link,
-                  route
+                  route,
                 )
                   ? 'bg-indigo-500 text-white'
                   : 'text-slate-400 hover:bg-slate-700 hover:text-white'}"
@@ -238,7 +233,7 @@
         aria-current={compareRouteBase(item.link, route) ? "page" : undefined}
         class="p-2 rounded-md font-medium mb-2 text-primary text-sm 2xl:text-base {compareRouteBase(
           item.link,
-          route
+          route,
         )
           ? 'bg-indigo-600 text-white hover:none'
           : 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
@@ -251,7 +246,7 @@
     {/if}
   {/each}
 
-  <div class="p-4 border-t border-slate-700">
+  <div class="p-4 border-t border-slate-700 mt-4">
     <button on:click={handleViewProfile} class="cursor-pointer">
       <div class="flex items-center space-x-3 px-4 py-3">
         <div
@@ -264,14 +259,14 @@
             {$authStore?.userName || "-"}
           </p>
           <span class="text-xs font-medium text-slate-400 truncate"
-            >{$authStore?.roleName || '-'}</span
+            >{$authStore?.roleName || "-"}</span
           >
         </div>
       </div>
     </button>
 
     <button
-      on:click={handleLogout}
+      on:click={handleLogoutAction}
       class="w-full flex items-center space-x-3 px-4 py-2 mt-2 text-slate-300 hover:bg-red-400 hover:text-white rounded-lg transition-all duration-200"
     >
       <svelte:component this={LogOut} size={18} />
