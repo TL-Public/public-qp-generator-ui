@@ -323,6 +323,7 @@
             parent: {
               name: allQuestion.grp_type_name,
               type: allQuestion.grp_type,
+              code: allQuestion.grp_type_code,
             },
           };
         });
@@ -337,6 +338,36 @@
     } finally {
       questionIsLoading = false;
     }
+  }
+
+  function countQuestionsForItemInWizard(itemCode, itemType, questions, excludedCodes) {
+    if (!questions || questions.length === 0) return 0;
+    
+    const activeQuestions = questions.filter(q => !excludedCodes.includes(q.id));
+    
+    return activeQuestions.filter(q => {
+      if (q.parent?.code === itemCode) return true;
+      
+      if (itemType === 'chapter') {
+        if (q.parent?.type === 'topic') {
+          const topicCode = q.parent.code;
+          if (topicCode && topicCode.startsWith(itemCode + '_')) return true;
+        }
+        if (q.parent?.type === 'subtopic') {
+          const subtopicCode = q.parent.code;
+          if (subtopicCode && subtopicCode.startsWith(itemCode + '_')) return true;
+        }
+      }
+      
+      if (itemType === 'topic') {
+        if (q.parent?.type === 'subtopic') {
+          const subtopicCode = q.parent.code;
+          if (subtopicCode && subtopicCode.startsWith(itemCode + '_')) return true;
+        }
+      }
+      
+      return false;
+    }).length;
   }
 
   // Fetch exam data on mount if in edit mode
@@ -453,12 +484,32 @@
         Array.isArray(chaptersTopics) &&
         chaptersTopics.length > 0
       ) {
+        // Check if all qn_count values are null or undefined.
+        // If all are null, it means it is Auto allocation. If any qn_count is not null, it is Manual.
+        let allQnCountNull = true;
+        for (const group of chaptersTopics) {
+          const codes = group.codes || [];
+          for (const item of codes) {
+            if (item.qn_count !== null && typeof item.qn_count !== 'undefined') {
+              allQnCountNull = false;
+              break;
+            }
+          }
+          if (!allQnCountNull) break;
+        }
+
         apiPayloadStore.update((currentStore) => ({
           ...currentStore,
           chapters_topics: chaptersTopics,
+          is_ai_selected: allQnCountNull,
         }));
 
         // Pre-populate the selectedContentStore hierarchy/selections
+        const chaptersList = [];
+        const topicsList = [];
+        const selectedItems = [];
+        let totalAllocated = 0;
+
         for (const group of chaptersTopics) {
           const type = group.type;
           const codes = group.codes || [];
@@ -471,12 +522,27 @@
               parent_code: item.parent_code || null,
             };
 
+            const qCount = item.qn_count || item.question_count || 0;
+            totalAllocated += qCount;
+            selectedItems.push({
+              code: item.code,
+              name: item.name,
+              type: type,
+              questionAvailable: qCount || 0,
+              questionsToAdd: qCount,
+              isSelected: true
+            });
+
             if (type === "topic") {
               selectionData.parent_code =
                 item.chapter_details?.code || item.parent_code;
+              topicsList.push(item);
             } else if (type === "subtopic") {
               selectionData.parent_code =
                 item.topic_details?.code || item.parent_code;
+            } else if (type === "chapter") {
+              selectionData.parent_code = null;
+              chaptersList.push(item);
             }
 
             selectedContentStore.addSelection(selectionData);
@@ -487,6 +553,104 @@
                 selectionData.question_count,
               );
             }
+          }
+        }
+
+        // Initialize confirmedAllocationData for review page
+        const initialAllocationData = {
+          allocationType: allQnCountNull ? "Auto" : "Manual",
+          allocationLevel: "chapter",
+          totalRequired: examData.totalQuestions,
+          totalAllocated: totalAllocated,
+          totalAvailable: 0,
+          remaining: examData.totalQuestions - totalAllocated,
+          selectedItems: selectedItems
+        };
+        examData.confirmedAllocationData = initialAllocationData;
+        examData.isAllocationConfirmed = true;
+        apiPayloadStore.updateFromAllocationData(initialAllocationData);
+
+        // Fetch questions for these chapters and topics in edit mode
+        if (chaptersList.length > 0 || topicsList.length > 0) {
+          questionIsLoading = true;
+          try {
+            const apiCalls = [];
+            if (chaptersList.length > 0) {
+              const chapterCodes = chaptersList.map((c) => c.code).join(",");
+              apiCalls.push(
+                apiClient({
+                  url: `/apis/questions?type=chapter&codes=${chapterCodes}`,
+                }),
+              );
+            }
+            if (topicsList.length > 0) {
+              const topicCodes = topicsList.map((t) => t.code).join(",");
+              apiCalls.push(
+                apiClient({
+                  url: `/apis/questions?type=topic&codes=${topicCodes}`,
+                }),
+              );
+            }
+
+            const responses = await Promise.all(apiCalls);
+            let allQuestionsData = [];
+            for (const res of responses) {
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.qns) {
+                  const cleanedQuestions = data.qns.map(cleanQuestionText);
+                  allQuestionsData = [...allQuestionsData, ...cleanedQuestions];
+                }
+              }
+            }
+
+            if (allQuestionsData.length > 0) {
+              fetchedQuestions = allQuestionsData.map((allQuestion) => {
+                return {
+                  id: allQuestion.code,
+                  text: allQuestion.text,
+                  type: allQuestion.type,
+                  marks: allQuestion.marks,
+                  difficulty: allQuestion.difficulty_level,
+                  parent: {
+                    name: allQuestion.grp_type_name,
+                    type: allQuestion.grp_type,
+                    code: allQuestion.grp_type_code,
+                  },
+                };
+              });
+
+              selectedContentStore.setQuestions(fetchedQuestions);
+              
+              const excludedCodes = design.qtn_codes_to_exclude || [];
+              for (const code of excludedCodes) {
+                selectedContentStore.removeQuestion(code);
+              }
+
+              // Update initial allocation counts with actual questions fetched
+              if (examData.confirmedAllocationData) {
+                let updatedTotalAvailable = 0;
+                const updatedSelectedItems = examData.confirmedAllocationData.selectedItems.map(item => {
+                  const availableCount = countQuestionsForItemInWizard(item.code, item.type, fetchedQuestions, excludedCodes);
+                  updatedTotalAvailable += availableCount;
+                  return {
+                    ...item,
+                    questionAvailable: availableCount
+                  };
+                });
+
+                examData.confirmedAllocationData = {
+                  ...examData.confirmedAllocationData,
+                  totalAvailable: updatedTotalAvailable,
+                  selectedItems: updatedSelectedItems
+                };
+                apiPayloadStore.updateFromAllocationData(examData.confirmedAllocationData);
+              }
+            }
+          } catch (err) {
+            console.error("Failed to pre-fetch questions in edit mode:", err);
+          } finally {
+            questionIsLoading = false;
           }
         }
       }
