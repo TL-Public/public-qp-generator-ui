@@ -5,11 +5,7 @@
 
   const dispatch = createEventDispatcher();
 
-  export let examClass = '';
-  export let examMedium = '';
-  export let examSubject = '';
-  export let examMediumName = '';
-  export let examSubjectName = '';
+  export let examData = {};
   export let isValid = false;
 
   export let mediumOptions = [];
@@ -38,28 +34,28 @@
 
   // Watch for changes and dispatch selected values
   $: {
-    if (examClass && examMedium && examSubject) {
+    if (examData.examClass && examData.examMedium && examData.examSubject) {
       // Find the selected subject and medium's full data
-      const selectedSubject = subjectOptions.find(s => s.value === examSubject);
-      const selectedMedium = mediumOptions.find(m => m.value === examMedium);
+      const selectedSubject = subjectOptions.find(s => s.value === examData.examSubject);
+      const selectedMedium = mediumOptions.find(m => m.value === examData.examMedium);
       
-      if (selectedSubject) examSubjectName = selectedSubject.label;
-      if (selectedMedium) examMediumName = selectedMedium.label;
+      if (selectedSubject) examData.examSubjectName = selectedSubject.label;
+      if (selectedMedium) examData.examMediumName = selectedMedium.label;
 
       // Dispatch the event with the codes
       const selectionData = {
-        standard: examClass,
-        medium_code: examMedium,
-        subject_code: examSubject,
-        subject_name: examSubjectName,
-        medium_name: examMediumName
+        standard: examData.examClass,
+        medium_code: examData.examMedium,
+        subject_code: examData.examSubject,
+        subject_name: examData.examSubjectName,
+        medium_name: examData.examMediumName
       };
 
       dispatch('selectionComplete', selectionData);
       dispatch('change', selectionData);
     }
     
-    isValid = examClass !== '' && examMedium !== '' && examSubject !== '';
+    isValid = examData.examClass !== '' && examData.examMedium !== '' && examData.examSubject !== '';
   }
 
   function handleRetrySubjects() {
@@ -75,9 +71,9 @@
         label="Class"
         options={classOptions}
         required={true}
-        bind:value={examClass}
+        bind:value={examData.examClass}
       />
-      {#if !examClass}
+      {#if !examData.examClass}
         <p class="text-xs text-red-600">Class is required</p>
       {/if}
     </div>
@@ -87,10 +83,10 @@
         label="Medium"
         options={mediumOptions}
         required={true}
-        bind:value={examMedium}
+        bind:value={examData.examMedium}
         disabled={loading.mediums}
       />
-      {#if !examMedium}
+      {#if !examData.examMedium}
         <p class="text-xs text-red-600">Medium is required</p>
       {/if}
     </div>
@@ -111,10 +107,10 @@
         label="Subject"
         options={subjectOptions}
         required={true}
-        bind:value={examSubject}
+        bind:value={examData.examSubject}
         disabled={loading.subjects || subjectOptions.length === 0}
       />
-      {#if !examSubject}
+      {#if !examData.examSubject}
         <p class="text-xs text-red-600">Subject is required</p>
       {/if}
       {#if !loading.subjects && subjectOptions.length === 0}

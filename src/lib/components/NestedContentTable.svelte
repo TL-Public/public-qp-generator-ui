@@ -22,17 +22,7 @@
   } from "$lib/utils/textUtils.js";
   import RemovedQuestionsTable from "$lib/components/RemovedQuestionsTable.svelte";
 
-  export let examClass = "";
-  export let examSubject = ""; // exam subject code
-  export let examMedium = ""; // same as examMedium
-  export let totalQuestions = "";
-  export let examTitle = "";
-
-  export let examMode = "";
-  export let totalTime = "";
-
-  export let numberOfVersions = "";
-  export let numberOfSets = "";
+  export let examData = {};
 
   export let showQuestions = false;
   export let activeTab = "selected-content";
@@ -541,17 +531,17 @@
         <TabPanel name="selected-content">
           <div class="mt-4" id="selected-content">
             <SelectedContentTable
-              bind:totalQuestions
+              bind:totalQuestions={examData.totalQuestions}
               examData={{
-                exam_name: examTitle,
+                exam_name: examData.examTitle,
                 exam_type_code: "1000",
-                subject_code: examSubject,
-                medium_code: examMedium,
-                exam_mode: examMode,
-                total_time: totalTime,
-                no_of_versions: numberOfVersions,
-                no_of_sets: numberOfSets,
-                exam_class: examClass,
+                subject_code: examData.examSubject,
+                medium_code: examData.examMedium,
+                exam_mode: examData.examMode,
+                total_time: examData.totalTime,
+                no_of_versions: examData.numberOfVersions,
+                no_of_sets: examData.numberOfSets,
+                exam_class: examData.examClass,
               }}
               on:allocationConfirmed={handleAllocationConfirmed}
               on:draftSaved
