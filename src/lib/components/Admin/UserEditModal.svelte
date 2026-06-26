@@ -10,6 +10,7 @@
   import Input from "$lib/components/Input.svelte";
   import SearchableComboBox from "$lib/components/SearchableComboBox.svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
+  import { generateStrongPassword, validatePasswordInput } from "$lib/utils/helper.js";
   export let user = null;
 
   const dispatch = createEventDispatcher();
@@ -159,43 +160,13 @@
 
   // Password validation
   function validatePassword() {
-    passwordValidationErrors = {};
-    let isValid = true;
-
-    if (!passwordData.new_password) {
-      passwordValidationErrors.new_password = "New password is required";
-      isValid = false;
-    } else if (api.adminUpdatePassword?.validatePassword) {
-      try {
-        const validation = api.adminUpdatePassword.validatePassword({
-          new_password: passwordData.new_password,
-        });
-
-        if (!validation.isValid) {
-          passwordValidationErrors.new_password = validation.errors.join(". ");
-          isValid = false;
-        }
-      } catch (e) {
-        console.warn("Password validation not available:", e);
-        // Basic validation fallback
-        if (passwordData.new_password.length < 8) {
-          passwordValidationErrors.new_password =
-            "Password must be at least 8 characters long";
-          isValid = false;
-        }
-      }
-    }
-
-    if (!passwordData.confirm_password) {
-      passwordValidationErrors.confirm_password =
-        "Please confirm your password";
-      isValid = false;
-    } else if (passwordData.new_password !== passwordData.confirm_password) {
-      passwordValidationErrors.confirm_password = "Passwords do not match";
-      isValid = false;
-    }
-
-    return isValid;
+    const result = validatePasswordInput(
+      passwordData.new_password,
+      passwordData.confirm_password,
+      api.adminUpdatePassword?.validatePassword
+    );
+    passwordValidationErrors = result.errors;
+    return result.isValid;
   }
 
   // Handle form submission
@@ -309,23 +280,7 @@
 
   // Generate strong password
   function generatePassword() {
-    let generated = "";
-    if (api.adminUpdatePassword?.generateStrongPassword) {
-      try {
-        generated = api.adminUpdatePassword.generateStrongPassword(12);
-      } catch (e) {
-        console.warn("Password generation not available:", e);
-      }
-    }
-
-    if (!generated) {
-      // Fallback password generation
-      const chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-      for (let i = 0; i < 12; i++) {
-        generated += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-    }
+    const generated = generateStrongPassword(12);
 
     passwordData.new_password = generated;
     passwordData.confirm_password = generated;

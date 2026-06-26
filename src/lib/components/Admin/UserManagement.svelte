@@ -5,6 +5,7 @@
   import { api, apiClient } from "$lib/utils/api.js";
   import UserTable from "./UserTable.svelte";
   import UserEditModal from "./UserEditModal.svelte";
+  import UserAddModal from "./UserAddModal.svelte";
   import LoadingSpinner from "../LoadingSpinner.svelte";
   import Button from "$lib/components/Button.svelte";
   import { Plus, RefreshCcw } from "@lucide/svelte";
@@ -24,6 +25,7 @@
 
   // Modal state
   let showEditModal = false;
+  let showAddModal = false;
   let selectedUser = null;
 
   // Check for success message from URL params (when returning from add user page)
@@ -116,9 +118,17 @@
     selectedUser = null;
   }
 
-  // Function to navigate to add user page
+  // Function to open add user modal
   function handleAddUser() {
-    goto("/users/add");
+    showAddModal = true;
+  }
+
+  // Function to handle user addition success
+  function handleUserAdded(event) {
+    const { message } = event.detail;
+    successMessage = message || "User added successfully!";
+    showAddModal = false;
+    loadUsers();
   }
 
   // Function to refresh users list
@@ -273,5 +283,13 @@
     user={selectedUser}
     on:userUpdated={handleUserUpdated}
     on:close={handleCloseEditModal}
+  />
+{/if}
+
+<!-- Add User Modal -->
+{#if showAddModal}
+  <UserAddModal
+    on:userAdded={handleUserAdded}
+    on:close={() => (showAddModal = false)}
   />
 {/if}

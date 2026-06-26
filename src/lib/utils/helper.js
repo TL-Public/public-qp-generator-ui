@@ -229,3 +229,71 @@ export function injectGAHead(measurementId, options = {}) {
 		console.warn('injectGAHead failed', e);
 	}
 }
+
+
+export function generateStrongPassword(length = 12){
+      const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
+      const numberChars = "0123456789";
+      const specialChars = '!@#$%^&*(),.?":{}|<>';
+
+      const allChars =
+        uppercaseChars + lowercaseChars + numberChars + specialChars;
+
+      let password = "";
+
+      password +=
+        uppercaseChars[Math.floor(Math.random() * uppercaseChars.length)];
+      password +=
+        lowercaseChars[Math.floor(Math.random() * lowercaseChars.length)];
+      password += numberChars[Math.floor(Math.random() * numberChars.length)];
+      password += specialChars[Math.floor(Math.random() * specialChars.length)];
+
+      for (let i = 4; i < length; i++) {
+        password += allChars[Math.floor(Math.random() * allChars.length)];
+      }
+
+      return password
+        .split("")
+        .sort(() => Math.random() - 0.5)
+        .join("");
+}
+
+export function validatePasswordInput(newPassword, confirmPassword, apiValidatePassword = null) {
+  const errors = {};
+  let isValid = true;
+
+  if (!newPassword) {
+    errors.new_password = "Password is required";
+    isValid = false;
+  } else if (apiValidatePassword) {
+    try {
+      const validation = apiValidatePassword({
+        new_password: newPassword,
+      });
+
+      if (!validation.isValid) {
+        errors.new_password = validation.errors.join(". ");
+        isValid = false;
+      }
+    } catch (e) {
+      if (newPassword.length < 8) {
+        errors.new_password = "Password must be at least 8 characters long";
+        isValid = false;
+      }
+    }
+  } else if (newPassword.length < 8) {
+    errors.new_password = "Password must be at least 8 characters long";
+    isValid = false;
+  }
+
+  if (!confirmPassword) {
+    errors.confirm_password = "Please confirm your password";
+    isValid = false;
+  } else if (newPassword !== confirmPassword) {
+    errors.confirm_password = "Passwords do not match";
+    isValid = false;
+  }
+
+  return { isValid, errors };
+}
