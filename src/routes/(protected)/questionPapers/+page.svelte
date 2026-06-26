@@ -8,6 +8,12 @@
   import Modal from "$lib/components/Modal.svelte";
   import DropDownSelector from "$lib/components/DropDownSelector.svelte";
   import Button from "$lib/components/Button.svelte";
+  import DeletionModal from "$lib/components/DeletionModal.svelte";
+  import Portal from "$lib/components/Portal.svelte";
+  import PortalBackdrop from "$lib/components/PortalBackdrop.svelte";
+  import ExamSummaryModal from "$lib/components/exams/ExamSummaryModal.svelte";
+  import PortalModal from "$lib/components/PortalModal.svelte";
+  import TablePagination from "$lib/components/TablePagination.svelte";
 
   // Search and sort state
   let sortField = "created_at";
@@ -345,14 +351,7 @@
     }
   }
 
-  function handleJumpToPage(event) {
-    event.preventDefault();
-    const page = parseInt(jumpToPage);
-    if (page && page >= 1 && page <= totalPages) {
-      goToPage(page);
-      jumpToPage = "";
-    }
-  }
+
 
   function handleEdit(paperId) {
     if (paperId) {
@@ -560,48 +559,24 @@
     }
   }
 
-  function handleDelete(examCode) {
-    examToDelete = examCode;
+  function handleDelete(paper) {
+    examToDelete = paper;
     showDeleteModal = true;
   }
 
-  async function confirmDelete() {
-    if (deleteConfirmText.toLowerCase() !== "confirm") {
-      errorMessage = 'Please type "confirm" to delete the exam';
-      return;
-    }
+  function handleDeleteSuccess(event) {
+    const { message } = event.detail;
+    successMessage = message;
+    errorMessage = "";
+    showDeleteModal = false;
+    examToDelete = null;
 
-    try {
-      const res = await apiClient({
-        url: `/apis/exams/${examToDelete}`,
-        options: {
-          method: "DELETE",
-        },
-      });
+    // Refresh the search results
+    searchPapers();
 
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(
-          errorData.detail || `HTTP error! status: ${res.status}`,
-        );
-      }
-
-      successMessage = `Question paper with exam code '${examToDelete}' deleted successfully.`;
-      errorMessage = "";
-      showDeleteModal = false;
-      deleteConfirmText = "";
-      examToDelete = null;
-
-      // Refresh the search results
-      await searchPapers();
-
-      setTimeout(() => {
-        successMessage = "";
-      }, 5000);
-    } catch (error) {
-      errorMessage = error.message || "Failed to delete exam";
-      console.error("Delete error:", error);
-    }
+    setTimeout(() => {
+      successMessage = "";
+    }, 5000);
   }
 
   // Helper function to format date
@@ -1190,7 +1165,7 @@
                                 <button
                                   type="button"
                                   class="text-red-600 hover:text-red-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
-                                  on:click={() => handleDelete(paper.exam_code)}
+                                  on:click={() => handleDelete(paper)}
                                 >
                                   Delete
                                 </button>
@@ -1269,116 +1244,12 @@
 
           <!-- Enhanced Pagination Controls -->
           {#if totalPages > 1}
-            <div
-              class="mt-6 flex items-center justify-between border-t border-gray-200 p-4"
-            >
-              <!-- Left side: Page info -->
-              <div class="text-sm text-gray-700">
-                Page <span class="font-medium">{currentPage}</span> of
-                <span class="font-medium">{totalPages}</span>
-                <span class="text-gray-500 ml-2"
-                  >({totalResults} total results)</span
-                >
-              </div>
-
-              <!-- Center: Page navigation -->
-              <div class="flex items-center space-x-1">
-                <!-- First page -->
-                <button
-                  type="button"
-                  class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                  1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                  disabled={currentPage === 1}
-                  on:click={() => goToPage(1)}
-                >
-                  First
-                </button>
-
-                <!-- Previous page -->
-                <button
-                  type="button"
-                  class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                  1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                  disabled={currentPage === 1}
-                  on:click={() => goToPage(currentPage - 1)}
-                >
-                  Previous
-                </button>
-
-                <!-- Page numbers -->
-                {#each Array.from( { length: Math.min(5, totalPages) }, (_, i) => {
-                    const start = Math.max(1, currentPage - 2);
-                    const end = Math.min(totalPages, start + 4);
-                    const adjustedStart = Math.max(1, end - 4);
-                    return adjustedStart + i;
-                  }, ).filter((page) => page <= totalPages) as page}
-                  <button
-                    type="button"
-                    class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                    page
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                    on:click={() => goToPage(page)}
-                  >
-                    {page}
-                  </button>
-                {/each}
-
-                <!-- Next page -->
-                <button
-                  type="button"
-                  class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                  totalPages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                  disabled={currentPage === totalPages}
-                  on:click={() => goToPage(currentPage + 1)}
-                >
-                  Next
-                </button>
-
-                <!-- Last page -->
-                <button
-                  type="button"
-                  class="px-3 py-2 text-sm font-medium rounded-md {currentPage ===
-                  totalPages
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
-                  disabled={currentPage === totalPages}
-                  on:click={() => goToPage(totalPages)}
-                >
-                  Last
-                </button>
-              </div>
-
-              <!-- Right side: Jump to page -->
-              <div class="flex items-center space-x-2">
-                <span class="text-sm text-gray-700">Jump to:</span>
-                <form
-                  on:submit|preventDefault={handleJumpToPage}
-                  class="flex items-center space-x-1"
-                >
-                  <input
-                    type="number"
-                    bind:value={jumpToPage}
-                    min="1"
-                    max={totalPages}
-                    placeholder="Page"
-                    class="w-16 px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <button
-                    type="submit"
-                    class="px-3 py-1 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-150"
-                  >
-                    Go
-                  </button>
-                </form>
-              </div>
-            </div>
+            <TablePagination
+              {currentPage}
+              {totalPages}
+              {totalResults}
+              on:pageChange={(e) => goToPage(e.detail)}
+            />
           {/if}
         {/if}
       </div>
@@ -1388,22 +1259,24 @@
 
 <!-- All existing modals remain the same -->
 {#if showViewModal}
-  <Modal
-    loading={detailsLoading}
-    error={errorMessage}
-    papers={examPapers}
-    paperDetails={selectedPaperDetails}
-    on:close={() => {
-      showViewModal = false;
-      selectedPaperDetails = null;
-    }}
-    on:back={() => (selectedPaperDetails = null)}
-    on:viewPaper={handlePaperView}
-    examTitle={selectedPaper?.exam_name}
-    numberOfQuestions={selectedPaper?.total_questions}
-    subject={selectedPaper?.subject}
-    standard={selectedPaper?.standard}
-  />
+  <PortalModal>
+    <ExamSummaryModal
+      loading={detailsLoading}
+      error={errorMessage}
+      papers={examPapers}
+      paperDetails={selectedPaperDetails}
+      on:close={() => {
+        showViewModal = false;
+        selectedPaperDetails = null;
+      }}
+      on:back={() => (selectedPaperDetails = null)}
+      on:viewPaper={handlePaperView}
+      examTitle={selectedPaper?.exam_name}
+      numberOfQuestions={selectedPaper?.total_questions}
+      subject={selectedPaper?.subject}
+      standard={selectedPaper?.standard}
+    />
+  </PortalModal>
 {/if}
 
 {#if showPaperDetailsModal}
@@ -1433,73 +1306,23 @@
 {/if}
 
 {#if showDeleteModal}
-  <div
-    class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4"
-  >
-    <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-      <div class="flex items-center mb-4">
-        <div class="flex-shrink-0">
-          <svg
-            class="h-6 w-6 text-red-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3 class="text-lg font-medium text-dark">Confirm Delete</h3>
-        </div>
-      </div>
-
-      <div class="mb-4">
-        <p class="text-sm text-gray-600">
-          Are you sure you want to delete exam <span
-            class="font-semibold text-dark">{examToDelete}</span
-          >? This action cannot be undone.
-        </p>
-      </div>
-
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">
-          Type "confirm" to delete:
-        </label>
-        <input
-          type="text"
-          bind:value={deleteConfirmText}
-          placeholder="Type 'confirm'"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500"
-        />
-      </div>
-
-      <div class="flex justify-end space-x-3">
-        <button
-          type="button"
-          class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-150"
-          on:click={() => {
-            showDeleteModal = false;
-            deleteConfirmText = "";
-            examToDelete = null;
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors duration-150"
-          on:click={confirmDelete}
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
+  <DeletionModal
+    item={examToDelete}
+    itemType="question paper"
+    confirmText="confirm"
+    deletionUrl={`/apis/exams/${examToDelete?.exam_code}`}
+    details={[
+      { label: "Name", value: examToDelete?.exam_name },
+      { label: "Code", value: examToDelete?.exam_code },
+      { label: "Status", value: examToDelete?.status },
+      { label: "Subject", value: examToDelete?.subject },
+    ]}
+    on:cancel={() => {
+      showDeleteModal = false;
+      examToDelete = null;
+    }}
+    on:success={handleDeleteSuccess}
+  />
 {/if}
 
 <!-- TODO FIX WIDTH  -->
