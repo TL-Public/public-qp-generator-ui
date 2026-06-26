@@ -37,6 +37,10 @@ export function formatDDMMYYYY(dateString) {
   }
 }
 
+// takes in date string and converts to this format: 24/6/2026, 7:43:35 am
+export function formatDate(date) {
+  return new Date(date).toLocaleString();
+}
 // Helper: convert route pattern to regex (e.g. '/quiz/:exam_code/attempt')
 export function routePatternToRegex(route) {
   // Escape regex special chars except for :param

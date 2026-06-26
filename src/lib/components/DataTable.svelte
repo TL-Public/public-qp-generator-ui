@@ -644,7 +644,7 @@
                         on:click={() => {
                           handleCreateSortAccordingToObject(header);
                         }}
-                        class="px-4 text-left text-xs font-medium text-gray-600 w-full flex items-center uppercase"
+                        class="px-4 text-left text-sm font-medium text-gray-600 w-full flex items-center uppercase"
                         class:py-2={rowHeight === "compact"}
                         class:py-3={rowHeight === "normal"}
                         class:py-4={rowHeight === "medium"}
@@ -742,9 +742,9 @@
                                     data,
                                     action?.modal,
                                   )}
-                                class="text-accent hover:text-indigo-900 relative {action.isDisabled &&
+                                class="text-primary hover:underline cursor-pointer text-sm relative {action.isDisabled &&
                                 action.isDisabled(data)
-                                  ? 'opacity-30 cursor-not-allowed hover:text-accent'
+                                  ? 'opacity-30 cursor-not-allowed hover:text-primary'
                                   : ''}"
                               >
                                 <div class="flex gap-1 items-center">
