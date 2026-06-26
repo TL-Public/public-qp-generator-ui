@@ -9,11 +9,17 @@
   import DropDownSelector from "$lib/components/DropDownSelector.svelte";
   import Button from "$lib/components/Button.svelte";
   import DeletionModal from "$lib/components/DeletionModal.svelte";
+  import Input from "$lib/components/Input.svelte";
   import Portal from "$lib/components/Portal.svelte";
   import PortalBackdrop from "$lib/components/PortalBackdrop.svelte";
   import ExamSummaryModal from "$lib/components/exams/ExamSummaryModal.svelte";
   import PortalModal from "$lib/components/PortalModal.svelte";
   import TablePagination from "$lib/components/TablePagination.svelte";
+  import ExamLinkCell from "$lib/components/ui/ExamLinkCell.svelte";
+  import ExamCodeCell from "$lib/components/ui/ExamCodeCell.svelte";
+  import DataTable from "$lib/components/DataTable.svelte";
+  import SpinnerWithText from "$lib/components/SpinnerWithText.svelte";
+  import SearchableComboBox from "$lib/components/SearchableComboBox.svelte";
 
   // Search and sort state
   let sortField = "created_at";
@@ -270,7 +276,10 @@
 
       const responseData = await res.json();
       // Update state with response data
-      exams = responseData.exams || [];
+      exams = (responseData.exams || []).map((item) => ({
+        ...item,
+        created_at: formatDate(item.created_at),
+      }));
       totalResults = responseData.total || 0;
       totalPages = Math.ceil(totalResults / itemsPerPage);
     } catch (err) {
@@ -285,11 +294,57 @@
     }
   }
 
+  let mediumOptions = [];
+  let subjectOptions = [];
+  let classOptions = Array.from({ length: 12 }, (_, i) => ({
+    id: (i + 1).toString(),
+    name: (i + 1).toString(),
+  }));
+
+  let selectedSubjectId = "";
+  let selectedMediumId = "";
+  let selectedClassId = "";
+
+  async function fetchMediums() {
+    try {
+      const res = await apiClient({ url: "/apis/mediums" });
+      if (res.ok) {
+        const responseData = await res.json();
+        const data = responseData.data || [];
+        mediumOptions = data.map((item) => ({
+          id: item.medium_code,
+          name: item.medium_name,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch mediums:", err);
+    }
+  }
+
+  async function fetchSubjects() {
+    try {
+      const res = await apiClient({ url: "/apis/subjects" });
+      if (res.ok) {
+        const responseData = await res.json();
+        const data = responseData.data || [];
+        subjectOptions = data.map((item) => ({
+          id: item.subject_code,
+          name: item.subject_name,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to fetch subjects:", err);
+    }
+  }
+
   // Subscribe to auth store to check admin status
-  onMount(() => {
+  onMount(async () => {
     const unsubscribe = authStore.subscribe((value) => {
       isAdmin = value?.roleCode === "100";
     });
+
+    fetchMediums();
+    fetchSubjects();
 
     return unsubscribe;
   });
@@ -305,9 +360,9 @@
       end_date: "",
     };
 
-    const params = new URLSearchParams($page.url.searchParams);
-    params.set("page", "1");
-    goto(`${$page.url.pathname}?${params.toString()}`, { replaceState: true });
+    // const params = new URLSearchParams($page.url.searchParams);
+    // params.set("page", "1");
+    // goto(`${$page.url.pathname}?${params.toString()}`, { replaceState: true });
   }
 
   function toggleAdvancedSearch() {
@@ -351,11 +406,62 @@
     }
   }
 
-
-
   function handleEdit(paperId) {
     if (paperId) {
       goto(`/questionPapers/${paperId}/edit?step=2`);
+    }
+  }
+
+  const actionConfigObject = [
+    {
+      actionName: "view",
+      label: "View",
+    },
+    {
+      actionName: "delete",
+      label: "Delete",
+      isHidden: (data) => !isAdmin,
+    },
+    {
+      actionName: "edit",
+      label: "Edit",
+      isHidden: (data) => data.status !== "draft",
+    },
+  ];
+
+  const customRenderers = {
+    exam_code: (data) => ({
+      component: ExamCodeCell,
+      props: {
+        data: data,
+        onClick: (d) => handlePaperSummary(d.exam_code),
+      },
+    }),
+    exam_name: (data) => ({
+      component: ExamLinkCell,
+      props: {
+        data: data,
+        onClick: handleViewPaper,
+      },
+    }),
+    subject: (data) =>
+      `<span class="text-sm text-gray-600">${data.subject || "N/A"}, ${data.standard || ""}, ${data.medium || ""}</span>`,
+    status: (data) =>
+      `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusStyling(data.status)}">${formatStatus(data.status)}</span>`,
+    number_of_sets: (data) => `
+      <div class="text-sm text-gray-600">Sets - ${data.number_of_sets || 1}</div>
+      <div class="text-sm text-gray-600">Versions - ${data.number_of_versions || 1}</div>
+    `,
+  };
+
+  function handleTableAction(event) {
+    const { actionName, actionData } = event.detail;
+    if (actionName === "view") {
+      handleViewPaper(actionData);
+    } else if (actionName === "delete") {
+      handleDelete(actionData);
+    } else if (actionName === "edit") {
+      handleEdit(actionData.exam_code);
     }
   }
 
@@ -743,17 +849,17 @@
 
   <!-- Step 2: Search Filters (Only shown after status is selected) -->
   {#if showAdvancedSearch}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-      <div class="flex items-center justify-between mb-6">
+    <div class="bg-white rounded-lg border border-stroke p-6 mb-8">
+      <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="text-lg font-semibold text-dark">Advanced Search</h3>
-          <p class="text-sm text-gray-600 mt-1">
+          <p class="text-sm text-subtext">
             Refine your search with additional filters for {formatStatus(
               selectedStatus?.value,
             ).toLowerCase()} papers
           </p>
         </div>
-        <div class="flex items-center space-x-2 text-sm text-gray-500">
+        <div class="flex items-center space-x-2 text-sm text-subtext">
           <span
             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
           >
@@ -763,8 +869,8 @@
       </div>
 
       <!-- Search Filters -->
-      <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
-        <div class="flex items-center mb-4">
+      <div class="bg-white py-6 border-t border-t-stroke">
+        <!-- <div class="flex items-center mb-4">
           <svg
             class="w-5 h-5 text-gray-400 mr-2"
             fill="none"
@@ -779,62 +885,54 @@
             />
           </svg>
           <h4 class="text-sm font-medium text-dark">Search Filters</h4>
-        </div>
+        </div> -->
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <!-- Exam Name -->
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-2"
-              >Exam Name</label
-            >
-            <input
-              type="text"
-              bind:value={searchFilters.exam_name}
-              on:input={handleFilterChange}
-              placeholder="Search exam name..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <Input
+            type="text"
+            label="Exam Name"
+            placeholder="Search exam name..."
+            bind:value={searchFilters.exam_name}
+            on:handleInputData={handleFilterChange}
+          />
 
           <!-- Subject -->
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-2"
-              >Subject</label
-            >
-            <input
-              type="text"
-              bind:value={searchFilters.subject}
-              on:input={handleFilterChange}
+          <div class="relative">
+            <SearchableComboBox
+              options={subjectOptions}
+              label="Subject"
               placeholder="Search subject..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              bind:selectedItemName={searchFilters.subject}
+              bind:selectedItemId={selectedSubjectId}
+              on:handleDispatchComboBoxData={handleFilterChange}
+              on:handleDispatchFilterData={handleFilterChange}
             />
           </div>
 
           <!-- Medium -->
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-2"
-              >Medium</label
-            >
-            <input
-              type="text"
-              bind:value={searchFilters.medium}
-              on:input={handleFilterChange}
+          <div class="relative">
+            <SearchableComboBox
+              options={mediumOptions}
+              label="Medium"
               placeholder="Search medium..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              bind:selectedItemName={searchFilters.medium}
+              bind:selectedItemId={selectedMediumId}
+              on:handleDispatchComboBoxData={handleFilterChange}
+              on:handleDispatchFilterData={handleFilterChange}
             />
           </div>
 
           <!-- Standard/Class -->
-          <div>
-            <label class="block text-xs font-medium text-gray-700 mb-2"
-              >Standard/Class</label
-            >
-            <input
-              type="text"
-              bind:value={searchFilters.standard}
-              on:input={handleFilterChange}
+          <div class="relative">
+            <SearchableComboBox
+              options={classOptions}
+              label="Standard/Class"
               placeholder="Search class..."
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              bind:selectedItemName={searchFilters.standard}
+              bind:selectedItemId={selectedClassId}
+              on:handleDispatchComboBoxData={handleFilterChange}
+              on:handleDispatchFilterData={handleFilterChange}
             />
           </div>
 
@@ -867,11 +965,7 @@
 
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-3 justify-end">
-          <button
-            type="button"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
-            on:click={clearAllFilters}
-          >
+          <Button type="button" btnType="tertiary" on:click={clearAllFilters}>
             <div class="flex items-center justify-center">
               <svg
                 class="w-4 h-4 mr-2"
@@ -888,13 +982,8 @@
               </svg>
               Clear Filters
             </div>
-          </button>
-          <button
-            type="button"
-            class="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={loading}
-            on:click={searchPapers}
-          >
+          </Button>
+          <Button type="button" disabled={loading} on:click={searchPapers}>
             {#if loading}
               <div class="flex items-center justify-center">
                 <svg
@@ -936,7 +1025,7 @@
                 Search
               </div>
             {/if}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -1026,28 +1115,11 @@
 
         <!-- Results table -->
         {#if loading}
-          <div class="text-center py-12">
-            <svg
-              class="animate-spin mx-auto h-8 w-8 text-blue-600"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <p class="text-gray-500 mt-2">Searching papers...</p>
-          </div>
+          <SpinnerWithText
+            size="md"
+            variant="primary"
+            message="Searching papers..."
+          />
         {:else if exams.length === 0}
           <div class="text-center py-12">
             <svg
@@ -1069,178 +1141,26 @@
             </p>
           </div>
         {:else}
-          <div class="border-y border-y-stroke overflow-hidden">
-            <div class="overflow-x-auto">
-              <table
-                class="min-w-full divide-y divide-gray-200"
-                style="table-layout: fixed; width: 100%;"
-              >
-                <thead class="bg-gray-50">
-                  <tr>
-                    {#each headers as header}
-                      <th
-                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
-                        style="width: {getColumnWidth(
-                          header.key,
-                        )}; min-width: {header.key === 'actions'
-                          ? '120px'
-                          : 'auto'};"
-                        on:click={() =>
-                          !["actions"].includes(header.key) &&
-                          toggleSort(header.key)}
-                      >
-                        <div class="flex items-center space-x-1">
-                          <span class="text-xs">{header.label}</span>
-                          {#if !["actions"].includes(header.key)}
-                            <span class="text-gray-400">
-                              {sortField === header.key
-                                ? sortDirection === "asc"
-                                  ? "↑"
-                                  : "↓"
-                                : "↕"}
-                            </span>
-                          {/if}
-                        </div>
-                      </th>
-                    {/each}
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  {#each exams as paper}
-                    <tr class="hover:bg-gray-50 transition-colors duration-150">
-                      {#each headers as header}
-                        <td
-                          class="px-4 py-4 text-xs {header.key === 'actions' ||
-                          header.key === 'exam_name'
-                            ? ''
-                            : 'whitespace-nowrap'}"
-                          style="width: {getColumnWidth(
-                            header.key,
-                          )}; {header.key === 'actions'
-                            ? 'min-width: 120px;'
-                            : ''} {header.key === 'exam_name'
-                            ? 'word-wrap: break-word; overflow-wrap: break-word;'
-                            : ''}"
-                        >
-                          {#if header.key === "exam_name"}
-                            <div class="w-full">
-                              <button
-                                type="button"
-                                class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-left font-medium transition-colors duration-150 w-full"
-                                title="Click to view paper details: {paper[
-                                  header.key
-                                ]}"
-                                on:click={() => handleViewPaper(paper)}
-                              >
-                                <div
-                                  class="break-words"
-                                  style="word-wrap: break-word; overflow-wrap: break-word;"
-                                >
-                                  {paper[header.key]}
-                                </div>
-                                <div class="text-xs text-red-600 mt-1">
-                                  ({paper["total_questions"]} Questions)
-                                </div>
-                              </button>
-                            </div>
-                          {:else if header.key === "exam_code"}
-                            <button
-                              type="button"
-                              class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-left font-medium transition-colors duration-150"
-                              on:click={() =>
-                                handlePaperSummary(paper[header.key])}
-                            >
-                              {paper[header.key]}
-                            </button>
-                          {:else if header.key === "actions"}
-                            <div class="flex items-center space-x-2">
-                              <button
-                                type="button"
-                                class="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
-                                on:click={() => handleViewPaper(paper)}
-                              >
-                                View
-                              </button>
-                              {#if isAdmin}
-                                <button
-                                  type="button"
-                                  class="text-red-600 hover:text-red-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
-                                  on:click={() => handleDelete(paper)}
-                                >
-                                  Delete
-                                </button>
-                              {/if}
-                              <!-- Only show Edit button for draft status -->
-                              {#if paper.status === "draft"}
-                                <button
-                                  type="button"
-                                  class="text-green-600 hover:text-green-800 focus:outline-none focus:underline text-xs font-medium transition-colors duration-150"
-                                  on:click={() => handleEdit(paper.exam_code)}
-                                >
-                                  Edit
-                                </button>
-                              {/if}
-                            </div>
-                          {:else if header.key === "created_at"}
-                            <span
-                              class="text-xs text-gray-600"
-                              title={paper[header.key]}
-                            >
-                              {formatDate(paper[header.key])}
-                            </span>
-                          {:else if header.key === "status"}
-                            <!-- Use alternative name for status display -->
-                            <span
-                              class="inline-flex word-wrap items-center px-2.5 py-0.5 rounded-full text-xs font-medium {getStatusStyling(
-                                paper[header.key],
-                              )}"
-                            >
-                              {formatStatus(paper[header.key])}
-                            </span>
-                          {:else if header.key === "subject"}
-                            <span
-                              class="text-xs text-gray-600"
-                              title={paper[header.key]}
-                            >
-                              {paper["subject"]}, {paper["standard"]}, {paper[
-                                "medium"
-                              ]}
-                            </span>
-                          {:else if header.key === "number_of_sets"}
-                            <div
-                              class="text-xs text-gray-600"
-                              title={paper[header.key]}
-                            >
-                              No Of Sets - {paper["number_of_sets"]}
-                            </div>
-                            <div
-                              class="text-xs text-gray-600"
-                              title={paper[header.key]}
-                            >
-                              No Of Versions - {paper["number_of_versions"]}
-                            </div>
-                          {:else if header.key === "exam_type"}
-                            <div
-                              class="text-xs text-gray-600"
-                              title={paper[header.key]}
-                            >
-                              {paper["exam_type"]}, {paper["exam_mode"]}
-                            </div>
-                          {:else}
-                            <div class="text-dark" title={paper[header.key]}>
-                              <span class="word-wrap"
-                                >{paper[header.key] || "N/A"}</span
-                              >
-                            </div>
-                          {/if}
-                        </td>
-                      {/each}
-                    </tr>
-                  {/each}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <DataTable
+            tableHeadersDisplay={[
+              { key: "exam_code", name: "Exam Code", width: "15%" },
+              { key: "exam_name", name: "Exam Title", width: "25%" },
+              { key: "subject", name: "Class & Subject", width: "20%" },
+              { key: "status", name: "Status", width: "15%" },
+              { key: "number_of_sets", name: "Sets & Versions", width: "15%" },
+              { key: "created_at", name: "Created at", width: "15%" },
+              { key: "created_by", name: "Created by", width: "15%" },
+            ]}
+            tableData={exams}
+            showPagination={false}
+            serverSidePagination={true}
+            apiCurrentPage={currentPage}
+            apiTotalItems={totalResults}
+            apiPageSize={itemsPerPage}
+            {actionConfigObject}
+            {customRenderers}
+            on:tableActionClick={handleTableAction}
+          />
 
           <!-- Enhanced Pagination Controls -->
           {#if totalPages > 1}
@@ -1766,28 +1686,11 @@
           {/if}
         {:else}
           <!-- Loading State -->
-          <div class="text-center py-12">
-            <svg
-              class="animate-spin mx-auto h-8 w-8 text-blue-600"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-            <p class="text-gray-500 mt-2">Loading exam details...</p>
-          </div>
+          <SpinnerWithText
+            size="md"
+            variant="primary"
+            message="Loading exam details..."
+          />
         {/if}
       </div>
 
