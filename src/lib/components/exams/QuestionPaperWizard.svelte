@@ -73,12 +73,6 @@
   let examConfigValid = true;
   let difficultyValid = true;
 
-  // Subscribe to API store for debugging
-  let apiStoreData = {};
-  apiPayloadStore.subscribe((store) => {
-    apiStoreData = store;
-  });
-
   // Draft saving state
   let isSavingDraft = false;
   let draftSaveError = "";
@@ -340,34 +334,332 @@
     }
   }
 
-  function countQuestionsForItemInWizard(itemCode, itemType, questions, excludedCodes) {
+  function countQuestionsForItemInWizard(
+    itemCode,
+    itemType,
+    questions,
+    excludedCodes,
+  ) {
     if (!questions || questions.length === 0) return 0;
-    
-    const activeQuestions = questions.filter(q => !excludedCodes.includes(q.id));
-    
-    return activeQuestions.filter(q => {
+
+    const activeQuestions = questions.filter(
+      (q) => !excludedCodes.includes(q.id),
+    );
+
+    return activeQuestions.filter((q) => {
       if (q.parent?.code === itemCode) return true;
-      
-      if (itemType === 'chapter') {
-        if (q.parent?.type === 'topic') {
+
+      if (itemType === "chapter") {
+        if (q.parent?.type === "topic") {
           const topicCode = q.parent.code;
-          if (topicCode && topicCode.startsWith(itemCode + '_')) return true;
+          if (topicCode && topicCode.startsWith(itemCode + "_")) return true;
         }
-        if (q.parent?.type === 'subtopic') {
+        if (q.parent?.type === "subtopic") {
           const subtopicCode = q.parent.code;
-          if (subtopicCode && subtopicCode.startsWith(itemCode + '_')) return true;
+          if (subtopicCode && subtopicCode.startsWith(itemCode + "_"))
+            return true;
         }
       }
-      
-      if (itemType === 'topic') {
-        if (q.parent?.type === 'subtopic') {
+
+      if (itemType === "topic") {
+        if (q.parent?.type === "subtopic") {
           const subtopicCode = q.parent.code;
-          if (subtopicCode && subtopicCode.startsWith(itemCode + '_')) return true;
+          if (subtopicCode && subtopicCode.startsWith(itemCode + "_"))
+            return true;
         }
       }
-      
+
       return false;
     }).length;
+  }
+
+  /**
+   * Fetches the dropdown options for mediums and subjects.
+   */
+  async function initializeDropdownOptions() {
+    await Promise.all([fetchMediums(), fetchSubjects()]);
+  }
+
+  /**
+   * Fetches exam details from the API using the current examCode.
+   * @param {string} examCode - The code of the exam to fetch.
+   * @returns {Promise<Object>} The parsed exam response containing design and status.
+   */
+  async function fetchExamDetails(examCode) {
+    const examRes = await apiClient({
+      url: `/apis/exams/${examCode}`,
+    });
+
+    if (!examRes.ok) {
+      const errorData = await examRes.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || `HTTP error! status: ${examRes.status}`,
+      );
+    }
+
+    return await examRes.json();
+  }
+
+  /**
+   * Populates the local state with values loaded from the exam design configuration.
+   * @param {Object} design - The design details object from the exam API response.
+   */
+  async function populateExamFields(design) {
+    examData.examTitle = design.exam_name || "";
+    examData.examMode = design.exam_mode
+      ? design.exam_mode.charAt(0).toUpperCase() + design.exam_mode.slice(1)
+      : "Online";
+    examData.examClass = design.standard || "";
+    examData.examMediumName = design.medium || "";
+    examData.examSubjectName = design.subject || "";
+
+    // Map medium code
+    let mediumCode = design.medium_code || "";
+    if (!mediumCode && design.medium) {
+      const foundMedium = mediumOptions.find(
+        (m) =>
+          m.label?.toLowerCase() === design.medium?.toLowerCase() ||
+          m.label === design.medium,
+      );
+      mediumCode = foundMedium?.value || "";
+    }
+    examData.examMedium = mediumCode;
+
+    // Map subject code
+    let subjectCode = design.subject_code || "";
+    if (!subjectCode && design.subject) {
+      const foundSubject = subjectOptions.find(
+        (s) =>
+          (s.label?.toLowerCase() === design.subject?.toLowerCase() ||
+            s.label === design.subject) &&
+          (s.standard === design.standard || !design.standard),
+      );
+      subjectCode = foundSubject?.value || "";
+    }
+    examData.examSubject = subjectCode;
+
+    const mappedMediumCode = mediumCode;
+    const mappedSubjectCode = subjectCode;
+
+    // Tick and delay to ensure select elements are completely mounted and populated
+    await tick();
+
+    examData.examMedium = mappedMediumCode;
+    examData.examSubject = mappedSubjectCode;
+
+    // Populate question count details
+    examData.totalTime = design.total_time;
+    examData.totalQuestions = design.total_questions || 40;
+    examData.numberOfSets = design.number_of_sets || 1;
+    examData.numberOfVersions = design.number_of_versions || 1;
+
+    // Sync state values with apiPayloadStore
+    apiPayloadStore.updatePayload({
+      exam_name: examData.examTitle,
+      exam_mode: examData.examMode,
+      total_time: examData.totalTime,
+      total_questions: examData.totalQuestions,
+      no_of_versions: examData.numberOfVersions,
+      no_of_sets: examData.numberOfSets,
+      subject_code: examData.examSubject,
+      medium_code: examData.examMedium,
+      standard: examData.examClass,
+    });
+  }
+
+  /**
+   * Evaluates if all qn_count values in loaded chapters_topics are null to infer the allocation mode.
+   * @param {Array} chaptersTopics - Selected chapters/topics array.
+   * @returns {boolean} True if all qn_count values are null (signaling Auto allocation).
+   */
+  function determineAllocationMode(chaptersTopics) {
+    let allQnCountNull = true;
+    for (const group of chaptersTopics) {
+      const codes = group.codes || [];
+      for (const item of codes) {
+        if (item.qn_count !== null && typeof item.qn_count !== "undefined") {
+          allQnCountNull = false;
+          break;
+        }
+      }
+      if (!allQnCountNull) break;
+    }
+    return allQnCountNull;
+  }
+
+  /**
+   * Pre-populates selectedContentStore and sets up initial allocation tracking.
+   * @param {Array} chaptersTopics - Selected chapters/topics list.
+   * @param {boolean} allQnCountNull - Allocation mode indicator.
+   * @returns {Object} Lists of parsed chapters/topics and calculated totals.
+   */
+  function initializeAllocationState(chaptersTopics, allQnCountNull) {
+    const chaptersList = [];
+    const topicsList = [];
+    const selectedItems = [];
+    let totalAllocated = 0;
+
+    for (const group of chaptersTopics) {
+      const type = group.type;
+      const codes = group.codes || [];
+      for (const item of codes) {
+        const selectionData = {
+          type: type,
+          code: item.code,
+          name: item.name,
+          question_count: item.qn_count || item.question_count || 0,
+          parent_code: item.parent_code || null,
+        };
+
+        const qCount = item.qn_count || item.question_count || 0;
+        totalAllocated += qCount;
+        selectedItems.push({
+          code: item.code,
+          name: item.name,
+          type: type,
+          questionAvailable: qCount || 0,
+          questionsToAdd: qCount,
+          isSelected: true,
+        });
+
+        if (type === "topic") {
+          selectionData.parent_code =
+            item.chapter_details?.code || item.parent_code;
+          topicsList.push(item);
+        } else if (type === "subtopic") {
+          selectionData.parent_code =
+            item.topic_details?.code || item.parent_code;
+        } else if (type === "chapter") {
+          selectionData.parent_code = null;
+          chaptersList.push(item);
+        }
+
+        selectedContentStore.addSelection(selectionData);
+
+        if (selectionData.question_count > 0) {
+          selectedContentStore.updateQuestionCount(
+            item.code,
+            selectionData.question_count,
+          );
+        }
+      }
+    }
+
+    // Set initial confirmed allocation details for review step navigation
+    const initialAllocationData = {
+      allocationType: allQnCountNull ? "Auto" : "Manual",
+      allocationLevel: "chapter",
+      totalRequired: examData.totalQuestions,
+      totalAllocated: totalAllocated,
+      totalAvailable: 0,
+      remaining: examData.totalQuestions - totalAllocated,
+      selectedItems: selectedItems,
+    };
+    examData.confirmedAllocationData = initialAllocationData;
+    examData.isAllocationConfirmed = true;
+    apiPayloadStore.updateFromAllocationData(initialAllocationData);
+
+    return { chaptersList, topicsList, selectedItems, totalAllocated };
+  }
+
+  /**
+   * Queries APIs for question counts and populates active/excluded store lists.
+   * @param {Array} chaptersList - Selected chapters.
+   * @param {Array} topicsList - Selected topics.
+   * @param {Object} design - The design object containing exclusions.
+   */
+  async function preFetchQuestionsForEdit(chaptersList, topicsList, design) {
+    if (chaptersList.length === 0 && topicsList.length === 0) return;
+
+    questionIsLoading = true;
+    try {
+      const apiCalls = [];
+      if (chaptersList.length > 0) {
+        const chapterCodes = chaptersList.map((c) => c.code).join(",");
+        apiCalls.push(
+          apiClient({
+            url: `/apis/questions?type=chapter&codes=${chapterCodes}`,
+          }),
+        );
+      }
+      if (topicsList.length > 0) {
+        const topicCodes = topicsList.map((t) => t.code).join(",");
+        apiCalls.push(
+          apiClient({
+            url: `/apis/questions?type=topic&codes=${topicCodes}`,
+          }),
+        );
+      }
+
+      const responses = await Promise.all(apiCalls);
+      let allQuestionsData = [];
+      for (const res of responses) {
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.qns) {
+            const cleanedQuestions = data.qns.map(cleanQuestionText);
+            allQuestionsData = [...allQuestionsData, ...cleanedQuestions];
+          }
+        }
+      }
+
+      if (allQuestionsData.length > 0) {
+        fetchedQuestions = allQuestionsData.map((allQuestion) => {
+          return {
+            id: allQuestion.code,
+            text: allQuestion.text,
+            type: allQuestion.type,
+            marks: allQuestion.marks,
+            difficulty: allQuestion.difficulty_level,
+            parent: {
+              name: allQuestion.grp_type_name,
+              type: allQuestion.grp_type,
+              code: allQuestion.grp_type_code,
+            },
+          };
+        });
+
+        selectedContentStore.setQuestions(fetchedQuestions);
+
+        // Remove initially excluded questions in store
+        const excludedCodes = design.qtn_codes_to_exclude || [];
+        for (const code of excludedCodes) {
+          selectedContentStore.removeQuestion(code);
+        }
+
+        // Tally available questions and update confirmedAllocationData
+        if (examData.confirmedAllocationData) {
+          let updatedTotalAvailable = 0;
+          const updatedSelectedItems =
+            examData.confirmedAllocationData.selectedItems.map((item) => {
+              const availableCount = countQuestionsForItemInWizard(
+                item.code,
+                item.type,
+                fetchedQuestions,
+                excludedCodes,
+              );
+              updatedTotalAvailable += availableCount;
+              return {
+                ...item,
+                questionAvailable: availableCount,
+              };
+            });
+
+          examData.confirmedAllocationData = {
+            ...examData.confirmedAllocationData,
+            totalAvailable: updatedTotalAvailable,
+            selectedItems: updatedSelectedItems,
+          };
+          apiPayloadStore.updateFromAllocationData(
+            examData.confirmedAllocationData,
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Failed to pre-fetch questions in edit mode:", err);
+    } finally {
+      questionIsLoading = false;
+    }
   }
 
   // Fetch exam data on mount if in edit mode
@@ -376,127 +668,32 @@
     loadError = null;
 
     try {
-      // Always fetch mediums and subjects first
-      await Promise.all([fetchMediums(), fetchSubjects()]);
+      // Always fetch mediums and subjects dropdown options first
+      await initializeDropdownOptions();
 
       if (!isEditMode) {
         return;
       }
 
-      const examRes = await apiClient({
-        url: `/apis/exams/${examData.examCode}`,
-      });
-
-      if (!examRes.ok) {
-        const errorData = await examRes.json().catch(() => ({}));
-        throw new Error(
-          errorData.detail || `HTTP error! status: ${examRes.status}`,
-        );
-      }
-
-      const examResponse = await examRes.json();
-
+      // Fetch active exam config details
+      const examResponse = await fetchExamDetails(examData.examCode);
       if (!examResponse || !examResponse.design) {
         throw new Error("Invalid response: missing design data");
       }
 
       const design = examResponse.design;
 
-      // Populate form fields from design data
-      examData.examTitle = design.exam_name || "";
-      examData.examMode = design.exam_mode
-        ? design.exam_mode.charAt(0).toUpperCase() + design.exam_mode.slice(1)
-        : "Online";
-      examData.examClass = design.standard || "";
-      examData.examMediumName = design.medium || "";
-      examData.examSubjectName = design.subject || "";
+      // Populate input configuration fields
+      await populateExamFields(design);
 
-      // Map medium - try code first, then find code by name
-      let mediumCode = design.medium_code || "";
-      if (!mediumCode && design.medium) {
-        const foundMedium = mediumOptions.find(
-          (m) =>
-            m.label?.toLowerCase() === design.medium?.toLowerCase() ||
-            m.label === design.medium,
-        );
-        mediumCode = foundMedium?.value || "";
-      }
-      examData.examMedium = mediumCode;
-
-      // Map subject - try code first, then find code by name
-      let subjectCode = design.subject_code || "";
-      if (!subjectCode && design.subject) {
-        const foundSubject = subjectOptions.find(
-          (s) =>
-            (s.label?.toLowerCase() === design.subject?.toLowerCase() ||
-              s.label === design.subject) &&
-            (s.standard === design.standard || !design.standard),
-        );
-        subjectCode = foundSubject?.value || "";
-      }
-      examData.examSubject = subjectCode;
-
-      const mappedMediumCode = mediumCode;
-      const mappedSubjectCode = subjectCode;
-
-      // Wait for next tick to ensure ClassSubjectSelector component has mounted
-      await tick();
-
-      // Wait a bit more for the dropdowns to load their options
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Now set the values - this ensures the dropdowns have their options loaded
-      examData.examMedium = mappedMediumCode;
-      examData.examSubject = mappedSubjectCode;
-
-      // Populate exam configuration
-      examData.totalTime = design.total_time;
-      examData.totalQuestions =
-        design.total_questions || design.no_of_qns || 40;
-      examData.numberOfSets = design.number_of_sets || design.no_of_sets || 1;
-      examData.numberOfVersions =
-        design.number_of_versions || design.no_of_versions || 1;
-
-      // Update API store with fetched data
-      apiPayloadStore.updateExamDetails({
-        examTitle: examData.examTitle,
-        examMode: examData.examMode,
-      });
-
-      apiPayloadStore.updateExamConfig({
-        totalTime: examData.totalTime,
-        totalQuestions: examData.totalQuestions,
-        numberOfVersions: examData.numberOfVersions,
-        numberOfSets: examData.numberOfSets,
-      });
-
-      apiPayloadStore.updateClassSubject({
-        subject_code: examData.examSubject,
-        medium_code: examData.examMedium,
-        examClass: examData.examClass,
-      });
-
-      // If there are chapters_topics in the design, update the store and pre-select them in selectedContentStore
-      const chaptersTopics =
-        design.chapters_topics || examResponse.chapters_topics || [];
+      // Initialize selected content and question listings if any exist
+      const chaptersTopics = design.chapters_topics;
       if (
         chaptersTopics &&
         Array.isArray(chaptersTopics) &&
         chaptersTopics.length > 0
       ) {
-        // Check if all qn_count values are null or undefined.
-        // If all are null, it means it is Auto allocation. If any qn_count is not null, it is Manual.
-        let allQnCountNull = true;
-        for (const group of chaptersTopics) {
-          const codes = group.codes || [];
-          for (const item of codes) {
-            if (item.qn_count !== null && typeof item.qn_count !== 'undefined') {
-              allQnCountNull = false;
-              break;
-            }
-          }
-          if (!allQnCountNull) break;
-        }
+        const allQnCountNull = determineAllocationMode(chaptersTopics);
 
         apiPayloadStore.update((currentStore) => ({
           ...currentStore,
@@ -504,158 +701,16 @@
           is_ai_selected: allQnCountNull,
         }));
 
-        // Pre-populate the selectedContentStore hierarchy/selections
-        const chaptersList = [];
-        const topicsList = [];
-        const selectedItems = [];
-        let totalAllocated = 0;
+        const { chaptersList, topicsList } = initializeAllocationState(
+          chaptersTopics,
+          allQnCountNull,
+        );
 
-        for (const group of chaptersTopics) {
-          const type = group.type;
-          const codes = group.codes || [];
-          for (const item of codes) {
-            const selectionData = {
-              type: type,
-              code: item.code,
-              name: item.name,
-              question_count: item.qn_count || item.question_count || 0,
-              parent_code: item.parent_code || null,
-            };
-
-            const qCount = item.qn_count || item.question_count || 0;
-            totalAllocated += qCount;
-            selectedItems.push({
-              code: item.code,
-              name: item.name,
-              type: type,
-              questionAvailable: qCount || 0,
-              questionsToAdd: qCount,
-              isSelected: true
-            });
-
-            if (type === "topic") {
-              selectionData.parent_code =
-                item.chapter_details?.code || item.parent_code;
-              topicsList.push(item);
-            } else if (type === "subtopic") {
-              selectionData.parent_code =
-                item.topic_details?.code || item.parent_code;
-            } else if (type === "chapter") {
-              selectionData.parent_code = null;
-              chaptersList.push(item);
-            }
-
-            selectedContentStore.addSelection(selectionData);
-
-            if (selectionData.question_count > 0) {
-              selectedContentStore.updateQuestionCount(
-                item.code,
-                selectionData.question_count,
-              );
-            }
-          }
-        }
-
-        // Initialize confirmedAllocationData for review page
-        const initialAllocationData = {
-          allocationType: allQnCountNull ? "Auto" : "Manual",
-          allocationLevel: "chapter",
-          totalRequired: examData.totalQuestions,
-          totalAllocated: totalAllocated,
-          totalAvailable: 0,
-          remaining: examData.totalQuestions - totalAllocated,
-          selectedItems: selectedItems
-        };
-        examData.confirmedAllocationData = initialAllocationData;
-        examData.isAllocationConfirmed = true;
-        apiPayloadStore.updateFromAllocationData(initialAllocationData);
-
-        // Fetch questions for these chapters and topics in edit mode
-        if (chaptersList.length > 0 || topicsList.length > 0) {
-          questionIsLoading = true;
-          try {
-            const apiCalls = [];
-            if (chaptersList.length > 0) {
-              const chapterCodes = chaptersList.map((c) => c.code).join(",");
-              apiCalls.push(
-                apiClient({
-                  url: `/apis/questions?type=chapter&codes=${chapterCodes}`,
-                }),
-              );
-            }
-            if (topicsList.length > 0) {
-              const topicCodes = topicsList.map((t) => t.code).join(",");
-              apiCalls.push(
-                apiClient({
-                  url: `/apis/questions?type=topic&codes=${topicCodes}`,
-                }),
-              );
-            }
-
-            const responses = await Promise.all(apiCalls);
-            let allQuestionsData = [];
-            for (const res of responses) {
-              if (res.ok) {
-                const data = await res.json();
-                if (data && data.qns) {
-                  const cleanedQuestions = data.qns.map(cleanQuestionText);
-                  allQuestionsData = [...allQuestionsData, ...cleanedQuestions];
-                }
-              }
-            }
-
-            if (allQuestionsData.length > 0) {
-              fetchedQuestions = allQuestionsData.map((allQuestion) => {
-                return {
-                  id: allQuestion.code,
-                  text: allQuestion.text,
-                  type: allQuestion.type,
-                  marks: allQuestion.marks,
-                  difficulty: allQuestion.difficulty_level,
-                  parent: {
-                    name: allQuestion.grp_type_name,
-                    type: allQuestion.grp_type,
-                    code: allQuestion.grp_type_code,
-                  },
-                };
-              });
-
-              selectedContentStore.setQuestions(fetchedQuestions);
-              
-              const excludedCodes = design.qtn_codes_to_exclude || [];
-              for (const code of excludedCodes) {
-                selectedContentStore.removeQuestion(code);
-              }
-
-              // Update initial allocation counts with actual questions fetched
-              if (examData.confirmedAllocationData) {
-                let updatedTotalAvailable = 0;
-                const updatedSelectedItems = examData.confirmedAllocationData.selectedItems.map(item => {
-                  const availableCount = countQuestionsForItemInWizard(item.code, item.type, fetchedQuestions, excludedCodes);
-                  updatedTotalAvailable += availableCount;
-                  return {
-                    ...item,
-                    questionAvailable: availableCount
-                  };
-                });
-
-                examData.confirmedAllocationData = {
-                  ...examData.confirmedAllocationData,
-                  totalAvailable: updatedTotalAvailable,
-                  selectedItems: updatedSelectedItems
-                };
-                apiPayloadStore.updateFromAllocationData(examData.confirmedAllocationData);
-              }
-            }
-          } catch (err) {
-            console.error("Failed to pre-fetch questions in edit mode:", err);
-          } finally {
-            questionIsLoading = false;
-          }
-        }
+        // Fetch question pools and handle exclusion lists in edit mode
+        await preFetchQuestionsForEdit(chaptersList, topicsList, design);
       }
 
-      // Update excluded questions if any
+      // Sync overall exclusions list
       if (
         design.qtn_codes_to_exclude &&
         Array.isArray(design.qtn_codes_to_exclude) &&
@@ -712,18 +767,18 @@
       confirmedAllocationData: null,
     };
     selectedContentStore.clearAll();
-    
+
     // Clear validation states
     examDetailsValid = true;
     classSubjectValid = true;
     examConfigValid = true;
     difficultyValid = true;
-    
+
     // Reset wizard view/tabs
     currentView = "config";
     showQuestions = false;
     nestedContentActiveTab = "selected-content";
-    
+
     // Reset notifications/results
     allocationResult = {
       message: "",
@@ -757,7 +812,6 @@
     allocationResult.message = "";
     allocationResult.type = "success";
     const data = event.detail || event;
-    console.log("event received", event);
     if (!data) {
       allocationResult.message =
         "Invalid allocation data received. Please try again.";
@@ -782,22 +836,16 @@
 
     apiPayloadStore.updateFromAllocationData(allocationData);
 
-    apiPayloadStore.updateExamDetails({
-      examTitle: examData.examTitle,
-      examMode: examData.examMode,
-    });
-
-    apiPayloadStore.updateExamConfig({
-      totalTime: examData.totalTime,
-      totalQuestions: examData.totalQuestions,
-      numberOfVersions: examData.numberOfVersions,
-      numberOfSets: examData.numberOfSets,
-    });
-
-    apiPayloadStore.updateClassSubject({
+    apiPayloadStore.updatePayload({
+      exam_name: examData.examTitle,
+      exam_mode: examData.examMode,
+      total_time: examData.totalTime,
+      total_questions: examData.totalQuestions,
+      no_of_versions: examData.numberOfVersions,
+      no_of_sets: examData.numberOfSets,
       subject_code: examData.examSubject,
       medium_code: examData.examMedium,
-      examClass: examData.examClass,
+      standard: examData.examClass,
     });
 
     if (allQuestions?.length > 0) {

@@ -25,6 +25,14 @@ export const createApiPayloadStore = () => {
     set,
     update,
 
+    // Update any payload properties in a unified way
+    updatePayload: (data) => {
+      update(store => ({
+        ...store,
+        ...data
+      }));
+    },
+
     // Update basic exam details
     updateExamDetails: (data) => {
       update(store => ({
