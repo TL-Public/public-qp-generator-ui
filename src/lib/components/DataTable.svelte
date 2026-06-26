@@ -9,11 +9,11 @@
     ChevronLeft,
     ChevronRight,
   } from "@lucide/svelte";
-  // import ErrorMessage from "$lib/components/reusable/ErrorMessage.svelte";
+  import ErrorMessage from "$lib/components/ErrorMessage.svelte";
 
   export let showPagination = true;
   export let tableStyle = "primary";
-  export let notFoundMessage;
+  export let notFoundMessage="";
   export let searchParameter = null;
   export let customRenderers = {};
 
@@ -870,6 +870,5 @@
     </div>
   {/if}
 {:else}
-  <!-- <ErrorMessage error={notFoundMessage} /> -->
-  <div>notFoundMessage</div>
+  <ErrorMessage error={notFoundMessage} />
 {/if}
