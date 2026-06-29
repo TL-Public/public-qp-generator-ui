@@ -122,19 +122,15 @@
   async function handleUserUpdated(event) {
     const { updatedUser } = event.detail;
 
-    // Update the user in the local array
-    const userIndex = users.findIndex((u) => u.id === updatedUser.id);
-    if (userIndex !== -1) {
-      users[userIndex] = api.adminListUsers.formatUser(updatedUser);
-      users = [...users]; // Trigger reactivity
-    }
-
     // Show success message
     successMessage = `User "${updatedUser.username}" updated successfully!`;
 
     // Close modal
     showEditModal = false;
     selectedUser = null;
+
+    // Fetch the users listing API again to get updated state from server
+    loadUsers();
   }
 
   // Function to close modals

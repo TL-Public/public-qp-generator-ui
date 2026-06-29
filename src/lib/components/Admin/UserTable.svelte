@@ -179,6 +179,22 @@
   </div>
 {/if}
 
+<!-- Empty State for Desktop -->
+{#if filteredUsers.length === 0}
+  <div
+    class="hidden md:block text-center py-12 border border-gray-200 rounded-lg"
+  >
+    <div class="text-gray-400 text-6xl mb-4">👥</div>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+    <p class="text-sm text-gray-500">
+      {#if Object.keys(currentFilters).some((key) => currentFilters[key] && (Array.isArray(currentFilters[key]) ? currentFilters[key].length > 0 : currentFilters[key].trim() !== ""))}
+        No users match the current filters. Try adjusting your search criteria.
+      {:else}
+        No users are currently registered in the system.
+      {/if}
+    </p>
+  </div>
+{/if}
 <!-- Desktop Table View -->
 <div class="hidden md:block">
   <DataTable
@@ -194,6 +210,10 @@
     notFoundMessage="No users found matching your filters. Try adjusting your search criteria."
     on:tableActionClick={handleTableAction}
   />
+
+  <!-- Use the existing Pagination component -->
+
+  <Pagination {currentPage} {totalPages} on:pageChange={handlePageChange} />
 </div>
 
 <!-- Mobile Card View -->
@@ -298,23 +318,3 @@
     </div>
   {/if}
 </div>
-
-<!-- Empty State for Desktop -->
-{#if filteredUsers.length === 0}
-  <div
-    class="hidden md:block text-center py-12 border border-gray-200 rounded-lg"
-  >
-    <div class="text-gray-400 text-6xl mb-4">👥</div>
-    <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-    <p class="text-sm text-gray-500">
-      {#if Object.keys(currentFilters).some((key) => currentFilters[key] && (Array.isArray(currentFilters[key]) ? currentFilters[key].length > 0 : currentFilters[key].trim() !== ""))}
-        No users match the current filters. Try adjusting your search criteria.
-      {:else}
-        No users are currently registered in the system.
-      {/if}
-    </p>
-  </div>
-{/if}
-
-<!-- Use the existing Pagination component -->
-<Pagination {currentPage} {totalPages} on:pageChange={handlePageChange} />
