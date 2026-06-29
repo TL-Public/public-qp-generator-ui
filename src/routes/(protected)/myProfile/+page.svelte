@@ -6,8 +6,9 @@
     import Button from "$lib/components/Button.svelte";
     import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
     import InlineNotification from "$lib/components/InlineNotification.svelte";
-    import { User, Shield, KeyRound } from "@lucide/svelte";
+    import { User, ShieldUser, KeyRound } from "@lucide/svelte";
     import { goto } from "$app/navigation";
+    import Pill from "$lib/components/Pill.svelte";
 
     export let data;
 
@@ -176,20 +177,21 @@
                 <div
                     class="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-4 text-dark relative"
                 >
-                    <div class="flex items-center space-x-5">
+                    <div class="flex items-center gap-5">
                         <div
-                            class="w-16 h-16 rounded-full bg-white backdrop-blur-md flex items-center justify-center border-2 border-white/40 shadow-inner"
+                            class="w-16 h-16 flex-shrink-0 rounded-full bg-white backdrop-blur-md flex items-center justify-center border-2 border-white/40 shadow-inner"
                         >
                             <User class="h-6 w-6 text-primary " />
                         </div>
-                        <div>
-                            <h2 class="text-xl font-medium">
+                        <div class="">
+                            <h2 class="text-lg font-medium">
                                 {username || "User Profile"}
                             </h2>
-                            <p class="text-sm flex items-center gap-1.5 mt-1">
-                                <Shield class="h-4 w-4" />
-                                {roleName.charAt(0).toUpperCase() +
-                                    roleName.slice(1)} Access
+                            <p class="text-sm mt-1">
+                                <Pill size="sm">
+                                    {roleName.charAt(0).toUpperCase() +
+                                        roleName.slice(1)}
+                                </Pill>
                             </p>
                         </div>
                     </div>
@@ -238,10 +240,12 @@
                             <div>
                                 <label
                                     class="block text-xs font-semibold tracking-wider mb-2"
+                                    for="assigned-role"
                                 >
                                     Assigned Role
                                 </label>
                                 <div
+                                    id="assigned-role"
                                     class="px-4 py-2 bg-gray-50 text-sm border border-stroke rounded-lg text-subtext font-medium capitalize flex items-center justify-between"
                                 >
                                     <span>{roleName || "N/A"}</span>
@@ -256,11 +260,13 @@
                             <!-- Account Status (Read-only) -->
                             <div>
                                 <label
+                                    for="status"
                                     class="block text-xs font-semibold tracking-wider mb-2"
                                 >
                                     Account Status
                                 </label>
                                 <div
+                                    id="status"
                                     class="px-4 py-2 bg-gray-50 text-sm border border-gray-200 rounded-lg text-subtext font-medium flex items-center justify-between"
                                 >
                                     <div class="flex items-center">
