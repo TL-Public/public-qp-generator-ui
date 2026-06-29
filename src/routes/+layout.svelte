@@ -127,9 +127,10 @@
 
     {
       name: "My Profile",
-      link: $authStore?.userId
-        ? `/updateProfile/${$authStore?.userId}`
-        : "/unauthorized",
+      // link: $authStore?.userId
+      //   ? `/updateProfile/${$authStore?.userId}`
+      //   : "/unauthorized",
+      link: "myProfile",
       key: "PROFILE",
       icon: User,
     },

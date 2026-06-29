@@ -60,11 +60,11 @@
       userNameFromStore === user.username)
   );
 
-  // Role options - updated based on documentation
-  const roleOptions = [
-    { code: "100", name: "Admin" },
-    { code: "101", name: "Educator" },
-  ];
+  // Props
+  export let roleOptions = [];
+  export let rolesLoading = false;
+  export let rolesError = "";
+  export let retryLoadRoles = () => {};
 
   // Initialize form data when user prop changes
   $: if (user) {
@@ -380,18 +380,24 @@
   $: activeStatusString = formData.is_active ? "Active" : "Inactive";
   $: formData.is_active = activeStatusString === "Active";
 
-  $: searchableRoleOptions = roleOptions.map((r) => ({
-    id: r.code,
-    name: r.name,
-    code: r.code,
-  }));
+  $: searchableRoleOptions = Array.isArray(roleOptions)
+    ? roleOptions.map((role) => {
+        const name = role.name || role.role_name || role.label || "";
+        const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+        return {
+          id: role.code || role.role_code || role.id,
+          name: capitalizedName,
+          code: role.code || role.role_code || role.id,
+        };
+      })
+    : [];
   let selectedRoleName = "";
   let selectedRoleId = "";
 
   $: {
-    const matched = roleOptions.find((r) => r.code === formData.role_code);
+    const matched = searchableRoleOptions.find((r) => r.id === formData.role_code);
     if (matched) {
-      selectedRoleId = matched.code;
+      selectedRoleId = matched.id;
       selectedRoleName = matched.name;
     } else {
       selectedRoleId = "";
@@ -400,7 +406,7 @@
   }
 
   function handleRoleChange(event) {
-    formData.role_code = event.detail.selectedItemId || "";
+    formData.role_code = event.detail.selectedItemId || event.detail.code || event.detail.id || "";
     handleInputChange("role_code");
   }
 
@@ -706,9 +712,11 @@
             required={true}
             disabled={loading}
             placeholder="Select a role"
+            loading={rolesLoading}
+            validationErrors={validationErrors.role_code || rolesError}
+            errorHandler={retryLoadRoles}
             on:handleDispatchComboBoxData={handleRoleChange}
             on:handleDispatchFilterData={handleRoleClear}
-            validationErrors={validationErrors.role_code}
           />
 
           <!-- Active Status Field -->

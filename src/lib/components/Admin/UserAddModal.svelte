@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher } from "svelte";
   import { api, apiClient } from "$lib/utils/api.js";
   import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
   import PortalModal from "$lib/components/PortalModal.svelte";
@@ -11,6 +11,12 @@
   import { generateStrongPassword, validatePasswordInput } from "$lib/utils/helper.js";
 
   const dispatch = createEventDispatcher();
+
+  // Props
+  export let roleOptions = [];
+  export let rolesLoading = false;
+  export let rolesError = "";
+  export let retryLoadRoles = () => {};
 
   // Form state
   let formData = {
@@ -30,41 +36,25 @@
 
   // UI state
   let loading = false;
-  let rolesLoading = false;
   let error = "";
   let validationErrors = {};
   let passwordValidationErrors = {};
-  let roleOptions = [];
 
   // Map roles for SearchableComboBox
   $: searchableRoleOptions = Array.isArray(roleOptions)
-    ? roleOptions.map((role) => ({
-        id: role.code || role.role_code || role.id,
-        name: role.name || role.role_name || role.label,
-      }))
+    ? roleOptions.map((role) => {
+        const name = role.name || role.role_name || role.label || "";
+        const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+        return {
+          id: role.code || role.role_code || role.id,
+          name: capitalizedName,
+        };
+      })
     : [];
 
   $: selectedRoleId = formData.role_code;
   $: selectedRoleName =
     searchableRoleOptions.find((r) => r.id === selectedRoleId)?.name || "";
-
-  // Fetch roles on mount
-  onMount(async () => {
-    rolesLoading = true;
-    try {
-      const res = await apiClient({ url: "/apis/roles" });
-      if (res.ok) {
-        const data = await res.json();
-        roleOptions = Array.isArray(data)
-          ? data
-          : data.roles || data.data || [];
-      }
-    } catch (err) {
-      console.error("Error fetching roles:", err);
-    } finally {
-      rolesLoading = false;
-    }
-  });
 
   // Watch password changes for strength indication
   $: if (
@@ -337,9 +327,10 @@
           required={true}
           disabled={loading}
           placeholder="Select a role"
+          validationErrors={validationErrors.role_code || rolesError}
+          errorHandler={retryLoadRoles}
           on:handleDispatchComboBoxData={handleRoleChange}
           on:handleDispatchFilterData={handleRoleClear}
-          validationErrors={validationErrors.role_code}
         />
 
         <!-- New Password Field -->

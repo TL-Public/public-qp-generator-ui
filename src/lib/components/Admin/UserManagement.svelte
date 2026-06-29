@@ -17,6 +17,11 @@
   let error = "";
   let successMessage = "";
 
+  // Roles state
+  let roleOptions = [];
+  let rolesLoading = false;
+  let rolesError = "";
+
   // Pagination state
   let currentPage = 1;
   let totalPages = 0;
@@ -41,10 +46,30 @@
     }
   }
 
-  // Load users on component mount
+  // Load users and roles on component mount
   onMount(() => {
     loadUsers();
+    loadRoles();
   });
+
+  // Function to load roles
+  async function loadRoles() {
+    rolesLoading = true;
+    rolesError = "";
+    try {
+      const res = await apiClient({ url: "/apis/roles" });
+      if (!res.ok) {
+        throw new Error(`Failed to load roles:  status ${res.status}`);
+      }
+      const data = await res.json();
+      roleOptions = Array.isArray(data) ? data : data.roles || data.data || [];
+    } catch (err) {
+      rolesError = err.message || "Failed to load roles";
+      console.error("Error loading roles:", err);
+    } finally {
+      rolesLoading = false;
+    }
+  }
 
   // Function to load users
   async function loadUsers() {
@@ -97,19 +122,15 @@
   async function handleUserUpdated(event) {
     const { updatedUser } = event.detail;
 
-    // Update the user in the local array
-    const userIndex = users.findIndex((u) => u.id === updatedUser.id);
-    if (userIndex !== -1) {
-      users[userIndex] = api.adminListUsers.formatUser(updatedUser);
-      users = [...users]; // Trigger reactivity
-    }
-
     // Show success message
     successMessage = `User "${updatedUser.username}" updated successfully!`;
 
     // Close modal
     showEditModal = false;
     selectedUser = null;
+
+    // Fetch the users listing API again to get updated state from server
+    loadUsers();
   }
 
   // Function to close modals
@@ -135,6 +156,7 @@
   function handleRefresh() {
     currentPage = 1;
     loadUsers();
+    loadRoles();
   }
 
   // Clear error message
@@ -210,11 +232,7 @@
     <!-- Error Message -->
     {#if error}
       <div class="mb-4 sm:mb-6">
-        <InlineNotification
-          kind="error"
-          title={error}
-          on:close={clearError}
-        />
+        <InlineNotification kind="error" title={error} on:close={clearError} />
       </div>
     {/if}
 
@@ -266,6 +284,10 @@
       <!-- Users Table -->
       <UserTable
         {users}
+        {roleOptions}
+        {rolesLoading}
+        {rolesError}
+        retryLoadRoles={loadRoles}
         {currentPage}
         {totalPages}
         {totalUsers}
@@ -281,6 +303,10 @@
 {#if showEditModal && selectedUser}
   <UserEditModal
     user={selectedUser}
+    {roleOptions}
+    {rolesLoading}
+    {rolesError}
+    retryLoadRoles={loadRoles}
     on:userUpdated={handleUserUpdated}
     on:close={handleCloseEditModal}
   />
@@ -289,6 +315,10 @@
 <!-- Add User Modal -->
 {#if showAddModal}
   <UserAddModal
+    {roleOptions}
+    {rolesLoading}
+    {rolesError}
+    retryLoadRoles={loadRoles}
     on:userAdded={handleUserAdded}
     on:close={() => (showAddModal = false)}
   />

@@ -6,6 +6,10 @@
   import Pill from "$lib/components/Pill.svelte";
 
   export let users = [];
+  export let roleOptions = [];
+  export let rolesLoading = false;
+  export let rolesError = "";
+  export let retryLoadRoles = () => {};
   export let currentPage = 1;
   export let totalPages = 1;
   export let totalUsers = 0;
@@ -41,14 +45,7 @@
     if (currentFilters.roles && currentFilters.roles.length > 0) {
       const userRole = user.role_name?.toLowerCase();
       const hasMatchingRole = currentFilters.roles.some((role) => {
-        // Map role values to actual role names
-        const roleMap = {
-          admin: "admin",
-          teacher: "teacher",
-          student: "student",
-          principal: "principal",
-        };
-        return roleMap[role] === userRole;
+        return role?.toLowerCase() === userRole;
       });
       if (!hasMatchingRole) return false;
     }
@@ -147,7 +144,13 @@
 </script>
 
 <!-- Search and Filter Component -->
-<FilterUsers on:filtersChanged={handleFiltersChanged} />
+<FilterUsers
+  {roleOptions}
+  {rolesLoading}
+  {rolesError}
+  {retryLoadRoles}
+  on:filtersChanged={handleFiltersChanged}
+/>
 
 <!-- Results Summary -->
 {#if Object.keys(currentFilters).some((key) => currentFilters[key] && (Array.isArray(currentFilters[key]) ? currentFilters[key].length > 0 : currentFilters[key].trim() !== ""))}
@@ -176,6 +179,22 @@
   </div>
 {/if}
 
+<!-- Empty State for Desktop -->
+{#if filteredUsers.length === 0}
+  <div
+    class="hidden md:block text-center py-12 border border-gray-200 rounded-lg"
+  >
+    <div class="text-gray-400 text-6xl mb-4">👥</div>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+    <p class="text-sm text-gray-500">
+      {#if Object.keys(currentFilters).some((key) => currentFilters[key] && (Array.isArray(currentFilters[key]) ? currentFilters[key].length > 0 : currentFilters[key].trim() !== ""))}
+        No users match the current filters. Try adjusting your search criteria.
+      {:else}
+        No users are currently registered in the system.
+      {/if}
+    </p>
+  </div>
+{/if}
 <!-- Desktop Table View -->
 <div class="hidden md:block">
   <DataTable
@@ -191,6 +210,10 @@
     notFoundMessage="No users found matching your filters. Try adjusting your search criteria."
     on:tableActionClick={handleTableAction}
   />
+
+  <!-- Use the existing Pagination component -->
+
+  <Pagination {currentPage} {totalPages} on:pageChange={handlePageChange} />
 </div>
 
 <!-- Mobile Card View -->
@@ -295,23 +318,3 @@
     </div>
   {/if}
 </div>
-
-<!-- Empty State for Desktop -->
-{#if filteredUsers.length === 0}
-  <div
-    class="hidden md:block text-center py-12 border border-gray-200 rounded-lg"
-  >
-    <div class="text-gray-400 text-6xl mb-4">👥</div>
-    <h3 class="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-    <p class="text-sm text-gray-500">
-      {#if Object.keys(currentFilters).some((key) => currentFilters[key] && (Array.isArray(currentFilters[key]) ? currentFilters[key].length > 0 : currentFilters[key].trim() !== ""))}
-        No users match the current filters. Try adjusting your search criteria.
-      {:else}
-        No users are currently registered in the system.
-      {/if}
-    </p>
-  </div>
-{/if}
-
-<!-- Use the existing Pagination component -->
-<Pagination {currentPage} {totalPages} on:pageChange={handlePageChange} />

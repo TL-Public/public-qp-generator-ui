@@ -8,12 +8,14 @@ export async function handle({ event, resolve }) {
   const roleName = event.cookies.get('roleName');
   // const role = event.cookies.get('role');
   const roleCode = event.cookies.get('roleCode');
+  const userId = event.cookies.get('userId');
 
 
   let sessionData ={
     isAuthenticated: !!accessToken,
     userName,
     // role,
+    userId,
     roleCode,
     roleName
   }
