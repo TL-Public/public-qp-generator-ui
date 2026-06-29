@@ -1,17 +1,21 @@
 <script>
-  import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
-  import { api } from '$lib/utils/api.js';
-  import UserTable from './UserTable.svelte';
-  import UserEditModal from './UserEditModal.svelte';
-  import LoadingSpinner from '../LoadingSpinner.svelte';
-
+  import { onMount } from "svelte";
+  import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
+  import { api, apiClient } from "$lib/utils/api.js";
+  import UserTable from "./UserTable.svelte";
+  import UserEditModal from "./UserEditModal.svelte";
+  import UserAddModal from "./UserAddModal.svelte";
+  import LoadingSpinner from "../LoadingSpinner.svelte";
+  import Button from "$lib/components/Button.svelte";
+  import { Plus, RefreshCcw } from "@lucide/svelte";
+  import Pill from "$lib/components/Pill.svelte";
+  import InlineNotification from "$lib/components/InlineNotification.svelte";
   // State management
   let users = [];
   let loading = false;
-  let error = '';
-  let successMessage = '';
+  let error = "";
+  let successMessage = "";
 
   // Pagination state
   let currentPage = 1;
@@ -21,23 +25,19 @@
 
   // Modal state
   let showEditModal = false;
+  let showAddModal = false;
   let selectedUser = null;
 
   // Check for success message from URL params (when returning from add user page)
-  $: if ($page.url.searchParams.get('userCreated') === 'true') {
-    const message = $page.url.searchParams.get('message');
+  $: if ($page.url.searchParams.get("userCreated") === "true") {
+    const message = $page.url.searchParams.get("message");
     if (message) {
       successMessage = decodeURIComponent(message);
       // Clear the URL params
       const url = new URL($page.url);
-      url.searchParams.delete('userCreated');
-      url.searchParams.delete('message');
+      url.searchParams.delete("userCreated");
+      url.searchParams.delete("message");
       goto(url.toString(), { replaceState: true });
-      
-      // Clear success message after 5 seconds
-      setTimeout(() => {
-        successMessage = '';
-      }, 5000);
     }
   }
 
@@ -49,26 +49,31 @@
   // Function to load users
   async function loadUsers() {
     loading = true;
-    error = '';
-    
+    error = "";
+
     try {
-      const response = await api.adminListUsers.getAll({
-        page: currentPage,
-        limit: itemsPerPage
+      const res = await apiClient({
+        url: `/apis/users?page=${currentPage}&limit=${itemsPerPage}`,
       });
 
-      if (response.error) {
-        throw new Error(response.error);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail ||
+            errorData.message ||
+            `HTTP error! status: ${res.status}`,
+        );
       }
 
-      users = response.data.users.map(user => api.adminListUsers.formatUser(user));
-      totalUsers = response.data.total_users;
+      const responseData = await res.json();
+      users = responseData.users.map((user) =>
+        api.adminListUsers.formatUser(user),
+      );
+      totalUsers = responseData.total_users;
       totalPages = Math.ceil(totalUsers / itemsPerPage);
-
-
     } catch (err) {
-      error = err.message || 'Failed to load users';
-      console.error('Error loading users:', err);
+      error = err.message || "Failed to load users";
+      console.error("Error loading users:", err);
     } finally {
       loading = false;
     }
@@ -91,9 +96,9 @@
   // Function to handle user update success
   async function handleUserUpdated(event) {
     const { updatedUser } = event.detail;
-    
+
     // Update the user in the local array
-    const userIndex = users.findIndex(u => u.id === updatedUser.id);
+    const userIndex = users.findIndex((u) => u.id === updatedUser.id);
     if (userIndex !== -1) {
       users[userIndex] = api.adminListUsers.formatUser(updatedUser);
       users = [...users]; // Trigger reactivity
@@ -101,11 +106,6 @@
 
     // Show success message
     successMessage = `User "${updatedUser.username}" updated successfully!`;
-    
-    // Clear success message after 5 seconds
-    setTimeout(() => {
-      successMessage = '';
-    }, 5000);
 
     // Close modal
     showEditModal = false;
@@ -118,9 +118,17 @@
     selectedUser = null;
   }
 
-  // Function to navigate to add user page
+  // Function to open add user modal
   function handleAddUser() {
-    goto('/admin/addUsers');
+    showAddModal = true;
+  }
+
+  // Function to handle user addition success
+  function handleUserAdded(event) {
+    const { message } = event.detail;
+    successMessage = message || "User added successfully!";
+    showAddModal = false;
+    loadUsers();
   }
 
   // Function to refresh users list
@@ -131,60 +139,56 @@
 
   // Clear error message
   function clearError() {
-    error = '';
+    error = "";
   }
 
   // Clear success message
   function clearSuccess() {
-    successMessage = '';
+    successMessage = "";
   }
 </script>
 
 <!-- Rest of the component remains the same, just remove the Add User Modal section -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200">
+<div class="bg-white rounded-lg border border-stroke">
   <!-- Header -->
-  <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-4 border-b border-gray-200">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+  <div
+    class="bg-gradient-to-r from-blue-50 to-indigo-50 px-4 sm:px-6 py-4 border-b border-gray-200"
+  >
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0"
+    >
       <div>
         <h2 class="large-header">User Management</h2>
-        <p class="sub-heading">
-          Manage system users and their permissions
-        </p>
+        <p class="sub-heading">Manage system users and their permissions</p>
       </div>
-      
+
       <!-- Actions Section -->
-      <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+      <div
+        class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3"
+      >
         <!-- User Count Badge -->
-        <span class="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+        <Pill variant="primary" size="md">
           {totalUsers} Total Users
-        </span>
-        
+        </Pill>
+
         <!-- Action Buttons -->
         <div class="flex space-x-2">
           <!-- Add User Button -->
-          <button
-            on:click={handleAddUser}
-            disabled={loading}
-            class="inline-flex items-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
+          <Button on:click={handleAddUser} disabled={loading} btnType="success">
+            <Plus class="h-5 w-5 " />
             <span class="hidden sm:inline">Add User</span>
             <span class="sm:hidden">Add</span>
-          </button>
-          
+          </Button>
+
           <!-- Refresh Button -->
-          <button
+          <Button
             on:click={handleRefresh}
             disabled={loading}
-            class="inline-flex items-center px-3 sm:px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+            btnType="tertiary"
           >
-            <svg class="w-4 h-4 mr-2 {loading ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
+            <RefreshCcw class="h-5 w-5 " />
             <span class="hidden sm:inline">Refresh</span>
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -194,53 +198,23 @@
   <div class="p-4 sm:p-6">
     <!-- Success Message -->
     {#if successMessage}
-      <div class="mb-4 sm:mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
-        <div class="flex items-center justify-between">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm text-green-700">{successMessage}</p>
-            </div>
-          </div>
-          <button
-            on:click={clearSuccess}
-            class="text-green-400 hover:text-green-600 transition-colors duration-200"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+      <div class="mb-4 sm:mb-6">
+        <InlineNotification
+          kind="success"
+          title={successMessage}
+          on:close={clearSuccess}
+        />
       </div>
     {/if}
 
     <!-- Error Message -->
     {#if error}
-      <div class="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-        <div class="flex items-center justify-between">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm text-red-700">{error}</p>
-            </div>
-          </div>
-          <button
-            on:click={clearError}
-            class="text-red-400 hover:text-red-600 transition-colors duration-200"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+      <div class="mb-4 sm:mb-6">
+        <InlineNotification
+          kind="error"
+          title={error}
+          on:close={clearError}
+        />
       </div>
     {/if}
 
@@ -252,30 +226,48 @@
     {:else if users.length === 0 && !error}
       <!-- Empty State -->
       <div class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
+          />
         </svg>
         <h3 class="mt-2 text-sm font-medium text-gray-900">No users found</h3>
-        <p class="mt-1 text-sm text-gray-500">No users are currently registered in the system.</p>
+        <p class="mt-1 text-sm text-gray-500">
+          No users are currently registered in the system.
+        </p>
         <div class="mt-6">
-          <button
-            type="button"
-            on:click={handleAddUser}
-            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          <Button type="button" on:click={handleAddUser} btnType="tertiary">
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
             </svg>
             Add First User
-          </button>
+          </Button>
         </div>
       </div>
     {:else}
       <!-- Users Table -->
-      <UserTable 
-        {users} 
-        {currentPage} 
-        {totalPages} 
+      <UserTable
+        {users}
+        {currentPage}
+        {totalPages}
         {totalUsers}
         {itemsPerPage}
         on:editUser={({ detail }) => handleEditUser(detail.user)}
@@ -294,3 +286,10 @@
   />
 {/if}
 
+<!-- Add User Modal -->
+{#if showAddModal}
+  <UserAddModal
+    on:userAdded={handleUserAdded}
+    on:close={() => (showAddModal = false)}
+  />
+{/if}

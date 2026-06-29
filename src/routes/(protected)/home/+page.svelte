@@ -20,7 +20,7 @@
   // Filter features based on user role
   $: filteredFeatures = features.filter((feature) => {
     // Show admin feature only to admins
-    if (feature.route === "/admin") {
+    if (feature.route === "/users") {
       return isAdmin;
     }
     // Show profile management only to authenticated users with userId
@@ -48,7 +48,7 @@
       title: "Admin",
       description: "Manage users and system settings",
       icon: "👑",
-      route: "/admin",
+      route: "/users",
     },
     {
       title: "Manage Profile",

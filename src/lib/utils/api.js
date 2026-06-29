@@ -110,7 +110,7 @@ export const endpoints = {
   register: "/register",
   login: "/login",
   viewPapers: "/exams",
-  adminQuestionPaper: '/admin/qn_papers',
+  adminQuestionPaper: '/users/qn_papers',
   userQuestionPaper : '/qn_papers',
   adminListUsers : '/users',
   adminUpdatePasswords: (userId) => `/users/${userId}/password`, 

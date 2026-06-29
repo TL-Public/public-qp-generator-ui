@@ -26,8 +26,8 @@
     tertiary: `${commonStyles} text-gray-600 bg-gray-50 border border-gray-300  hover:bg-gray-100`,
     danger: `${commonStyles} text-white bg-red-600`,
     dangerSecondary: `${commonStyles} text-red-700 bg-red-100 border border-red-300`,
-    success: `${commonStyles} text-white bg-green `,
-    successSecondary: `${commonStyles} bg-white border border-stroke text-green font-semibold hover:bg-gray-10 disabled:text-white disabled:bg-gray-50 `,
+    success: `${commonStyles} text-white bg-green-600 `,
+    successSecondary: `${commonStyles} bg-white border border-stroke text-green-600 font-semibold hover:bg-gray-10 disabled:text-white disabled:bg-gray-50 `,
     custom: ``,
   };
 </script>

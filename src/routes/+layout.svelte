@@ -102,7 +102,7 @@
       key: "VIEW_PAPERS",
       icon: Search,
     },
-    { name: "Users", link: "/admin", key: "USERS", icon: Users },
+    { name: "Users", link: "/users", key: "USERS", icon: Users },
 
     //  {
     //   name: "Masterdata",
