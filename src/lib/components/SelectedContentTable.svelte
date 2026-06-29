@@ -50,6 +50,10 @@
     requiredQuestions,
   );
 
+  $: console.log("allocationSummary", allocationSummary);
+  $: console.log("hierarchicalSelections", hierarchicalSelections);
+  $: console.log("storeData", storeData);
+
   // Validation for required fields
   $: isFormValid = !!(
     examData?.exam_name?.trim() &&
@@ -90,6 +94,36 @@
       : null;
   }
 
+  function countQuestionsForItem(itemCode, itemType) {
+    if (!storeData || !storeData.questions || storeData.questions.length === 0) return 0;
+    
+    return storeData.questions.filter(q => {
+      if (q.parent?.code === itemCode) return true;
+      
+      // If it's a chapter, also count questions in its children topics/subtopics
+      if (itemType === 'chapter') {
+        if (q.parent?.type === 'topic') {
+          const topicCode = q.parent.code;
+          if (topicCode && topicCode.startsWith(itemCode + '_')) return true;
+        }
+        if (q.parent?.type === 'subtopic') {
+          const subtopicCode = q.parent.code;
+          if (subtopicCode && subtopicCode.startsWith(itemCode + '_')) return true;
+        }
+      }
+      
+      // If it's a topic, also count questions in its children subtopics
+      if (itemType === 'topic') {
+        if (q.parent?.type === 'subtopic') {
+          const subtopicCode = q.parent.code;
+          if (subtopicCode && subtopicCode.startsWith(itemCode + '_')) return true;
+        }
+      }
+      
+      return false;
+    }).length;
+  }
+
   function buildHierarchyFromStore(storeData) {
     if (
       !storeData ||
@@ -110,9 +144,9 @@
         code: chapterData.code,
         name: metadata ? metadata.name : chapterData.name,
         type: "chapter",
-        questionAvailable: metadata
+        questionAvailable: countQuestionsForItem(chapterData.code, "chapter") || (metadata
           ? metadata.question_count
-          : chapterData.question_count || 0,
+          : chapterData.question_count || 0),
         questionsToAdd:
           chapterData.questionsToAdd ||
           getDefaultQuestionsToAdd("chapter", chapterData.question_count || 0),
@@ -128,7 +162,7 @@
             code: topicData.code,
             name: topicData.name,
             type: "topic",
-            questionAvailable: topicData.question_count || 0,
+            questionAvailable: countQuestionsForItem(topicData.code, "topic") || (topicData.question_count || 0),
             questionsToAdd:
               topicData.questionsToAdd ||
               getDefaultQuestionsToAdd("topic", topicData.question_count || 0),
@@ -145,7 +179,7 @@
                 code: subtopicData.code,
                 name: subtopicData.name,
                 type: "subtopic",
-                questionAvailable: subtopicData.question_count || 0,
+                questionAvailable: countQuestionsForItem(subtopicData.code, "subtopic") || (subtopicData.question_count || 0),
                 questionsToAdd:
                   subtopicData.questionsToAdd ||
                   getDefaultQuestionsToAdd(
