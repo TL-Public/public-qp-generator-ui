@@ -142,7 +142,7 @@
     }
 
     function handleCancel() {
-        goto("/home");
+        window.history.back();
     }
 </script>
 
@@ -295,7 +295,7 @@
                             class="pt-6 border-t border-gray-100 flex justify-end gap-4"
                         >
                             <Button btnType="secondary" on:click={handleCancel}
-                                >Cancel</Button
+                                >Go back</Button
                             >
                             <Button
                                 type="submit"
