@@ -6,6 +6,10 @@
   import Pill from "$lib/components/Pill.svelte";
 
   export let users = [];
+  export let roleOptions = [];
+  export let rolesLoading = false;
+  export let rolesError = "";
+  export let retryLoadRoles = () => {};
   export let currentPage = 1;
   export let totalPages = 1;
   export let totalUsers = 0;
@@ -41,14 +45,7 @@
     if (currentFilters.roles && currentFilters.roles.length > 0) {
       const userRole = user.role_name?.toLowerCase();
       const hasMatchingRole = currentFilters.roles.some((role) => {
-        // Map role values to actual role names
-        const roleMap = {
-          admin: "admin",
-          teacher: "teacher",
-          student: "student",
-          principal: "principal",
-        };
-        return roleMap[role] === userRole;
+        return role?.toLowerCase() === userRole;
       });
       if (!hasMatchingRole) return false;
     }
@@ -147,7 +144,13 @@
 </script>
 
 <!-- Search and Filter Component -->
-<FilterUsers on:filtersChanged={handleFiltersChanged} />
+<FilterUsers
+  {roleOptions}
+  {rolesLoading}
+  {rolesError}
+  {retryLoadRoles}
+  on:filtersChanged={handleFiltersChanged}
+/>
 
 <!-- Results Summary -->
 {#if Object.keys(currentFilters).some((key) => currentFilters[key] && (Array.isArray(currentFilters[key]) ? currentFilters[key].length > 0 : currentFilters[key].trim() !== ""))}

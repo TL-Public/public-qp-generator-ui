@@ -27,13 +27,22 @@
   let showSubjectDropdown = false;
   let showClassDropdown = false;
 
-  // Mock data for dropdowns (replace with API calls when ready)
-  const roleOptions = [
-    { id: 1, name: "Admin", value: "admin" },
-    { id: 2, name: "Educator", value: "educator" },
-    { id: 3, name: "Student", value: "student" },
-    { id: 4, name: "Principal", value: "principal" },
-  ];
+  export let roleOptions = [];
+  export let rolesLoading = false;
+  export let rolesError = "";
+  export let retryLoadRoles = () => {};
+
+  $: searchableRoleOptions = Array.isArray(roleOptions)
+    ? roleOptions.map((role) => {
+        const name = role.name || role.role_name || role.label || "";
+        const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+        return {
+          id: role.code || role.role_code || role.id,
+          name: capitalizedName,
+          value: (role.role_name || role.name || "").toLowerCase(),
+        };
+      })
+    : [];
 
   const blockOptions = [
     { id: 1, name: "Block A", value: "block-a" },
@@ -76,7 +85,7 @@
   ];
 
   // Check if teacher role is selected to show additional filters
-  $: showTeacherFilters = filters.roles.some((role) => role === "teacher");
+  $: showTeacherFilters = filters.roles.some((role) => role === "educator");
 
   // Check if any filters are active
   $: hasActiveFilters =
@@ -173,7 +182,9 @@
 
   $: {
     if (filters.roles.length > 0) {
-      const role = roleOptions.find((r) => r.value === filters.roles[0]);
+      const role = searchableRoleOptions.find(
+        (r) => r.value === filters.roles[0],
+      );
       if (role) {
         selectedRoleId = role.id;
         selectedRoleName = role.name;
@@ -185,7 +196,10 @@
   }
 
   function handleRoleChange(event) {
-    const roleVal = event.detail.value;
+    const roleVal =
+      event.detail.value ||
+      (event.detail.selectedItemName || event.detail.name || "").toLowerCase();
+    console.log(event.detail);
     filters.roles = roleVal ? [roleVal] : [];
     applyFilters();
   }
@@ -237,25 +251,27 @@
 
     <!-- Role Field -->
     <SearchableComboBox
-      options={roleOptions}
+      options={searchableRoleOptions}
       selectedItemId={selectedRoleId}
       selectedItemName={selectedRoleName}
       label="Role"
       placeholder="Select role..."
+      loading={rolesLoading}
+      validationErrors={rolesError}
+      errorHandler={retryLoadRoles}
       on:handleDispatchComboBoxData={handleRoleChange}
       on:handleDispatchFilterData={handleRoleClear}
     />
   </div>
 
   <!-- Teacher-specific Filters -->
-  {#if showTeacherFilters}
+  <!-- {#if showTeacherFilters}
     <div class="mt-8 pt-6 border-t border-gray-200">
       <h4 class="text-sm font-medium text-gray-700 mb-4">
         Teacher-specific Filters
       </h4>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Blocks -->
         <div class="dropdown-container relative">
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Blocks
@@ -318,7 +334,6 @@
           </div>
         </div>
 
-        <!-- Schools -->
         <div class="dropdown-container relative">
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Schools
@@ -382,7 +397,6 @@
           </div>
         </div>
 
-        <!-- Subjects -->
         <div class="dropdown-container relative">
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Subjects
@@ -447,7 +461,6 @@
           </div>
         </div>
 
-        <!-- Classes -->
         <div class="dropdown-container relative">
           <label class="block text-sm font-medium text-gray-700 mb-2">
             Classes
@@ -513,7 +526,7 @@
         </div>
       </div>
     </div>
-  {/if}
+  {/if} -->
 
   <!-- Action Buttons -->
   <!-- <div class="flex justify-end space-x-3 mt-8">
