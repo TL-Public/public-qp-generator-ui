@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { page } from "$app/stores";
     import { apiClient } from "$lib/utils/api.js";
+    import { authStore } from "$lib/stores/authStore.js";
     import Input from "$lib/components/Input.svelte";
     import Button from "$lib/components/Button.svelte";
     import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
@@ -42,7 +43,7 @@
         loading = true;
         error = "";
         try {
-            const res = await apiClient({ url: `/apis/users/${userId}` });
+            const res = await apiClient({ url: `/apis/profile` });
             if (!res.ok) {
                 throw new Error(
                     `Failed to load profile details (HTTP ${res.status})`,
@@ -51,7 +52,7 @@
             const data = await res.json();
             user = data;
             username = data.username || "";
-            roleName = data.role_name || currentRole;
+            roleName = data.role?.role_name;
             isActive = data.is_active ?? true;
         } catch (err) {
             error = err.message || "Failed to load profile details";
@@ -98,7 +99,7 @@
         try {
             const payload = {
                 username: username.trim(),
-                role_code: user.role_code,
+                role_code: user.role?.role_code,
                 is_active: user.is_active,
             };
 
@@ -121,6 +122,11 @@
                         `Failed to update profile! status: ${res?.status}`,
                 );
             }
+
+            authStore.update((curr) => ({
+                ...curr,
+                userName: username.trim(),
+            }));
 
             success = "Profile updated successfully!";
         } catch (err) {
