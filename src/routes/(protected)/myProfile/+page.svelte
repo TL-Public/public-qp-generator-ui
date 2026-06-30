@@ -148,7 +148,7 @@
     }
 
     function handleCancel() {
-        goto("/home");
+        window.history.back();
     }
 </script>
 

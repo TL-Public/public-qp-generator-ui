@@ -549,12 +549,13 @@
         draftPayload.standard = String(standard);
       }
 
-      // Check for excluded questions from examData
-      if (
-        examData.qtn_codes_to_exclude &&
-        Array.isArray(examData.qtn_codes_to_exclude)
-      ) {
-        draftPayload.qtn_codes_to_exclude = examData.qtn_codes_to_exclude;
+      // Check for excluded questions from selectedContentStore
+      const excludedQuestionCodes = ($selectedContentStore.removedQuestions || [])
+        .map((q) => q.id || q.code)
+        .filter(Boolean);
+
+      if (excludedQuestionCodes.length > 0) {
+        draftPayload.qtn_codes_to_exclude = excludedQuestionCodes;
       }
 
       // Dispatch event to parent to handle the API call

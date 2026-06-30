@@ -142,11 +142,33 @@ export function cleanQuestionText(question) {
   const textFields = ['text', 'question_text', 'description', 'grp_type_name', 'name'];
   const cleanedQuestion = { ...question };
   
-textFields.forEach(field => {
+  textFields.forEach(field => {
     if (cleanedQuestion[field]) {
       cleanedQuestion[field] = decodeHTMLEntities(cleanedQuestion[field]);
     }
   });
   
   return cleanedQuestion;
+}
+
+/**
+ * Normalize an excluded question object or code from API to the frontend question format
+ * @param {Object|string} q - The question code string or details object
+ * @returns {Object} - Normalized frontend question object
+ */
+export function normalizeExcludedQuestion(q) {
+  if (!q || typeof q !== 'object') return null;
+  
+  return {
+    id: q.code || "",
+    text: q.txt ? decodeHTMLEntities(q.txt) : "No question text available",
+    type: q.type || "MCQ",
+    marks: q.marks || 1,
+    difficulty: q.difficulty_level || q.difficulty || "Medium",
+    parent: {
+      name: q.topic_details?.name || q.chapter_details?.name || "Unknown",
+      type: q.topic_details ? "topic" : "chapter",
+      code: q.topic_details?.code || q.chapter_details?.code || "",
+    }
+  };
 }
