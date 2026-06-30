@@ -52,7 +52,7 @@
             const data = await res.json();
             user = data;
             username = data.username || "";
-            roleName = data.role?.role_name || data.role_name || currentRole;
+            roleName = data.role?.role_name;
             isActive = data.is_active ?? true;
         } catch (err) {
             error = err.message || "Failed to load profile details";
@@ -99,7 +99,7 @@
         try {
             const payload = {
                 username: username.trim(),
-                role_code: user.role?.role_code || user.role_code,
+                role_code: user.role?.role_code,
                 is_active: user.is_active,
             };
 
