@@ -1,6 +1,7 @@
 <script>
   import Card from "$lib/components/Cards/Card.svelte";
   import DifficultyDistribution from "$lib/components/DifficultyDistribution.svelte";
+  import ToggleWithLabel from "$lib/components/ToggleWithLabel.svelte";
   import InfoCard from "$lib/components/quiz/InfoCard.svelte";
   import Button from "$lib/components/Button.svelte";
 
@@ -143,11 +144,23 @@
 
   <!-- Difficulty Distribution -->
   <Card title="Question Difficulty Distribution">
-    <DifficultyDistribution
-      bind:examData
-      bind:isValid={difficultyValid}
-      {isReviewPageEnabled}
+    <ToggleWithLabel
+      bind:checked={examData.autoBalance}
+      disabled={true}
+      activeTitle="Auto Balance Difficulty"
+      activeDescription="Automatically distribute questions across difficulty levels"
+      inactiveTitle="Manually set difficulty levels"
+      inactiveDescription="Manually set the percentage of questions for each difficulty level"
+      class="mb-4"
     />
+
+    {#if !examData.autoBalance}
+      <DifficultyDistribution
+        bind:examData
+        bind:isValid={difficultyValid}
+        {isReviewPageEnabled}
+      />
+    {/if}
   </Card>
 
   <!--  NEW: Allocation Breakdown Card -->

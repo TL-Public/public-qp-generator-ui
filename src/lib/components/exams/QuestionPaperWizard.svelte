@@ -1,7 +1,7 @@
 <script>
   import ExamDetailsForm from "$lib/components/Forms/ExamDetailsForm.svelte";
   import ExamConfig from "$lib/components/ExamConfig.svelte";
-  import DifficultyDistribution from "$lib/components/DifficultyDistribution.svelte";
+  import DifficultyConfigurator from "$lib/components/DifficultyConfigurator.svelte";
   import ClassSubjectSelector from "$lib/components/ClassSubjectSelector.svelte";
   import Card from "$lib/components/Cards/Card.svelte";
   import ReviewPage from "$lib/components/ReviewPage.svelte";
@@ -11,6 +11,7 @@
   import Portal from "$lib/components/Portal.svelte";
   import PortalBackdrop from "$lib/components/PortalBackdrop.svelte";
   import ResetConfirmationModal from "$lib/components/exams/ResetConfirmationModal.svelte";
+  import InlineNotification from "$lib/components/InlineNotification.svelte";
 
   import { apiClient } from "$lib/utils/api";
   import { createApiPayloadStore } from "$lib/stores/apiPayLoadStore";
@@ -23,8 +24,8 @@
   import { createSelectedContentStore } from "$lib/stores/selectedContentStore.js";
 
   import { onDestroy, onMount, tick, setContext } from "svelte";
-  import InlineNotification from "$lib/components/InlineNotification.svelte";
-  import { cleanQuestionText } from "$lib/utils/textUtils.js";
+  import { cleanQuestionText, normalizeExcludedQuestion } from "$lib/utils/textUtils.js";
+  import SpinnerWithText from "$lib/components/SpinnerWithText.svelte";
 
   // Props
   export let examId = null;
@@ -59,6 +60,7 @@
     easy: 40,
     medium: 40,
     hard: 20,
+    autoBalance: true,
     isAllocationConfirmed: false,
     confirmedAllocationData: null,
   };
@@ -622,7 +624,9 @@
         selectedContentStore.setQuestions(fetchedQuestions);
 
         // Remove initially excluded questions in store
-        const excludedCodes = design.qtn_codes_to_exclude || [];
+        const excludedCodes = (design.qtn_codes_to_exclude || [])
+          .map((q) => (typeof q === "object" ? q.code : q))
+          .filter(Boolean);
         for (const code of excludedCodes) {
           selectedContentStore.removeQuestion(code);
         }
@@ -662,8 +666,7 @@
     }
   }
 
-  // Fetch exam data on mount if in edit mode
-  onMount(async () => {
+  async function loadWizardData() {
     isLoading = true;
     loadError = null;
 
@@ -716,7 +719,14 @@
         Array.isArray(design.qtn_codes_to_exclude) &&
         design.qtn_codes_to_exclude.length > 0
       ) {
-        apiPayloadStore.updateExcludedQuestions(design.qtn_codes_to_exclude);
+        const normalizedExclusions = design.qtn_codes_to_exclude
+          .map(normalizeExcludedQuestion)
+          .filter(Boolean);
+
+        selectedContentStore.setRemovedQuestions(normalizedExclusions);
+
+        const excludedCodes = normalizedExclusions.map((q) => q.id);
+        apiPayloadStore.updateExcludedQuestions(excludedCodes);
       }
     } catch (error) {
       console.error("Failed to load exam data:", error);
@@ -724,6 +734,11 @@
     } finally {
       isLoading = false;
     }
+  }
+
+  // Fetch exam data on mount if in edit mode
+  onMount(async () => {
+    await loadWizardData();
   });
 
   // Update the back handler in ReviewPage
@@ -763,6 +778,7 @@
       easy: 40,
       medium: 40,
       hard: 20,
+      autoBalance: true,
       isAllocationConfirmed: false,
       confirmedAllocationData: null,
     };
@@ -941,6 +957,8 @@
         status: 2,
       };
 
+      console.log("apiPayload", apiPayload);
+
       let response;
       if (examData.examCode) {
         response = await apiClient({
@@ -986,7 +1004,7 @@
         questionPapers: responseData.question_papers || [],
         shortfallInfo: responseData.shortfall_info || {},
         chapterTopics: responseData.chapter_topics || [],
-        questionsToExclude: responseData.questions_to_exclude || [],
+        questionsToExclude: responseData.qtn_codes_to_exclude || [],
         generatedAt: new Date().toISOString(),
         originalPayload: apiPayload,
         apiResponse: responseDataRaw,
@@ -1093,38 +1111,26 @@
       <div class="">
         {#if isLoading}
           <div class="flex items-center justify-center py-12">
-            <div class="text-center">
+            <!-- <div class="text-center">
               <div
                 class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"
               ></div>
               <p class="text-gray-600">Loading exam details...</p>
-            </div>
+            </div> -->
+            <SpinnerWithText message="Loading exam details..." />
           </div>
         {:else if loadError}
-          <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg
-                  class="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">
-                  Error loading exam details
-                </h3>
-                <div class="mt-2 text-sm text-red-700">
-                  <p>{loadError}</p>
-                </div>
-              </div>
-            </div>
+          <div class="mb-6">
+            <InlineNotification
+              kind="error"
+              title="Error loading exam details"
+              subtitle={loadError}
+              hideCloseButton={true}
+              action={{
+                text: "Retry Loading",
+                handler: loadWizardData,
+              }}
+            />
           </div>
         {:else if currentView === "config"}
           <form on:submit|preventDefault={handleSubmit}>
@@ -1152,10 +1158,11 @@
                   on:validate={handleExamConfigValidation}
                 />
                 <hr class="divider-line" />
-                <DifficultyDistribution
+                <DifficultyConfigurator
                   bind:examData
                   bind:isValid={difficultyValid}
                   isReviewPageEnabled={false}
+                  bind:autoBalance={examData.autoBalance}
                 />
               </div>
             </Card>

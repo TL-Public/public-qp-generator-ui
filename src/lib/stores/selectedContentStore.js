@@ -361,14 +361,26 @@ export function createSelectedContentStore(initialData = {}) {
         const questionToRemove = store.questions.find(q => q.id === questionId);
         if (questionToRemove) {
           // Add to removed questions if not already there
-          if (!store.removedQuestions.find(q => q.id === questionId)) {
+          const existingIndex = store.removedQuestions.findIndex(q => q.id === questionId);
+          if (existingIndex === -1) {
             store.removedQuestions = [...store.removedQuestions, questionToRemove];
+          } else {
+            store.removedQuestions[existingIndex] = questionToRemove;
+            store.removedQuestions = [...store.removedQuestions];
           }
           
           // Remove from active questions
           store.questions = store.questions.filter(q => q.id !== questionId);
           store.lastUpdated = new Date().toISOString();
         }
+        return store;
+      });
+    },
+
+    setRemovedQuestions: (questions) => {
+      update(store => {
+        store.removedQuestions = questions || [];
+        store.lastUpdated = new Date().toISOString();
         return store;
       });
     },
