@@ -38,6 +38,7 @@
   import { page } from "$app/stores";
   import { authStore } from "$lib/stores/authStore";
   import Sidebar from "$lib/components/Sidebar.svelte";
+  import { rolePermissions, isMenuAllowed } from "$lib/config.js";
   // import Header2 from "$lib/components/reusable/Header2.svelte";
   import BreadCrumbs from "$lib/components/BreadCrumbs.svelte";
   import { onMount } from "svelte";
@@ -204,7 +205,23 @@
   );
 
   $: filteredSidebarList = (() => {
-    return sidebarList;
+    const roleCode = $authStore?.roleCode || "102";
+
+    return sidebarList?.filter((item) => {
+      const isAllowed = isMenuAllowed(item.key, roleCode);
+      if (!isAllowed) return false;
+
+      if (item.children) {
+        const filteredChildren = item.children.filter(child => isMenuAllowed(child.key, roleCode));
+        if (filteredChildren.length === 0) return false;
+        return {
+          ...item,
+          children: filteredChildren
+        };
+      }
+
+      return true;
+    });
   })();
 </script>
 

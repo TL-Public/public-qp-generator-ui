@@ -1,6 +1,9 @@
 /** @type {import('@sveltejs/kit').Handle} */
 
 import { redirect } from "@sveltejs/kit";
+import { normalizeRoute } from "$lib/utils/helper.js";
+import { rolePermissions } from "$lib/config.js";
+
 export async function handle({ event, resolve }) {
   // List of routes that don't require authentication
   const accessToken = event.cookies.get('accessToken');
@@ -53,27 +56,28 @@ export async function handle({ event, resolve }) {
     // If user is not authenticated and visits "/", let them stay (show login page)
   } else {
     // Normalize the current route for RBAC
-    // const normalizedRoute = await normalizeRoute(event.url.pathname);
+    const normalizedRoute = await normalizeRoute(event.url.pathname);
 
-    // // Check if the user role is restricted from accessing the route
-    // if (
-    //   !event.url.pathname.startsWith("/apis") &&
-    //   roleCode &&
-    //   roles[roleCode]?.restrictedRoutes?.includes(normalizedRoute)
-    // ) {
-    //   console.log(
-    //     `Access denied for role "${roleCode}" to route "${normalizedRoute}"`,
-    //   );
-    //   throw redirect(303, "/unauthorized"); // Redirect to an unauthorized page
-    // }
-    // // User IS authenticated
-    // if (
-    //   event.url.pathname === "/" &&
-    //   !event.url.searchParams.has("redirectTo")
-    // ) {
-    //   // Redirect authenticated user from login page to home only if no redirectTo param
-    //   throw redirect(303, "/home");
-    // }
+    const userRoleConfig = rolePermissions[roleCode] || rolePermissions.student;
+
+    // Check if the user role is restricted from accessing the route
+    if (
+      !event.url.pathname.startsWith("/apis") &&
+      userRoleConfig?.restrictedRoutes?.includes(normalizedRoute)
+    ) {
+      console.log(
+        `Access denied for role "${roleCode}" to route "${normalizedRoute}"`,
+      );
+      throw redirect(303, "/unauthorized"); // Redirect to an unauthorized page
+    }
+    // User IS authenticated
+    if (
+      event.url.pathname === "/" &&
+      !event.url.searchParams.has("redirectTo")
+    ) {
+      // Redirect authenticated user from login page to home only if no redirectTo param
+      throw redirect(303, "/home");
+    }
   }
 
   const response = await resolve(event);
