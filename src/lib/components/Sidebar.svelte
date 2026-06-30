@@ -27,7 +27,7 @@
 <script>
   import {
     Home,
-    FileText,
+    BookOpen,
     HelpCircle,
     Search,
     Users,
@@ -165,7 +165,7 @@
       <div
         class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center"
       >
-        <FileText size={20} class="text-white" />
+        <BookOpen size={20} class="text-white" />
       </div>
       <div>
         <div class="text-xl font-bold text-white">Smart QP</div>
