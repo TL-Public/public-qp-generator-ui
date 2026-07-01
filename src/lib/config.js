@@ -1,10 +1,13 @@
 import { ROUTES, MAIN_MENU_ITEMS } from "$lib/rbacContants";
 export const rolePermissions = {
   // Access by role code (used by hooks and components)
+  //admin role code: 100
   "100": {
     restrictedRoutes: [],
     restrictedMenuList: [],
   },
+
+  // teacher role code: 101
   "101": {
     restrictedRoutes: [ ROUTES.USERS_LIST],
     restrictedMenuList: [MAIN_MENU_ITEMS.USERS],
