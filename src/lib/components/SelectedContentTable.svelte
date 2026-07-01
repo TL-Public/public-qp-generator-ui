@@ -5,6 +5,7 @@
   import Toggle from "$lib/components/Toggle.svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
   import Input from "$lib/components/Input.svelte";
+  import Button from "$lib/components/Button.svelte";
   // import { apiPayloadStore } from "$lib/stores/apiPayLoadStore.js";
 
   const selectedContentStore = getContext("selectedContentStore");
@@ -45,28 +46,26 @@
   $: hierarchicalSelections = buildHierarchyFromStore(storeData);
 
   // Calculate allocation summary
+  $: noOfSets = Number(examData?.no_of_sets) || 1;
   $: allocationSummary = calculateAllocationSummary(
     hierarchicalSelections,
     requiredQuestions,
+    noOfSets,
   );
-
-  $: console.log("allocationSummary", allocationSummary);
-  $: console.log("hierarchicalSelections", hierarchicalSelections);
-  $: console.log("storeData", storeData);
 
   // Validation for required fields
-  $: isFormValid = !!(
-    examData?.exam_name?.trim() &&
-    examData?.subject_code &&
-    examData?.medium_code &&
-    examData?.exam_mode &&
-    examData?.total_time &&
-    examData?.exam_class &&
-    examData?.no_of_versions &&
-    examData?.no_of_sets
-  );
+  $: examValidationError = getExamValidationError(examData);
+  $: isMetadataValid = !examValidationError;
+  $: isContentSelected = tableRows.length > 0;
+
+  // Track validity for different actions
+  $: isDraftValid = isMetadataValid && isContentSelected;
+  $: isAllocationValid = !allocationSummary.hasError && ($apiPayloadStore.is_ai_selected || allocationSummary.remaining === 0);
+  $: isReleaseValid = isDraftValid && isAllocationValid;
 
   function getExamValidationError(examData) {
+    if (!examData) return "Exam information not found.";
+    
     const missingFields = [];
 
     // Map of field keys to their display labels
@@ -83,7 +82,8 @@
 
     // Check each field
     for (const [key, label] of Object.entries(requiredFields)) {
-      if (!examData?.[key]) {
+      const value = examData[key];
+      if (value === undefined || value === null || (typeof value === 'string' && (value.trim() === '' || value.trim() === '0')) || (typeof value === 'number' && value === 0)) {
         missingFields.push(label);
       }
     }
@@ -94,32 +94,78 @@
       : null;
   }
 
+    /**
+   * Universal validation for both saving drafts and final confirmation
+     */
+  function validateAllocationConfig({ isFinalConfirm = false }) {
+    // 1. Check basic form validity (Metadata section)
+    const metadataError = getExamValidationError(examData);
+    if (metadataError) {
+      return metadataError;
+    }
+
+    // 2. Check content selection
+    if (tableRows.length === 0) {
+      return "No content selected. Please go back and select chapters or topics.";
+    }
+
+    // THE FOLLOWING ARE ONLY FOR FINAL CONFIRMATION
+    if (isFinalConfirm) {
+      // 3. Check question availability (considering No. of Sets)
+      if (allocationSummary.hasError) {
+        const sets = allocationSummary.sets;
+        const totalReq = allocationSummary.totalRequiredAcrossSets;
+        if (sets > 1) {
+          return `Insufficient questions available. You need ${totalReq} questions for ${sets} sets (${allocationSummary.required} per set), but only ${allocationSummary.available} are available.`;
+        }
+        return `Only ${allocationSummary.available} questions available, but ${allocationSummary.required} are required.`;
+      }
+
+      // 4. Check manual allocation balance
+      if (
+        !$apiPayloadStore.is_ai_selected &&
+        allocationSummary.remaining !== 0
+      ) {
+        if (allocationSummary.remaining > 0) {
+          return `You still have ${allocationSummary.remaining} questions left to allocate.`;
+        } else {
+          return `You have over-allocated by ${Math.abs(allocationSummary.remaining)} questions.`;
+        }
+      }
+    }
+
+    return null; // Valid
+  }
+
   function countQuestionsForItem(itemCode, itemType) {
-    if (!storeData || !storeData.questions || storeData.questions.length === 0) return 0;
-    
-    return storeData.questions.filter(q => {
+    if (!storeData || !storeData.questions || storeData.questions.length === 0)
+      return 0;
+
+    return storeData.questions.filter((q) => {
       if (q.parent?.code === itemCode) return true;
-      
+
       // If it's a chapter, also count questions in its children topics/subtopics
-      if (itemType === 'chapter') {
-        if (q.parent?.type === 'topic') {
+      if (itemType === "chapter") {
+        if (q.parent?.type === "topic") {
           const topicCode = q.parent.code;
-          if (topicCode && topicCode.startsWith(itemCode + '_')) return true;
+          if (topicCode && topicCode.startsWith(itemCode + "_")) return true;
         }
-        if (q.parent?.type === 'subtopic') {
+        if (q.parent?.type === "subtopic") {
           const subtopicCode = q.parent.code;
-          if (subtopicCode && subtopicCode.startsWith(itemCode + '_')) return true;
+          if (subtopicCode && subtopicCode.startsWith(itemCode + "_"))
+            return true;
         }
       }
-      
+
       // If it's a topic, also count questions in its children subtopics
-      if (itemType === 'topic') {
-        if (q.parent?.type === 'subtopic') {
+      if (itemType === "topic") {
+        if (q.parent?.type === "subtopic") {
           const subtopicCode = q.parent.code;
-          if (subtopicCode && subtopicCode.startsWith(itemCode + '_')) return true;
+          if (subtopicCode && subtopicCode.startsWith(itemCode + "_"))
+            return true;
         }
       }
-      
+
       return false;
     }).length;
   }
@@ -144,9 +190,11 @@
         code: chapterData.code,
         name: metadata ? metadata.name : chapterData.name,
         type: "chapter",
-        questionAvailable: countQuestionsForItem(chapterData.code, "chapter") || (metadata
-          ? metadata.question_count
-          : chapterData.question_count || 0),
+        questionAvailable:
+          countQuestionsForItem(chapterData.code, "chapter") ||
+          (metadata
+            ? metadata.question_count
+            : chapterData.question_count || 0),
         questionsToAdd:
           chapterData.questionsToAdd ||
           getDefaultQuestionsToAdd("chapter", chapterData.question_count || 0),
@@ -162,7 +210,10 @@
             code: topicData.code,
             name: topicData.name,
             type: "topic",
-            questionAvailable: countQuestionsForItem(topicData.code, "topic") || (topicData.question_count || 0),
+            questionAvailable:
+              countQuestionsForItem(topicData.code, "topic") ||
+              topicData.question_count ||
+              0,
             questionsToAdd:
               topicData.questionsToAdd ||
               getDefaultQuestionsToAdd("topic", topicData.question_count || 0),
@@ -179,7 +230,10 @@
                 code: subtopicData.code,
                 name: subtopicData.name,
                 type: "subtopic",
-                questionAvailable: countQuestionsForItem(subtopicData.code, "subtopic") || (subtopicData.question_count || 0),
+                questionAvailable:
+                  countQuestionsForItem(subtopicData.code, "subtopic") ||
+                  subtopicData.question_count ||
+                  0,
                 questionsToAdd:
                   subtopicData.questionsToAdd ||
                   getDefaultQuestionsToAdd(
@@ -208,7 +262,11 @@
     return 0; // Default to 0 as per user request
   }
 
-  function calculateAllocationSummary(hierarchicalSelections, required) {
+  function calculateAllocationSummary(
+    hierarchicalSelections,
+    required,
+    sets = 1,
+  ) {
     let totalAvailable = 0;
     let totalAllocated = 0;
 
@@ -231,17 +289,22 @@
 
     hierarchicalSelections.forEach((item) => processItem(item));
 
+    const totalRequiredAcrossSets = required * sets;
     const remaining = required - totalAllocated;
-    const hasError = totalAvailable < required;
+    const hasError = totalAvailable < totalRequiredAcrossSets;
 
     return {
       required,
+      sets,
+      totalRequiredAcrossSets,
       available: totalAvailable,
       allocated: totalAllocated,
       remaining,
       hasError,
     };
   }
+
+
 
   //   Enhanced updateQuestionsToAdd with better reactivity
   function updateQuestionsToAdd(item, value) {
@@ -401,6 +464,13 @@
   //   Renamed and improved function
   function handleApplyAllocation() {
     allocationError = "";
+
+    const validationError = validateAllocationConfig({ isFinalConfirm: true });
+    if (validationError) {
+      allocationError = validationError;
+      return;
+    }
+
     const preview = generateAllocationPreview();
 
     if (preview) {
@@ -467,16 +537,15 @@
     savingDraft = true;
     draftSaveError = "";
     draftSaveSuccess = "";
-    console.log("Saving draft with examData: SELECTED CONTENT", examData);
     try {
-      // Use exam data from props
-      if (!examData) {
-        throw new Error(
-          "Exam information not found. Please ensure you have filled out the exam details form before saving as draft.",
-        );
+      const validationError = validateAllocationConfig({
+        isFinalConfirm: false,
+      });
+      if (validationError) {
+        throw new Error(validationError);
       }
 
-      // Extract exam details from props with validation
+      // Extract exam details from props
       const examName = examData.exam_name?.trim();
       const examTypeCode = examData.exam_type_code;
       const subjectCode = examData.subject_code;
@@ -486,38 +555,6 @@
       const standard = examData.standard || examData.exam_class;
       const noOfVersions = Number(examData.no_of_versions) || 1;
       const noOfSets = Number(examData.no_of_sets) || 1;
-
-      // Validate required fields
-      if (!examName) {
-        throw new Error(
-          "Exam name is required. Please go back and enter an exam name.",
-        );
-      }
-
-      if (!examTypeCode) {
-        throw new Error(
-          "Exam type is required. Please go back and select an exam type.",
-        );
-      }
-
-      if (!subjectCode) {
-        throw new Error(
-          "Subject is required. Please go back and select a subject.",
-        );
-      }
-
-      if (!mediumCode) {
-        throw new Error(
-          "Medium is required. Please go back and select a medium.",
-        );
-      }
-
-      // Validate that we have selected content
-      if (!hierarchicalSelections || hierarchicalSelections.length === 0) {
-        throw new Error(
-          "No content selected. Please select chapters, topics, or subtopics before saving.",
-        );
-      }
 
       // Build chapters_topics array from selected content using selectedContentStore
       const chaptersTopics = buildChaptersTopicsFromStore();
@@ -550,7 +587,9 @@
       }
 
       // Check for excluded questions from selectedContentStore
-      const excludedQuestionCodes = ($selectedContentStore.removedQuestions || [])
+      const excludedQuestionCodes = (
+        $selectedContentStore.removedQuestions || []
+      )
         .map((q) => q.id || q.code)
         .filter(Boolean);
 
@@ -1012,10 +1051,10 @@
               <!-- Actions -->
               <td class="px-6 py-4 text-center">
                 {#if row.item.isSelected}
-                  <button
-                    type="button"
-                    class="text-red-600 hover:text-red-800 text-sm transition-colors duration-200 p-1"
-                    on:click|preventDefault={() => removeItem(row.item.code)}
+                  <Button
+                    btnType="dangerSecondary"
+                    customClass="p-1 px-1.5 py-1 normal-case min-w-0"
+                    on:click={() => removeItem(row.item.code)}
                     title="Remove {row.item.name}"
                   >
                     <svg
@@ -1029,7 +1068,7 @@
                         clip-rule="evenodd"
                       />
                     </svg>
-                  </button>
+                  </Button>
                 {:else}
                   <span class="text-gray-300">−</span>
                 {/if}
@@ -1046,16 +1085,15 @@
     <div class="flex flex-row justify-end gap-3 w-full">
       <!-- Save as Draft Button -->
       <div class="flex justify-end">
-        <button
-          type="button"
-          class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          disabled={!isFormValid || savingDraft || tableRows.length === 0}
-          on:click|preventDefault={handleSaveAsDraft}
+        <Button
+          btnType="secondary"
+          disabled={!isDraftValid || savingDraft}
+          on:click={handleSaveAsDraft}
         >
           {#if savingDraft}
             <div class="flex items-center">
               <svg
-                class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                class="animate-spin -ml-1 mr-2 h-4 w-4 text-primary"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -1093,24 +1131,18 @@
               Save as Draft
             </div>
           {/if}
-        </button>
+        </Button>
       </div>
 
       <!-- Confirm Allocation Button -->
-      <div class="flex justify-end">
-        <button
-          type="button"
-          class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-          disabled={!isFormValid ||
-            allocationSummary.hasError ||
-            tableRows.length === 0 ||
-            savingDraft ||
-            (!$apiPayloadStore.is_ai_selected &&
-              allocationSummary.remaining !== 0)}
-          on:click|preventDefault={handleApplyAllocation}
+      <div class="flex flex-col items-end gap-2">
+        <Button
+          disabled={!isReleaseValid || savingDraft}
+          btnType="primary"
+          on:click={handleApplyAllocation}
         >
           Confirm and Review Allocation
-        </button>
+        </Button>
       </div>
 
       {#if allocationError}
@@ -1123,30 +1155,13 @@
         </div>
       {/if}
     </div>
-    {#if !isFormValid}
+    {#if !isMetadataValid}
       <p
         class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2 w-full md:w-auto"
       >
-        ⚠️ {getExamValidationError(examData)}
+        ⚠️ {examValidationError}
       </p>
     {/if}
   </div>
 </div>
 
-<!-- Allocation Preview Modal (Disabled for now) -->
-<!-- <AllocationPreviewModal
-  allocateWithAI={$apiPayloadStore.is_ai_selected}
-  bind:showModal={showAllocationPreview}
-  allocationType={previewData?.allocationType || ""}
-  allocationLevel={previewData?.allocationLevel || ""}
-  totalRequired={previewData?.totalRequired || 0}
-  totalAllocated={previewData?.totalAllocated || 0}
-  totalAvailable={previewData?.totalAvailable || 0}
-  remaining={previewData?.remaining || 0}
-  items={previewData?.items || []}
-  selectedItems={previewData?.selectedItems || []}
-  autoAllocations={previewData?.autoAllocations || []}
-  on:confirm={handleConfirmAllocation}
-  on:cancel={handleCancelAllocation}
-  on:allocationConfirmed={handleAllocationConfirmed}
-/> -->
