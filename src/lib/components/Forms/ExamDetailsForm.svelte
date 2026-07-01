@@ -7,6 +7,7 @@
 
   export let examData = {};
   export let isValid = false;
+  export let showErrors = false;
 
   const dispatch = createEventDispatcher();
 
@@ -16,8 +17,13 @@
     { value: "Hybrid", label: "Hybrid", description: "Both formats", icon: "wifi" }
   ];
 
+  let touchedFields = {
+    examTitle: false,
+    examMode: false
+  };
+
   $: {
-    isValid = !!examData.examTitle && !!examData.examMode;
+    isValid = !!examData.examTitle?.trim() && !!examData.examMode;
     if (isValid) {
       apiPayloadStore.updateExamDetails({ 
         examTitle: examData.examTitle, 
@@ -26,7 +32,8 @@
     }
   }
 
-  function handleInput() {
+  function handleInput(field) {
+    if (field) touchedFields[field] = true;
     dispatch("change", { 
       examTitle: examData.examTitle, 
       examMode: examData.examMode, 
@@ -45,12 +52,12 @@
         type="text"
         required
         class="w-full p-2 text-sm border broder-gray-200 rounded-md focus:ring-blue-500 focus:border-blue-500
-        {!examData.examTitle?.trim() ? 'border-red-300' : 'border-gray-300'}"
+        {(touchedFields.examTitle || showErrors) && !examData.examTitle?.trim() ? 'border-red-300' : 'border-gray-300'}"
         bind:value={examData.examTitle}
         placeholder="Enter exam title"
-        on:input={handleInput}
+        on:input={() => handleInput('examTitle')}
       />
-      {#if !examData.examTitle?.trim()}
+      {#if (touchedFields.examTitle || showErrors) && !examData.examTitle?.trim()}
         <p class="mt-1 text-xs text-red-600">Exam title is required</p>
       {/if}
     </div>
@@ -62,7 +69,7 @@
       <SelectableCardGroup
         options={examModes}
         bind:selected={examData.examMode}
-        on:change={handleInput}
+        on:change={() => handleInput('examMode')}
       />
     </div>
   </div>

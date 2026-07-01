@@ -17,6 +17,7 @@
   export let savingDraft = false;
   export let draftSaveError = "";
   export let draftSaveSuccess = "";
+  export let showErrors = false;
 
   // Subscribe to stores
   let storeData = {};
@@ -254,7 +255,6 @@
 
       result.push(chapter);
     }
-    console.log("Hierarchical selections built from store:", result);
     return result;
   }
 
@@ -464,6 +464,7 @@
   //   Renamed and improved function
   function handleApplyAllocation() {
     allocationError = "";
+    showErrors = true;
 
     const validationError = validateAllocationConfig({ isFinalConfirm: true });
     if (validationError) {
@@ -535,6 +536,7 @@
    */
   async function handleSaveAsDraft() {
     savingDraft = true;
+    showErrors = true;
     draftSaveError = "";
     draftSaveSuccess = "";
     try {

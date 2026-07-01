@@ -6,6 +6,12 @@
   const dispatch = createEventDispatcher();
 
   export let examData = {};
+  export let showErrors = false;
+
+  let touchedFields = {
+    sets: false,
+    versions: false
+  };
 
   // Validation state
   $: isValid = examData.numberOfSets <= 10 && examData.numberOfVersions <= 5 && 
@@ -17,11 +23,18 @@
   }
 
   // Pre-calculate validation errors for Input components
-  $: setsError = examData.numberOfSets > 10 ? 'Maximum 10 sets allowed' : 
-                 examData.numberOfSets < 1 ? 'Minimum 1 set required' : '';
+  $: setsErrorRaw = examData.numberOfSets > 10 ? 'Maximum 10 sets allowed' : 
+                    examData.numberOfSets < 1 ? 'Minimum 1 set required' : '';
   
-  $: versionsError = examData.numberOfVersions > 5 ? 'Maximum 5 versions allowed' : 
-                     examData.numberOfVersions < 1 ? 'Minimum 1 version required' : '';
+  $: versionsErrorRaw = examData.numberOfVersions > 5 ? 'Maximum 5 versions allowed' : 
+                        examData.numberOfVersions < 1 ? 'Minimum 1 version required' : '';
+
+  $: setsError = (touchedFields.sets || showErrors) ? setsErrorRaw : '';
+  $: versionsError = (touchedFields.versions || showErrors) ? versionsErrorRaw : '';
+
+  function handleInput(field) {
+    if (field) touchedFields[field] = true;
+  }
 </script>
 
 <div >
@@ -61,6 +74,7 @@
         bind:value={examData.numberOfSets}
         validationErrors={setsError}
         placeholder="e.g. 2"
+        on:handleInputData={() => handleInput('sets')}
       />
     </div>
 
@@ -81,6 +95,7 @@
         bind:value={examData.numberOfVersions}
         validationErrors={versionsError}
         placeholder="e.g. 1"
+        on:handleInputData={() => handleInput('versions')}
       />
     </div>
   </div>
