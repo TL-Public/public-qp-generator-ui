@@ -26,7 +26,6 @@
       });
 
       const data = await response.json();
-      console.log("data of login", data);
       if (data.error) {
         throw new Error(data.error);
       }

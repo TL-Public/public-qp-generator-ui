@@ -38,6 +38,7 @@
   import { page } from "$app/stores";
   import { authStore } from "$lib/stores/authStore";
   import Sidebar from "$lib/components/Sidebar.svelte";
+  import { rolePermissions, isMenuAllowed } from "$lib/config.js";
   // import Header2 from "$lib/components/reusable/Header2.svelte";
   import BreadCrumbs from "$lib/components/BreadCrumbs.svelte";
   import { onMount } from "svelte";
@@ -64,9 +65,10 @@
   } from "@lucide/svelte";
   // import { PUBLIC_APP_NAME } from "$env/static/public";
   import { checkSidebarRules } from "$lib/utils/helper.js";
+  import {  MAIN_MENU_ITEMS } from "$lib/rbacContants";
   // import { injectGAHead } from '$lib/utils/helper.js';
 
-  $: console.log("$authStore in layout.svelte", $authStore);
+
   export let data;
 
   $: isAuthenticated = data?.session?.isAuthenticated;
@@ -88,21 +90,21 @@
   ];
 
   $: sidebarList = [
-    { name: "Dashboard", link: "/home", key: "DASHBOARD", icon: Home },
+    { name: "Dashboard", link: "/home", key: MAIN_MENU_ITEMS.HOME, icon: Home },
 
     {
       name: "Create Paper",
       link: "/create-paper",
-      key: "CREATE_PAPER",
+      key: MAIN_MENU_ITEMS.CREATE_PAPER,
       icon: FilePlus,
     },
     {
       name: "View Papers",
       link: "/questionPapers",
-      key: "VIEW_PAPERS",
+      key: MAIN_MENU_ITEMS.VIEW_PAPER,
       icon: Search,
     },
-    { name: "Users", link: "/users", key: "USERS", icon: Users },
+    { name: "Users", link: "/users", key: MAIN_MENU_ITEMS.USERS, icon: Users },
 
     //  {
     //   name: "Masterdata",
@@ -130,8 +132,8 @@
       // link: $authStore?.userId
       //   ? `/updateProfile/${$authStore?.userId}`
       //   : "/unauthorized",
-      link: "myProfile",
-      key: "PROFILE",
+      link: "/myProfile",
+      key: MAIN_MENU_ITEMS.MY_PROFILE,
       icon: User,
     },
   ];
@@ -204,7 +206,23 @@
   );
 
   $: filteredSidebarList = (() => {
-    return sidebarList;
+    const roleCode = data?.session?.roleCode; 
+    
+    return sidebarList?.filter((item) => {
+      const isAllowed = isMenuAllowed(item.key, roleCode);
+      if (!isAllowed) return false;
+
+      if (item.children) {
+        const filteredChildren = item.children.filter(child => isMenuAllowed(child.key, roleCode));
+        if (filteredChildren.length === 0) return false;
+        return {
+          ...item,
+          children: filteredChildren
+        };
+      }
+
+      return true;
+    });
   })();
 </script>
 

@@ -41,7 +41,6 @@
   import { page } from "$app/stores";
   import { onMount } from "svelte";
   import { slide } from "svelte/transition";
-  // import { roles } from "$lib/config.js";
 
   // import { roles } from '$lib/config.js';
   // import { userDetails } from '/src/routes/store.js';
@@ -49,7 +48,6 @@
   export let sidebarList = [];
   $: route = $page.url.pathname;
 
-  let filteredSidebarList = [];
   let expandedItems = new Set();
 
   // this function checks which of the side bar is currently active
@@ -114,9 +112,9 @@
 
   // Auto-expand if child route is active, and auto-collapse when navigating away
   // Explicitly depend on route to ensure it runs when route changes
-  $: if (route && filteredSidebarList) {
+  $: if (route && sidebarList) {
     const newExpandedItems = new Set();
-    filteredSidebarList.forEach((item) => {
+    sidebarList.forEach((item) => {
       if (item.children && isChildRouteActive(item)) {
         // Only expand if a child is currently active
         newExpandedItems.add(item.key);
@@ -130,31 +128,6 @@
   function toogleMenu() {
     sidebarOpen = !sidebarOpen;
   }
-
-  // handleLogout is now imported from context=module
-  // -------------------{--------------- Role based functions --------------------------------
-  function roleBasedAcessSetting() {
-    // Filter the sidebar list by checking if the item's key is not in the restrictedMenuList
-    // commented out since there are no rbac implemented in smart qp
-    // filteredSidebarList = sidebarList?.filter((item) => {
-    //   // Only include items that are NOT in the restricted menu list
-    //   return !roles[$authStore?.roleCode]?.restrictedMenuList?.includes(
-    //     item?.key?.toLowerCase()?.trim()
-    //   );
-    // });
-    filteredSidebarList = sidebarList;
-  }
-
-  onMount(() => {
-    const unsubscribe = authStore?.subscribe((user) => {
-      if (user && Object.keys(user)?.length > 0) {
-        roleBasedAcessSetting(user);
-      } else {
-        filteredSidebarList = sidebarList;
-      }
-    });
-    return () => unsubscribe(); // Cleanup subscription
-  });
 </script>
 
 <aside
@@ -173,7 +146,7 @@
     </a>
   </div>
 
-  {#each filteredSidebarList as item, index (index)}
+  {#each sidebarList as item, index (index)}
     {#if item.children && item.children.length > 0}
       <!-- Nested menu item -->
       <div class="mb-2">

@@ -129,13 +129,12 @@ export async function apiBatch(urls, params = "", pageUrl = "") {
   return results;
 }
 
-// Normalize dynamic routes for consistency ---- this converts uuid and AlphaNumeric IDs starting with Q like Q1234 to ':id'
-export function normalizeRoute(route) {
+// Normalize dynamic routes for consistency ---- this converts uuid, AlphaNumeric IDs starting with Q like Q1234, and numeric IDs to ':id'
+export async function normalizeRoute(route) {
+  if (!route || typeof route !== 'string') return '';
   return route
-    ?.replace(
-      /\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}(?=$|[/?])/gi,
-      "/:id"
-    )
+    .replace(/\/\d+/g, '/:id')
+    .replace(/\/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}(?=$|[/?])/gi, "/:id")
     .replace(/\/Q\d+(?=$|[/?])/gi, "/:id");
 }
 
