@@ -6,28 +6,27 @@ import { rolePermissions } from "$lib/config.js";
 
 export async function handle({ event, resolve }) {
   // List of routes that don't require authentication
-  const accessToken = event.cookies.get('accessToken');
-  const userName = event.cookies.get('userName');
-  const roleName = event.cookies.get('roleName');
+  const accessToken = event.cookies.get("accessToken");
+  const userName = event.cookies.get("userName");
+  const roleName = event.cookies.get("roleName");
   // const role = event.cookies.get('role');
-  const roleCode = event.cookies.get('roleCode');
-  const userId = event.cookies.get('userId');
+  const roleCode = event.cookies.get("roleCode");
+  const userId = event.cookies.get("userId");
 
-
-  let sessionData ={
+  let sessionData = {
     isAuthenticated: !!accessToken,
     userName,
     // role,
     userId,
     roleCode,
-    roleName
-  }
+    roleName,
+  };
   event.locals.sessionData = sessionData;
 
   // const publicRoutes = ['/login', '/register'];
-  
+
   // // Check if the route is public
-  // const isPublicRoute = publicRoutes.some(route => 
+  // const isPublicRoute = publicRoutes.some(route =>
   //   event.url.pathname.startsWith(route)
   // );
 
@@ -42,9 +41,9 @@ export async function handle({ event, resolve }) {
   // const response = await resolve(event);
   // return response;
 
-   if (!sessionData?.isAuthenticated) {
+  if (!sessionData?.isAuthenticated) {
     // User is NOT authenticated
-  
+
     const publicPaths = ["/", "/login"];
     const isPublicPath = publicPaths.includes(event.url.pathname);
     if (!event.url.pathname.startsWith("/apis") && !isPublicPath) {
@@ -58,8 +57,7 @@ export async function handle({ event, resolve }) {
     // Normalize the current route for RBAC
     const normalizedRoute = await normalizeRoute(event.url.pathname);
 
-    const userRoleConfig = rolePermissions[roleCode] || rolePermissions.student;
-
+    const userRoleConfig = rolePermissions[roleCode];
     // Check if the user role is restricted from accessing the route
     if (
       !event.url.pathname.startsWith("/apis") &&

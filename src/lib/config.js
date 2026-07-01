@@ -1,3 +1,4 @@
+import { ROUTES, MAIN_MENU_ITEMS } from "$lib/rbacContants";
 export const rolePermissions = {
   // Access by role code (used by hooks and components)
   "100": {
@@ -5,31 +6,12 @@ export const rolePermissions = {
     restrictedMenuList: [],
   },
   "101": {
-    restrictedRoutes: ["/admin/settings", "/users/management"],
-    restrictedMenuList: ["ADMIN_SETTINGS", "USER_MANAGEMENT"],
+    restrictedRoutes: [ ROUTES.USERS_LIST],
+    restrictedMenuList: [MAIN_MENU_ITEMS.USERS],
   },
-  "102": {
-    restrictedRoutes: ["/admin/settings", "/questions/add", "/uploadHistory"],
-    restrictedMenuList: ["ADMIN_SETTINGS", "ADD_QUESTION", "HISTORY"],
-  },
-  "1000": {
-    restrictedRoutes: ["/admin/settings", "/questions/add", "/uploadHistory"],
-    restrictedMenuList: ["ADMIN_SETTINGS", "ADD_QUESTION", "HISTORY"],
-  },
+
   
-  // Access by role name (for fallback / compatibility)
-  admin: {
-    restrictedRoutes: [],
-    restrictedMenuList: [],
-  },
-  teacher: {
-    restrictedRoutes: ["/admin/settings", "/users/management"],
-    restrictedMenuList: ["ADMIN_SETTINGS", "USER_MANAGEMENT"],
-  },
-  student: {
-    restrictedRoutes: ["/admin/settings", "/questions/add", "/uploadHistory"],
-    restrictedMenuList: ["ADMIN_SETTINGS", "ADD_QUESTION", "HISTORY"],
-  }
+
 };
 
 export function isActionRestricted(route, action, userRole) {

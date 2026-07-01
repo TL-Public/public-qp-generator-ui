@@ -65,9 +65,10 @@
   } from "@lucide/svelte";
   // import { PUBLIC_APP_NAME } from "$env/static/public";
   import { checkSidebarRules } from "$lib/utils/helper.js";
+  import {  MAIN_MENU_ITEMS } from "$lib/rbacContants";
   // import { injectGAHead } from '$lib/utils/helper.js';
 
-  $: console.log("$authStore in layout.svelte", $authStore);
+
   export let data;
 
   $: isAuthenticated = data?.session?.isAuthenticated;
@@ -89,21 +90,21 @@
   ];
 
   $: sidebarList = [
-    { name: "Dashboard", link: "/home", key: "DASHBOARD", icon: Home },
+    { name: "Dashboard", link: "/home", key: MAIN_MENU_ITEMS.HOME, icon: Home },
 
     {
       name: "Create Paper",
       link: "/create-paper",
-      key: "CREATE_PAPER",
+      key: MAIN_MENU_ITEMS.CREATE_PAPER,
       icon: FilePlus,
     },
     {
       name: "View Papers",
       link: "/questionPapers",
-      key: "VIEW_PAPERS",
+      key: MAIN_MENU_ITEMS.VIEW_PAPER,
       icon: Search,
     },
-    { name: "Users", link: "/users", key: "USERS", icon: Users },
+    { name: "Users", link: "/users", key: MAIN_MENU_ITEMS.USERS, icon: Users },
 
     //  {
     //   name: "Masterdata",
@@ -131,8 +132,8 @@
       // link: $authStore?.userId
       //   ? `/updateProfile/${$authStore?.userId}`
       //   : "/unauthorized",
-      link: "myProfile",
-      key: "PROFILE",
+      link: "/myProfile",
+      key: MAIN_MENU_ITEMS.MY_PROFILE,
       icon: User,
     },
   ];
@@ -205,8 +206,8 @@
   );
 
   $: filteredSidebarList = (() => {
-    const roleCode = $authStore?.roleCode || "102";
-
+    const roleCode = data?.session?.roleCode; 
+    
     return sidebarList?.filter((item) => {
       const isAllowed = isMenuAllowed(item.key, roleCode);
       if (!isAllowed) return false;
