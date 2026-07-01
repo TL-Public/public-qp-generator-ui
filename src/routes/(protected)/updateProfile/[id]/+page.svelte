@@ -5,6 +5,7 @@
   import { authStore } from "$lib/stores/authStore.js";
   import { api } from "$lib/utils/api.js";
   import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
+  import { validatePassword as validatePasswordHelper } from "$lib/utils/helper.js";
 
   // Get user ID from the route parameter
   $: userId = $page.params.id;
@@ -48,12 +49,9 @@
   );
 
   // Watch password changes for strength indication
-  $: if (
-    passwordData.new_password &&
-    api.adminUpdatePassword?.validatePassword
-  ) {
+  $: if (passwordData.new_password) {
     try {
-      const validation = api.adminUpdatePassword.validatePassword({
+      const validation = validatePasswordHelper({
         new_password: passwordData.new_password,
       });
       passwordStrength = validation.strength || "weak";
@@ -90,24 +88,14 @@
     if (!passwordData.new_password) {
       validationErrors.new_password = "New password is required";
       isValid = false;
-    } else if (api.adminUpdatePassword?.validatePassword) {
-      try {
-        const validation = api.adminUpdatePassword.validatePassword({
-          new_password: passwordData.new_password,
-        });
+    } else {
+      const validation = validatePasswordHelper({
+        new_password: passwordData.new_password,
+      });
 
-        if (!validation.isValid) {
-          validationErrors.new_password = validation.errors.join(". ");
-          isValid = false;
-        }
-      } catch (e) {
-        console.warn("Password validation not available:", e);
-        // Basic validation fallback
-        if (passwordData.new_password.length < 8) {
-          validationErrors.new_password =
-            "Password must be at least 8 characters long";
-          isValid = false;
-        }
+      if (!validation.isValid) {
+        validationErrors.new_password = validation.errors.join(". ");
+        isValid = false;
       }
     }
 
@@ -695,7 +683,8 @@
                 type="submit"
                 disabled={loading ||
                   !passwordData.new_password ||
-                  !passwordData.confirm_password}
+                  !passwordData.confirm_password ||
+                  passwordData.new_password !== passwordData.confirm_password}
                 class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {#if loading}

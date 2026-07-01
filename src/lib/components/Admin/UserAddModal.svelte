@@ -8,7 +8,7 @@
   import Input from "$lib/components/Input.svelte";
   import SearchableComboBox from "$lib/components/SearchableComboBox.svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
-  import { generateStrongPassword, validatePasswordInput } from "$lib/utils/helper.js";
+  import { generateStrongPassword, validatePasswordInput, validatePassword as validatePasswordHelper } from "$lib/utils/helper.js";
 
   const dispatch = createEventDispatcher();
 
@@ -57,12 +57,9 @@
     searchableRoleOptions.find((r) => r.id === selectedRoleId)?.name || "";
 
   // Watch password changes for strength indication
-  $: if (
-    passwordData.new_password &&
-    api.adminUpdatePassword?.validatePassword
-  ) {
+  $: if (passwordData.new_password) {
     try {
-      const validation = api.adminUpdatePassword.validatePassword({
+      const validation = validatePasswordHelper({
         new_password: passwordData.new_password,
       });
       passwordStrength = validation.strength || "weak";
@@ -128,7 +125,7 @@
     const result = validatePasswordInput(
       passwordData.new_password,
       passwordData.confirm_password,
-      api.adminUpdatePassword?.validatePassword
+      validatePasswordHelper
     );
     passwordValidationErrors = result.errors;
     return result.isValid;
@@ -254,6 +251,8 @@
     };
     return widths[strength] || "0%";
   }
+
+  $: isSubmitDisabled = loading || !formData.username?.trim() || !formData.role_code || passwordData.new_password !== passwordData.confirm_password;
 </script>
 
 <PortalModal>
@@ -437,7 +436,7 @@
       <Button
         type="submit"
         on:click={handleSubmit}
-        disabled={loading}
+        disabled={isSubmitDisabled}
         btnType="primary"
       >
         {#if loading}
