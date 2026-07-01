@@ -38,6 +38,7 @@
   export let isLoading = false;
   export let error = null;
   export let questionIsLoading = false;
+  export let showErrors = false;
 
   let navigationHistory = [];
 
@@ -548,6 +549,7 @@
               bind:savingDraft
               bind:draftSaveError
               bind:draftSaveSuccess
+              bind:showErrors
             />
           </div>
         </TabPanel>

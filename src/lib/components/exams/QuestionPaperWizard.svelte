@@ -74,6 +74,7 @@
   let classSubjectValid = true;
   let examConfigValid = true;
   let difficultyValid = true;
+  let showErrors = false;
 
   // Draft saving state
   let isSavingDraft = false;
@@ -957,7 +958,6 @@
         status: 2,
       };
 
-      console.log("apiPayload", apiPayload);
 
       let response;
       if (examData.examCode) {
@@ -1035,6 +1035,7 @@
 
   function handleSubmit(event) {
     event.preventDefault();
+    showErrors = true;
     if (
       examDetailsValid &&
       classSubjectValid &&
@@ -1140,6 +1141,7 @@
                   <ExamDetailsForm
                     bind:examData
                     bind:isValid={examDetailsValid}
+                    bind:showErrors
                   />
                   <ClassSubjectSelector
                     bind:examData
@@ -1150,12 +1152,14 @@
                     error={classSubjectError}
                     on:change={handleClassSubjectSelect}
                     on:retrySubjects={fetchSubjects}
+                    bind:showErrors
                   />
                 </div>
                 <hr class="divider-line" />
                 <ExamConfig
                   bind:examData
                   on:validate={handleExamConfigValidation}
+                  bind:showErrors
                 />
                 <hr class="divider-line" />
                 <DifficultyConfigurator
@@ -1190,6 +1194,7 @@
                     bind:savingDraft={isSavingDraft}
                     bind:draftSaveError
                     bind:draftSaveSuccess
+                    bind:showErrors
                   />
                 </Card>
                 {#if allocationResult.message}

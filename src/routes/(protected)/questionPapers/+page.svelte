@@ -65,7 +65,6 @@
     // updateStatusInUrl(selectedOption.value); // Prevent automatic fetch on dropdown selection
   }
 
-  $: console.log("selectedStatus is", selectedStatus);
 
   function handleStatusCancel() {
     selectedStatus = null;

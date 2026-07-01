@@ -7,6 +7,7 @@
 
   export let examData = {};
   export let isValid = false;
+  export let showErrors = false;
 
   export let mediumOptions = [];
   export let subjectOptions = [];
@@ -15,6 +16,12 @@
     subjects: false
   };
   export let error = null;
+
+  let touchedFields = {
+    class: false,
+    medium: false,
+    subject: false
+  };
 
   // ✅ Hardcoded class options 1 to 12
   const classOptions = [
@@ -34,6 +41,10 @@
 
   // Watch for changes and dispatch selected values
   $: {
+    if (examData.examClass) touchedFields.class = true;
+    if (examData.examMedium) touchedFields.medium = true;
+    if (examData.examSubject) touchedFields.subject = true;
+
     if (examData.examClass && examData.examMedium && examData.examSubject) {
       // Find the selected subject and medium's full data
       const selectedSubject = subjectOptions.find(s => s.value === examData.examSubject);
@@ -73,7 +84,7 @@
         required={true}
         bind:value={examData.examClass}
       />
-      {#if !examData.examClass}
+      {#if (touchedFields.class || showErrors) && !examData.examClass}
         <p class="text-xs text-red-600">Class is required</p>
       {/if}
     </div>
@@ -86,7 +97,7 @@
         bind:value={examData.examMedium}
         disabled={loading.mediums}
       />
-      {#if !examData.examMedium}
+      {#if (touchedFields.medium || showErrors) && !examData.examMedium}
         <p class="text-xs text-red-600">Medium is required</p>
       {/if}
     </div>
@@ -110,7 +121,7 @@
         bind:value={examData.examSubject}
         disabled={loading.subjects || subjectOptions.length === 0}
       />
-      {#if !examData.examSubject}
+      {#if (touchedFields.subject || showErrors) && !examData.examSubject}
         <p class="text-xs text-red-600">Subject is required</p>
       {/if}
       {#if !loading.subjects && subjectOptions.length === 0}
