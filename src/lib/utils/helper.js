@@ -296,3 +296,48 @@ export function validatePasswordInput(newPassword, confirmPassword, apiValidateP
 
   return { isValid, errors };
 }
+
+/**
+ * Validates a password and estimates its strength
+ * @param {Object} data - Object containing new_password
+ * @returns {Object} - Object containing { isValid, errors: string[], strength: string }
+ */
+export function validatePassword({ new_password }) {
+  const errors = [];
+  
+  if (!new_password) {
+    return {
+      isValid: false,
+      errors: ["Password is required"],
+      strength: "very weak"
+    };
+  }
+
+  if (new_password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
+  }
+
+  // Calculate strength score
+  let score = 0;
+  if (/[A-Z]/.test(new_password)) score++;
+  if (/[a-z]/.test(new_password)) score++;
+  if (/[0-9]/.test(new_password)) score++;
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(new_password)) score++;
+
+  if (new_password.length >= 10) score++;
+
+  let strength = "very weak";
+  if (new_password.length >= 6) {
+    if (score <= 1) strength = "very weak";
+    else if (score === 2) strength = "weak";
+    else if (score === 3) strength = "medium";
+    else if (score === 4) strength = "strong";
+    else if (score >= 5) strength = "very strong";
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    strength
+  };
+}

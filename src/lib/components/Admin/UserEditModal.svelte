@@ -10,7 +10,7 @@
   import Input from "$lib/components/Input.svelte";
   import SearchableComboBox from "$lib/components/SearchableComboBox.svelte";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
-  import { generateStrongPassword, validatePasswordInput } from "$lib/utils/helper.js";
+  import { generateStrongPassword, validatePasswordInput, validatePassword as validatePasswordHelper } from "$lib/utils/helper.js";
   export let user = null;
 
   const dispatch = createEventDispatcher();
@@ -90,12 +90,9 @@
   }
 
   // Watch password changes for strength indication
-  $: if (
-    passwordData.new_password &&
-    api.adminUpdatePassword?.validatePassword
-  ) {
+  $: if (passwordData.new_password) {
     try {
-      const validation = api.adminUpdatePassword.validatePassword({
+      const validation = validatePasswordHelper({
         new_password: passwordData.new_password,
       });
       passwordStrength = validation.strength || "weak";
@@ -163,7 +160,7 @@
     const result = validatePasswordInput(
       passwordData.new_password,
       passwordData.confirm_password,
-      api.adminUpdatePassword?.validatePassword
+      validatePasswordHelper
     );
     passwordValidationErrors = result.errors;
     return result.isValid;
@@ -414,6 +411,8 @@
     formData.role_code = "";
     handleInputChange("role_code");
   }
+
+  $: isSubmitDisabled = loading || passwordLoading || !formData.username?.trim() || !formData.role_code;
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -645,7 +644,8 @@
                   on:click={handlePasswordUpdate}
                   disabled={passwordLoading ||
                     !passwordData.new_password ||
-                    !passwordData.confirm_password}
+                    !passwordData.confirm_password ||
+                    passwordData.new_password !== passwordData.confirm_password}
                 >
                   {#if passwordLoading}
                     <div class="flex items-center">
@@ -786,7 +786,7 @@
       <Button
         type="submit"
         on:click={handleSubmit}
-        disabled={loading || passwordLoading}
+        disabled={isSubmitDisabled}
         btnType="primary"
       >
         {#if loading}

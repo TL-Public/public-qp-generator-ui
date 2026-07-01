@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte";
   import { api } from "$lib/utils/api.js";
   import { authStore } from "$lib/stores/authStore.js";
+  import { generateStrongPassword, validatePassword as validatePasswordHelper } from "$lib/utils/helper.js";
   import LoadingSpinner from "../LoadingSpinner.svelte";
   import RadioGroup from "$lib/components/RadioGroup.svelte";
   import Input from "$lib/components/Input.svelte";
@@ -85,12 +86,9 @@
   }
 
   // Watch password changes for strength indication
-  $: if (
-    passwordData.new_password &&
-    api.adminUpdatePassword?.validatePassword
-  ) {
+  $: if (passwordData.new_password) {
     try {
-      const validation = api.adminUpdatePassword.validatePassword({
+      const validation = validatePasswordHelper({
         new_password: passwordData.new_password,
       });
       passwordStrength = validation.strength || "weak";
@@ -138,24 +136,14 @@
     if (!passwordData.new_password) {
       passwordValidationErrors.new_password = "New password is required";
       isValid = false;
-    } else if (api.adminUpdatePassword?.validatePassword) {
-      try {
-        const validation = api.adminUpdatePassword.validatePassword({
-          new_password: passwordData.new_password,
-        });
+    } else {
+      const validation = validatePasswordHelper({
+        new_password: passwordData.new_password,
+      });
 
-        if (!validation.isValid) {
-          passwordValidationErrors.new_password = validation.errors.join(". ");
-          isValid = false;
-        }
-      } catch (e) {
-        console.warn("Password validation not available:", e);
-        // Basic validation fallback
-        if (passwordData.new_password.length < 8) {
-          passwordValidationErrors.new_password =
-            "Password must be at least 8 characters long";
-          isValid = false;
-        }
+      if (!validation.isValid) {
+        passwordValidationErrors.new_password = validation.errors.join(". ");
+        isValid = false;
       }
     }
 
