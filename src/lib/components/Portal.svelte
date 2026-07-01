@@ -6,7 +6,7 @@
 
 	onMount(() => {
 		if (typeof window !== 'undefined' && slotContainer) {
-			container = document.querySelector('#modal-root');
+			container = document.querySelector('#portal-root') || document.body;
 			if (container) {
 				container.appendChild(slotContainer);
 			}
@@ -20,9 +20,7 @@
 	});
 </script>
 
-<div>
-	<div bind:this={slotContainer} class="fixed inset-0 bg-overlay bg-opacity-75 transition-opacity z-[999] flex items-center justify-center">
-			<slot />
-	</div>
+<div bind:this={slotContainer} class="contents">
+	<slot />
 </div>
 
