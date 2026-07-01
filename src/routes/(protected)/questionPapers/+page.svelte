@@ -65,7 +65,6 @@
     // updateStatusInUrl(selectedOption.value); // Prevent automatic fetch on dropdown selection
   }
 
-
   function handleStatusCancel() {
     selectedStatus = null;
     statusError = null;
@@ -408,7 +407,7 @@
 
   function handleEdit(paperId) {
     if (paperId) {
-      goto(`/questionPapers/${paperId}/edit?step=2`);
+      goto(`/questionPapers/${paperId}/edit?step=1`);
     }
   }
 

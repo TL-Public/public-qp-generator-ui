@@ -24,7 +24,10 @@
   import { createSelectedContentStore } from "$lib/stores/selectedContentStore.js";
 
   import { onDestroy, onMount, tick, setContext } from "svelte";
-  import { cleanQuestionText, normalizeExcludedQuestion } from "$lib/utils/textUtils.js";
+  import {
+    cleanQuestionText,
+    normalizeExcludedQuestion,
+  } from "$lib/utils/textUtils.js";
   import SpinnerWithText from "$lib/components/SpinnerWithText.svelte";
 
   // Props
@@ -729,6 +732,7 @@
         const excludedCodes = normalizedExclusions.map((q) => q.id);
         apiPayloadStore.updateExcludedQuestions(excludedCodes);
       }
+      showQuestions = true;
     } catch (error) {
       console.error("Failed to load exam data:", error);
       loadError = error.message || "Failed to load exam details";
@@ -957,7 +961,6 @@
         ...apiPayload,
         status: 2,
       };
-
 
       let response;
       if (examData.examCode) {

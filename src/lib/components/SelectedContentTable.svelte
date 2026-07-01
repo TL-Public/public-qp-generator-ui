@@ -61,12 +61,14 @@
 
   // Track validity for different actions
   $: isDraftValid = isMetadataValid && isContentSelected;
-  $: isAllocationValid = !allocationSummary.hasError && ($apiPayloadStore.is_ai_selected || allocationSummary.remaining === 0);
+  $: isAllocationValid =
+    !allocationSummary.hasError &&
+    ($apiPayloadStore.is_ai_selected || allocationSummary.remaining === 0);
   $: isReleaseValid = isDraftValid && isAllocationValid;
 
   function getExamValidationError(examData) {
     if (!examData) return "Exam information not found.";
-    
+
     const missingFields = [];
 
     // Map of field keys to their display labels
@@ -84,7 +86,13 @@
     // Check each field
     for (const [key, label] of Object.entries(requiredFields)) {
       const value = examData[key];
-      if (value === undefined || value === null || (typeof value === 'string' && (value.trim() === '' || value.trim() === '0')) || (typeof value === 'number' && value === 0)) {
+      if (
+        value === undefined ||
+        value === null ||
+        (typeof value === "string" &&
+          (value.trim() === "" || value.trim() === "0")) ||
+        (typeof value === "number" && value === 0)
+      ) {
         missingFields.push(label);
       }
     }
@@ -95,9 +103,9 @@
       : null;
   }
 
-    /**
+  /**
    * Universal validation for both saving drafts and final confirmation
-     */
+   */
   function validateAllocationConfig({ isFinalConfirm = false }) {
     // 1. Check basic form validity (Metadata section)
     const metadataError = getExamValidationError(examData);
@@ -303,8 +311,6 @@
       hasError,
     };
   }
-
-
 
   //   Enhanced updateQuestionsToAdd with better reactivity
   function updateQuestionsToAdd(item, value) {
@@ -810,8 +816,14 @@
         <div
           class="mt-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md p-2"
         >
-          ⚠️ Only {allocationSummary.available} questions available. Please reduce
-          the number or add more content.
+          {#if allocationSummary.sets > 1}
+            ⚠️ Only {allocationSummary.available} questions available. You need {allocationSummary.totalRequiredAcrossSets}
+            questions for {allocationSummary.sets} sets ({allocationSummary.required}
+            per set). Please reduce the number or add more content.
+          {:else}
+            ⚠️ Only {allocationSummary.available} questions available. Please reduce
+            the number or add more content.
+          {/if}
         </div>
       {:else if !$apiPayloadStore.is_ai_selected && allocationSummary.remaining > 0}
         <div
@@ -824,6 +836,19 @@
           class="mt-3 text-xs text-green-600 bg-green-50 border border-green-200 rounded-md p-2"
         >
           Perfect allocation! All {allocationSummary.required} questions are allocated.
+        </div>
+      {:else if $apiPayloadStore.is_ai_selected}
+        <div
+          class="mt-3 text-xs text-green-600 bg-green-50 border border-green-200 rounded-md p-2"
+        >
+          {#if allocationSummary.sets > 1}
+            Sufficient questions available. Total {allocationSummary.totalRequiredAcrossSets}
+            questions will be auto-allocated into {allocationSummary.sets}
+            sets.
+          {:else}
+            Sufficient questions available. All {allocationSummary.required}
+            questions will be auto-allocated.
+          {/if}
         </div>
       {/if}
     </div>
@@ -1166,4 +1191,3 @@
     {/if}
   </div>
 </div>
-
