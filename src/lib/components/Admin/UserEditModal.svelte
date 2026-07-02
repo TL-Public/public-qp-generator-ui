@@ -25,6 +25,7 @@
 
   // UI state
   let loading = false;
+  let passwordLoading = false;
   let error = "";
   let validationErrors = {};
 
@@ -341,6 +342,7 @@
         {#if canUpdatePassword && showPasswordSection}
           <UpdatePasswordForm
             userId={user.id}
+            bind:passwordLoading
             onSuccess={() => {
               // Hide password section after successful update
               setTimeout(() => {
