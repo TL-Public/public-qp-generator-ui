@@ -5,12 +5,11 @@
   import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
   import PortalModal from "$lib/components/PortalModal.svelte";
   import Button from "$lib/components/Button.svelte";
-  import { SquarePen, X, Wrench, Eye, EyeOff } from "@lucide/svelte";
+  import { SquarePen, X, Wrench } from "@lucide/svelte";
   import RadioGroup from "$lib/components/RadioGroup.svelte";
   import Input from "$lib/components/Input.svelte";
   import SearchableComboBox from "$lib/components/SearchableComboBox.svelte";
-  import InlineNotification from "$lib/components/InlineNotification.svelte";
-  import { generateStrongPassword, validatePasswordInput, validatePassword as validatePasswordHelper } from "$lib/utils/helper.js";
+  import UpdatePasswordForm from "$lib/components/UpdatePasswordForm.svelte";
   export let user = null;
 
   const dispatch = createEventDispatcher();
@@ -22,25 +21,12 @@
     is_active: true,
   };
 
-  // Password update state
-  let passwordData = {
-    new_password: "",
-    confirm_password: "",
-  };
-
   let showPasswordSection = false;
-  let passwordStrength = "weak";
-  let showNewPassword = false;
-  let showConfirmPassword = false;
 
   // UI state
   let loading = false;
-  let passwordLoading = false;
   let error = "";
-  let passwordError = "";
   let validationErrors = {};
-  let passwordValidationErrors = {};
-  let passwordSuccess = "";
 
   // Get correct data from auth store
   $: isAuthenticatedFromStore = $authStore?.isAuthenticated ? true : false;
@@ -89,42 +75,6 @@
     };
   }
 
-  // Watch password changes for strength indication
-  $: if (passwordData.new_password) {
-    try {
-      const validation = validatePasswordHelper({
-        new_password: passwordData.new_password,
-      });
-      passwordStrength = validation.strength || "weak";
-    } catch (e) {
-      console.warn("Password validation not available:", e);
-      passwordStrength = "weak";
-    }
-  }
-
-  // Reactive check to see if passwords match when edited
-  $: {
-    if (passwordData.new_password && passwordData.confirm_password) {
-      if (passwordData.new_password !== passwordData.confirm_password) {
-        passwordValidationErrors.confirm_password = "Passwords do not match";
-      } else {
-        if (
-          passwordValidationErrors.confirm_password === "Passwords do not match"
-        ) {
-          delete passwordValidationErrors.confirm_password;
-          passwordValidationErrors = { ...passwordValidationErrors };
-        }
-      }
-    } else if (!passwordData.confirm_password) {
-      if (
-        passwordValidationErrors.confirm_password === "Passwords do not match"
-      ) {
-        delete passwordValidationErrors.confirm_password;
-        passwordValidationErrors = { ...passwordValidationErrors };
-      }
-    }
-  }
-
   // Form validation
   function validateForm() {
     validationErrors = {};
@@ -153,17 +103,6 @@
     }
 
     return isValid;
-  }
-
-  // Password validation
-  function validatePassword() {
-    const result = validatePasswordInput(
-      passwordData.new_password,
-      passwordData.confirm_password,
-      validatePasswordHelper
-    );
-    passwordValidationErrors = result.errors;
-    return result.isValid;
   }
 
   // Handle form submission
@@ -223,87 +162,9 @@
     }
   }
 
-  // Handle password update
-  async function handlePasswordUpdate() {
-    if (!validatePassword()) {
-      return;
-    }
-
-    passwordLoading = true;
-    passwordError = "";
-    passwordSuccess = "";
-
-    try {
-      const response = await apiClient({
-        url: `/apis/users/${user.id}/password`,
-        options: {
-          method: "PUT",
-          body: JSON.stringify({
-            new_password: passwordData.new_password,
-          }),
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.detail ||
-            errorData.message ||
-            errorData.error ||
-            `HTTP error! status: ${response.status}`,
-        );
-      }
-
-      passwordSuccess = "Password updated successfully!";
-
-      // Clear password form
-      passwordData = {
-        new_password: "",
-        confirm_password: "",
-      };
-
-      // Hide password section after successful update
-      setTimeout(() => {
-        showPasswordSection = false;
-        passwordSuccess = "";
-      }, 3000);
-    } catch (err) {
-      passwordError = err.message || "Failed to update password";
-      console.error("Error updating password:", err);
-    } finally {
-      passwordLoading = false;
-    }
-  }
-
-  // Generate strong password
-  function generatePassword() {
-    const generated = generateStrongPassword(12);
-
-    passwordData.new_password = generated;
-    passwordData.confirm_password = generated;
-
-    // Show the passwords so user can see and edit what was generated
-    showNewPassword = true;
-    showConfirmPassword = true;
-
-    // Clear any existing errors
-    passwordValidationErrors = {};
-    passwordError = "";
-  }
-
   // Toggle password section
   function togglePasswordSection() {
     showPasswordSection = !showPasswordSection;
-    if (!showPasswordSection) {
-      // Clear password data when hiding
-      passwordData = {
-        new_password: "",
-        confirm_password: "",
-      };
-      passwordValidationErrors = {};
-      passwordError = "";
-      passwordSuccess = "";
-    }
   }
 
   // Handle modal close
@@ -318,46 +179,6 @@
       validationErrors = { ...validationErrors };
     }
     error = "";
-  }
-
-  // Handle password input changes
-  function handlePasswordInputChange(field) {
-    if (passwordValidationErrors[field]) {
-      delete passwordValidationErrors[field];
-      passwordValidationErrors = { ...passwordValidationErrors };
-    }
-    passwordError = "";
-    passwordSuccess = "";
-  }
-
-  // Get role name by code
-  function getRoleName(code) {
-    const role = roleOptions.find((r) => r.code === code);
-    return role ? role.name : code;
-  }
-
-  // Get password strength color
-  function getPasswordStrengthColor(strength) {
-    const colors = {
-      "very weak": "bg-red-500",
-      weak: "bg-orange-500",
-      medium: "bg-yellow-500",
-      strong: "bg-blue-500",
-      "very strong": "bg-green-500",
-    };
-    return colors[strength] || "bg-gray-300";
-  }
-
-  // Get password strength width
-  function getPasswordStrengthWidth(strength) {
-    const widths = {
-      "very weak": "20%",
-      weak: "40%",
-      medium: "60%",
-      strong: "80%",
-      "very strong": "100%",
-    };
-    return widths[strength] || "0%";
   }
 
   // Handle backdrop click
@@ -402,6 +223,12 @@
     }
   }
 
+  // Get role name by code
+  function getRoleName(code) {
+    const role = roleOptions.find((r) => r.code === code);
+    return role ? role.name : code;
+  }
+
   function handleRoleChange(event) {
     formData.role_code = event.detail.selectedItemId || event.detail.code || event.detail.id || "";
     handleInputChange("role_code");
@@ -412,7 +239,7 @@
     handleInputChange("role_code");
   }
 
-  $: isSubmitDisabled = loading || passwordLoading || !formData.username?.trim() || !formData.role_code;
+  $: isSubmitDisabled = loading || !formData.username?.trim() || !formData.role_code;
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
@@ -508,160 +335,15 @@
 
         <!-- Password Update Section -->
         {#if canUpdatePassword && showPasswordSection}
-          <div class="mb-6 p-4 bg-blue-50 border border-stroke rounded-lg">
-            <div class="flex items-center mb-4 gap-2">
-              <Wrench class="h-4 w-4 text-primary" />
-              <h4 class="text-sm font-medium text-primary">Update Password</h4>
-            </div>
-
-            <!-- Password Success Message -->
-            {#if passwordSuccess}
-              <div class="mb-4">
-                <InlineNotification
-                  kind="success"
-                  title={passwordSuccess}
-                  on:close={() => (passwordSuccess = "")}
-                />
-              </div>
-            {/if}
-
-            <!-- Password Error Message -->
-            {#if passwordError}
-              <div class="mb-4">
-                <InlineNotification
-                  kind="error"
-                  title={passwordError}
-                  on:close={() => (passwordError = "")}
-                />
-              </div>
-            {/if}
-
-            <div class="space-y-4">
-              <!-- New Password Field -->
-              <Input
-                label="New Password"
-                type={showNewPassword ? "text" : "password"}
-                placeholder="Enter new password"
-                required={true}
-                disabled={passwordLoading}
-                bind:value={passwordData.new_password}
-                on:handleInputData={() =>
-                  handlePasswordInputChange("new_password")}
-                validationErrors={passwordValidationErrors.new_password}
-              >
-                <div class="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    btnType="custom"
-                    customClass="text-subtext cursor-pointer hover:text-dark p-1"
-                    on:click={() => (showNewPassword = !showNewPassword)}
-                    disabled={passwordLoading}
-                    title={showNewPassword ? "Hide password" : "Show password"}
-                  >
-                    {#if showNewPassword}
-                      <EyeOff class="h-4 w-4" />
-                    {:else}
-                      <Eye class="h-4 w-4" />
-                    {/if}
-                  </Button>
-                  <Button
-                    type="button"
-                    btnType="custom"
-                    customClass="text-xs text-primary hover:text-primary-hover disabled:text-gray-400 cursor-pointer font-medium border-l pl-2 border-gray-200"
-                    on:click={generatePassword}
-                    disabled={passwordLoading}
-                    title="Generate strong password"
-                  >
-                    Generate
-                  </Button>
-                </div>
-              </Input>
-
-              <!-- Password Strength Indicator -->
-              {#if passwordData.new_password}
-                <div class="mt-2">
-                  <div
-                    class="flex items-center justify-between text-xs text-gray-600 mb-1"
-                  >
-                    <span>Password strength:</span>
-                    <span class="capitalize font-medium"
-                      >{passwordStrength}</span
-                    >
-                  </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      class="h-2 rounded-full transition-all duration-300 {getPasswordStrengthColor(
-                        passwordStrength,
-                      )}"
-                      style="width: {getPasswordStrengthWidth(
-                        passwordStrength,
-                      )}"
-                    ></div>
-                  </div>
-                </div>
-              {/if}
-
-              {#if passwordValidationErrors.new_password}
-                <p class="mt-1 text-xs text-red-600">
-                  {passwordValidationErrors.new_password}
-                </p>
-              {/if}
-
-              <!-- Confirm Password Field -->
-              <Input
-                label="Confirm Password"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm new password"
-                required={true}
-                disabled={passwordLoading}
-                bind:value={passwordData.confirm_password}
-                on:handleInputData={() =>
-                  handlePasswordInputChange("confirm_password")}
-                validationErrors={passwordValidationErrors.confirm_password}
-              >
-                <Button
-                  type="button"
-                  btnType="custom"
-                  customClass="text-subtext cursor-pointer hover:text-dark p-1"
-                  on:click={() => (showConfirmPassword = !showConfirmPassword)}
-                  disabled={passwordLoading}
-                  title={showConfirmPassword
-                    ? "Hide password"
-                    : "Show password"}
-                >
-                  {#if showConfirmPassword}
-                    <EyeOff class="h-4 w-4" />
-                  {:else}
-                    <Eye class="h-4 w-4" />
-                  {/if}
-                </Button>
-              </Input>
-
-              <!-- Password Update Button -->
-              <div class="flex justify-end">
-                <Button
-                  type="button"
-                  on:click={handlePasswordUpdate}
-                  disabled={passwordLoading ||
-                    !passwordData.new_password ||
-                    !passwordData.confirm_password ||
-                    passwordData.new_password !== passwordData.confirm_password}
-                >
-                  {#if passwordLoading}
-                    <div class="flex items-center">
-                      <LoadingSpinner size="small" color="white" />
-                      <span class="ml-2">Updating...</span>
-                    </div>
-                  {:else}
-                    <div class="flex items-center gap-2">
-                      <Wrench class="h-4 w-4" />
-                      Update Password
-                    </div>
-                  {/if}
-                </Button>
-              </div>
-            </div>
-          </div>
+          <UpdatePasswordForm
+            userId={user.id}
+            onSuccess={() => {
+              // Hide password section after successful update
+              setTimeout(() => {
+                showPasswordSection = false;
+              }, 3000);
+            }}
+          />
         {/if}
 
         <!-- Error Message for general form -->
