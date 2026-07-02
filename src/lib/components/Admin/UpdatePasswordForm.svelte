@@ -18,7 +18,7 @@
   let passwordStrength = "weak";
   let showNewPassword = false;
   let showConfirmPassword = false;
-  let passwordLoading = false;
+  export let passwordLoading = false;
   let passwordError = "";
   let passwordSuccess = "";
   let passwordValidationErrors = {};
