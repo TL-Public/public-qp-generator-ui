@@ -9,7 +9,7 @@
 
   // Get correct data from auth store
   $: isAuthenticatedFromStore = $authStore?.isAuthenticated ? true : false;
-  $: userNameFromStore = $authStore?.username;
+  $: userNameFromStore = $authStore?.userName;
   $: roleCodeFromStore = $authStore?.roleCode;
   $: roleFromStore = $authStore?.roleName;
   $: userIdFromStore = $authStore?.userId;

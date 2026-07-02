@@ -10,7 +10,7 @@
     import { User, ShieldUser, KeyRound } from "@lucide/svelte";
     import { goto } from "$app/navigation";
     import Pill from "$lib/components/Pill.svelte";
-    import UpdatePasswordForm from "$lib/components/UpdatePasswordForm.svelte";
+    import UpdatePasswordForm from "$lib/components/Admin/UpdatePasswordForm.svelte";
 
     export let data;
 
@@ -301,12 +301,20 @@
                         <div class="mt-8 pt-8 border-t border-gray-200">
                             <div class="flex justify-between items-center mb-4">
                                 <div>
-                                    <h4 class="text-sm font-medium text-gray-900">Password Management</h4>
-                                    <p class="text-xs text-gray-500 mt-0.5">Manage your account password</p>
+                                    <h4
+                                        class="text-sm font-medium text-gray-900"
+                                    >
+                                        Password Management
+                                    </h4>
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        Manage your account password
+                                    </p>
                                 </div>
                                 <Button
                                     type="button"
-                                    on:click={() => (showPasswordSection = !showPasswordSection)}
+                                    on:click={() =>
+                                        (showPasswordSection =
+                                            !showPasswordSection)}
                                     btnType="secondary"
                                 >
                                     {showPasswordSection ? "Hide" : "Update"} Password
@@ -315,7 +323,7 @@
 
                             {#if showPasswordSection}
                                 <UpdatePasswordForm
-                                    userId={userId}
+                                    {userId}
                                     onSuccess={() => {
                                         setTimeout(() => {
                                             showPasswordSection = false;

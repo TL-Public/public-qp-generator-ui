@@ -9,7 +9,7 @@
   import RadioGroup from "$lib/components/RadioGroup.svelte";
   import Input from "$lib/components/Input.svelte";
   import SearchableComboBox from "$lib/components/SearchableComboBox.svelte";
-  import UpdatePasswordForm from "$lib/components/UpdatePasswordForm.svelte";
+  import UpdatePasswordForm from "$lib/components/Admin/UpdatePasswordForm.svelte";
   export let user = null;
 
   const dispatch = createEventDispatcher();
@@ -213,7 +213,9 @@
   let selectedRoleId = "";
 
   $: {
-    const matched = searchableRoleOptions.find((r) => r.id === formData.role_code);
+    const matched = searchableRoleOptions.find(
+      (r) => r.id === formData.role_code,
+    );
     if (matched) {
       selectedRoleId = matched.id;
       selectedRoleName = matched.name;
@@ -230,7 +232,8 @@
   }
 
   function handleRoleChange(event) {
-    formData.role_code = event.detail.selectedItemId || event.detail.code || event.detail.id || "";
+    formData.role_code =
+      event.detail.selectedItemId || event.detail.code || event.detail.id || "";
     handleInputChange("role_code");
   }
 
@@ -239,7 +242,8 @@
     handleInputChange("role_code");
   }
 
-  $: isSubmitDisabled = loading || !formData.username?.trim() || !formData.role_code;
+  $: isSubmitDisabled =
+    loading || !formData.username?.trim() || !formData.role_code;
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
