@@ -13,7 +13,7 @@
 
   export let showPagination = true;
   export let tableStyle = "primary";
-  export let notFoundMessage="";
+  export let notFoundMessage = "";
   export let searchParameter = null;
   export let customRenderers = {};
 
