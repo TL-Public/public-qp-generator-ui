@@ -34,7 +34,7 @@
         throw new Error("Login failed. Please check your credentials.");
       }
 
-         // Redirect on success
+      // Redirect on success
       goto("/home", { invalidateAll: true });
     } catch (err) {
       error = err.message;
@@ -208,7 +208,7 @@
           Don't have an account?
           <a
             href="/register"
-            class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+            class="font-medium text-primary hover:text-blue-500 transition-colors duration-200"
           >
             Register Now
           </a>

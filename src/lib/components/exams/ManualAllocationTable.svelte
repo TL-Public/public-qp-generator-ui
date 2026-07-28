@@ -5,6 +5,7 @@
   export let selections = []; // [{ code, name, type, qn_count }]
   export let chaptersData = []; // Full hierarchy tree from API
   export let totalQuestions = 40;
+  export let setsCount = 1;
   export let isAutoAllocation = true;
 
   const dispatch = createEventDispatcher();
@@ -144,7 +145,9 @@
   }
 
   // Calculate allocation summary numbers
-  $: totalRequired = Number(totalQuestions) || 0;
+  $: numSets = Number(setsCount) || 1;
+  $: questionsPerSet = Number(totalQuestions) || 0;
+  $: totalRequired = questionsPerSet * numSets;
 
   $: totalAvailable = selections.reduce((sum, item) => {
     return sum + (availableMap.get(item.code) || item.questionAvailable || 0);
@@ -259,14 +262,17 @@
         class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl p-3 font-medium"
       >
         ⚠️ Only {totalAvailable} questions available in selected content. You need
-        {totalRequired} questions. Please select more chapters/topics.
+        at least
+        {totalRequired} questions ({numSets} set{numSets > 1 ? "s" : ""} × {questionsPerSet}
+        questions) to generate unique sets. Please select more chapters/topics.
       </div>
     {:else if !isAutoAllocation && remainingToAllocate > 0}
       <div
         class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-3 font-medium"
       >
-        📝 {remainingToAllocate} question(s) remaining to be allocated across selected
-        items.
+        📝 Total of {totalRequired} questions ({numSets} sets * {questionsPerSet}
+        questions) required. {remainingToAllocate}
+        question(s) remaining to be allocated across selected items.
       </div>
     {:else if !isAutoAllocation && remainingToAllocate === 0}
       <div
@@ -279,7 +285,7 @@
         class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl p-3 font-medium"
       >
         ⚠️ Overallocated by {Math.abs(remainingToAllocate)} question(s). Please reduce
-        numbers.
+        numbers to match requirement.
       </div>
     {/if}
   </div>
@@ -376,7 +382,7 @@
                             >Selected</span
                           >
                         {:else if row.selectedTopicCount > 0}
-                          <span class="text-[11px] text-blue-600 font-medium">
+                          <span class="text-[11px] text-primary font-medium">
                             {row.selectedTopicCount} of {row.totalTopicCount} topics
                             selected
                           </span>

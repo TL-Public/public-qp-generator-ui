@@ -429,7 +429,7 @@
                 <span class="text-blue-900">
                   {user.username} → {formData.username}
                   {#if formData.username === user.username}
-                    <span class="text-blue-600">(unchanged)</span>
+                    <span class="text-primary">(unchanged)</span>
                   {/if}
                 </span>
               </div>
@@ -438,7 +438,7 @@
                 <span class="text-blue-900">
                   {user.role_name} → {getRoleName(formData.role_code)}
                   {#if (user.role_code || (user.role_name === "admin" ? "100" : "101")) === formData.role_code}
-                    <span class="text-blue-600">(unchanged)</span>
+                    <span class="text-primary">(unchanged)</span>
                   {/if}
                 </span>
               </div>
@@ -449,7 +449,7 @@
                     ? "Active"
                     : "Inactive"}
                   {#if formData.is_active === user.is_active}
-                    <span class="text-blue-600">(unchanged)</span>
+                    <span class="text-primary">(unchanged)</span>
                   {/if}
                 </span>
               </div>

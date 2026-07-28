@@ -1,8 +1,8 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-  import api from '$lib/utils/api.js';
-  import ChapterTopicTable from './ChapterTopicTable.svelte';
-  
+  import { createEventDispatcher } from "svelte";
+  import api from "$lib/utils/api.js";
+  import ChapterTopicTable from "./ChapterTopicTable.svelte";
+
   const dispatch = createEventDispatcher();
 
   export let quizConfig = {};
@@ -10,40 +10,37 @@
 
   // Generated quiz data
   let quizPaperResponse = null;
-  let generateError = '';
+  let generateError = "";
   let generating = false;
 
   // Preview state
   let showDetails = false;
 
   // Auto-generate quiz when component loads
-  import { onMount } from 'svelte';
-  
-  
+  import { onMount } from "svelte";
 
   // Function to separate chapter and topic codes
   function separateChapterAndTopicCodes(selectedCodes, chaptersTopicsData) {
     const chapters = [];
     const topics = [];
-    
-    
+
     if (!chaptersTopicsData || !Array.isArray(chaptersTopicsData)) {
-      console.warn('chaptersTopicsData is not available or not an array');
+      console.warn("chaptersTopicsData is not available or not an array");
       return { chapters, topics };
     }
-    
+
     // Create lookup maps for faster searching
     const chapterCodeMap = new Map();
     const topicCodeMap = new Map();
-    
-    chaptersTopicsData.forEach(chapter => {
+
+    chaptersTopicsData.forEach((chapter) => {
       const chapterCode = chapter.code || chapter.chapter_code;
       if (chapterCode) {
         chapterCodeMap.set(chapterCode, chapter);
       }
-      
+
       if (chapter.topics && Array.isArray(chapter.topics)) {
-        chapter.topics.forEach(topic => {
+        chapter.topics.forEach((topic) => {
           const topicCode = topic.code || topic.topic_code;
           if (topicCode) {
             topicCodeMap.set(topicCode, topic);
@@ -51,72 +48,72 @@
         });
       }
     });
-    
-   
-    
+
     // Separate the selected codes
-    selectedCodes.forEach(code => {
+    selectedCodes.forEach((code) => {
       if (chapterCodeMap.has(code)) {
         chapters.push(code);
       } else if (topicCodeMap.has(code)) {
         topics.push(code);
       } else {
-        console.warn('Code not found in chapters or topics:', code);
+        console.warn("Code not found in chapters or topics:", code);
       }
     });
-    
+
     return { chapters, topics };
   }
 
   async function createQuizPaper() {
     generating = true;
-    generateError = '';
+    generateError = "";
     quizPaperResponse = null;
-    
+
     try {
-      
       // Check if we have the required data
       if (!quizConfig.chaptersTopicsData) {
-        throw new Error('Chapters/Topics data is missing. Please go back and reselect your options.');
+        throw new Error(
+          "Chapters/Topics data is missing. Please go back and reselect your options.",
+        );
       }
-      
+
       // Separate chapter and topic codes
       const { chapters, topics } = separateChapterAndTopicCodes(
-        quizConfig.selected_codes || [], 
-        quizConfig.chaptersTopicsData || []
+        quizConfig.selected_codes || [],
+        quizConfig.chaptersTopicsData || [],
       );
-      
-      
+
       // Build chapters_topics array
       const chaptersTopicsArray = [];
-      
+
       // Add chapters if any are selected
       if (chapters.length > 0) {
         chaptersTopicsArray.push({
           type: "chapter",
-          codes: chapters.map(code => ({
-            code: code
+          codes: chapters.map((code) => ({
+            code: code,
             // No qn_count needed since is_ai_selected = true
-          }))
+          })),
         });
       }
-      
+
       // Add topics if any are selected
       if (topics.length > 0) {
         chaptersTopicsArray.push({
           type: "topic",
-          codes: topics.map(code => ({
-            code: code
+          codes: topics.map((code) => ({
+            code: code,
             // No qn_count needed since is_ai_selected = true
-          }))
+          })),
         });
       }
-      
+
       // Ensure we have at least one selection
       if (chaptersTopicsArray.length === 0) {
-        throw new Error('No chapters or topics selected. Please go back and select some chapters or topics.');
+        throw new Error(
+          "No chapters or topics selected. Please go back and select some chapters or topics.",
+        );
       }
-      
+
       // Prepare the request payload for question paper creation
       const questionPaperPayload = {
         status: 2, // Finalized
@@ -125,31 +122,27 @@
         exam_type_code: "1000",
         subject_code: quizConfig.subject_code,
         medium_code: quizConfig.medium_code,
-        exam_mode: 'online', // Fixed for quiz mode
+        exam_mode: "online", // Fixed for quiz mode
         total_time: quizConfig.total_time || 15,
         total_questions: quizConfig.total_questions || 5,
         no_of_versions: 1, // Fixed for quiz mode
         no_of_sets: 1, // Fixed for quiz mode
         standard: quizConfig.standard,
-        chapters_topics: chaptersTopicsArray
+        chapters_topics: chaptersTopicsArray,
       };
-      
 
       // Call the question papers API to create the quiz
       const response = await api.questionPapers.create(questionPaperPayload);
-      
-      
+
       if (response.error) {
         throw new Error(response.error);
       }
 
       // Store the response for later use
       quizPaperResponse = response.data.data;
-
-
     } catch (error) {
-      console.error('Error creating quiz paper:', error);
-      generateError = error.message || 'Failed to create quiz paper';
+      console.error("Error creating quiz paper:", error);
+      generateError = error.message || "Failed to create quiz paper";
       quizPaperResponse = null;
     } finally {
       generating = false;
@@ -157,7 +150,7 @@
   }
 
   function handleBack() {
-    dispatch('back');
+    dispatch("back");
   }
 
   function handleStartQuiz() {
@@ -175,8 +168,12 @@
   }
 
   function startQuizWithData() {
-    if (!quizPaperResponse || !quizPaperResponse.question_papers || quizPaperResponse.question_papers.length === 0) {
-      generateError = 'No question papers found in response';
+    if (
+      !quizPaperResponse ||
+      !quizPaperResponse.question_papers ||
+      quizPaperResponse.question_papers.length === 0
+    ) {
+      generateError = "No question papers found in response";
       return;
     }
 
@@ -184,7 +181,7 @@
     const questions = questionPaper.qns;
 
     if (!questions || questions.length === 0) {
-      generateError = 'No questions found in question paper';
+      generateError = "No questions found in question paper";
       return;
     }
 
@@ -199,39 +196,39 @@
         subject: quizPaperResponse.subject,
         medium: quizPaperResponse.medium,
         exam_type: quizPaperResponse.exam_type,
-        status: quizPaperResponse.status
+        status: quizPaperResponse.status,
       },
       questions: questions.map((question, index) => ({
         id: question.id,
         question_number: index + 1,
         text: question.text,
         options: question.options,
-        correct_answer: question.options.find(opt => opt.is_correct)?.id || null,
-        difficulty: question.difficulty || 'Medium',
-        chapter: question.chapter || '',
-        topic: question.topic || '',
+        correct_answer:
+          question.options.find((opt) => opt.is_correct)?.id || null,
+        difficulty: question.difficulty || "Medium",
+        chapter: question.chapter || "",
+        topic: question.topic || "",
         marks: 1,
-        explanation: question.explanation || '',
-        originalQuestion: question
+        explanation: question.explanation || "",
+        originalQuestion: question,
       })),
       config: {
         exam_code: quizPaperResponse.exam_code,
         paper_code: questionPaper.id,
         total_time: quizConfig.total_time || 15,
-        total_questions: questions.length
-      }
+        total_questions: questions.length,
+      },
     };
 
-
     // Store exam code for reference
-    localStorage.setItem('currentExamCode', quizPaperResponse.exam_code);
-    localStorage.setItem('currentQuizData', JSON.stringify(quizData));
+    localStorage.setItem("currentExamCode", quizPaperResponse.exam_code);
+    localStorage.setItem("currentQuizData", JSON.stringify(quizData));
 
     // Dispatch to parent with formatted quiz data
-    dispatch('start', {
+    dispatch("start", {
       quiz: quizData,
       config: quizData.config,
-      originalResponse: quizPaperResponse
+      originalResponse: quizPaperResponse,
     });
   }
 
@@ -256,7 +253,11 @@
 
   // Get questions from the response for preview
   function getQuestionsFromResponse() {
-    if (quizPaperResponse && quizPaperResponse.question_papers && quizPaperResponse.question_papers[0]) {
+    if (
+      quizPaperResponse &&
+      quizPaperResponse.question_papers &&
+      quizPaperResponse.question_papers[0]
+    ) {
       return quizPaperResponse.question_papers[0].qns || [];
     }
     return [];
@@ -296,7 +297,9 @@
       </div> -->
       <div>
         <span class="font-medium text-blue-800">Time:</span>
-        <span class="text-blue-700 ml-1">{formatTime(quizConfig.total_time)}</span>
+        <span class="text-blue-700 ml-1"
+          >{formatTime(quizConfig.total_time)}</span
+        >
       </div>
       <div>
         <span class="font-medium text-blue-800">Selected:</span>
@@ -304,24 +307,26 @@
       </div>
       <div>
         <span class="font-medium text-blue-800">Quiz Name:</span>
-        <span class="text-blue-700 ml-1 truncate" title={quizConfig.exam_name}>{quizConfig.exam_name}</span>
+        <span class="text-blue-700 ml-1 truncate" title={quizConfig.exam_name}
+          >{quizConfig.exam_name}</span
+        >
       </div>
     </div>
-    
+
     <!-- Additional quiz info -->
     <div class="mt-3 pt-3 border-t border-blue-200">
       <div class="flex items-center justify-between">
         <div class="text-sm text-blue-700">
-          <span class="font-medium">Mode:</span> Online Quiz | 
-          <span class="font-medium">Sets:</span> 1 | 
+          <span class="font-medium">Mode:</span> Online Quiz |
+          <span class="font-medium">Sets:</span> 1 |
           <span class="font-medium">Versions:</span> 1 |
           <span class="font-medium">AI Selected:</span> Yes
         </div>
         <button
           on:click={toggleDetails}
-          class="text-sm text-blue-600 hover:text-blue-800 font-medium"
+          class="text-sm text-primary hover:text-blue-800 font-medium"
         >
-          {showDetails ? 'Hide' : 'Show'} Selection Details
+          {showDetails ? "Hide" : "Show"} Selection Details
         </button>
       </div>
     </div>
@@ -330,10 +335,7 @@
   <!-- Chapter/Topic Selection Details -->
   {#if showDetails}
     <div class="mb-6">
-      <ChapterTopicTable 
-        {quizConfig}
-        title="Selected Chapters and Topics"
-      />
+      <ChapterTopicTable {quizConfig} title="Selected Chapters and Topics" />
     </div>
   {/if}
 
@@ -341,18 +343,32 @@
   {#if generating}
     <div class="bg-white border border-gray-200 rounded-lg p-8 mb-6">
       <div class="flex items-center justify-center">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+        <div
+          class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"
+        ></div>
         <div>
           <h3 class="text-lg font-medium text-gray-900">Creating Quiz Paper</h3>
-          <p class="text-gray-600">Please wait while we generate your quiz...</p>
+          <p class="text-gray-600">
+            Please wait while we generate your quiz...
+          </p>
         </div>
       </div>
     </div>
   {:else if generateError}
     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
       <div class="flex items-center">
-        <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M6 18h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        <svg
+          class="w-5 h-5 text-red-500 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 9v2m0 4h.01M6 18h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z"
+          />
         </svg>
         <div class="flex-1">
           <h3 class="text-sm font-medium text-red-800">Quiz Creation Error</h3>
@@ -370,12 +386,25 @@
     <!-- Quiz Paper Created Successfully -->
     <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
       <div class="flex items-center mb-4">
-        <svg class="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <svg
+          class="w-6 h-6 text-green-500 mr-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
         </svg>
         <div>
           <h3 class="text-lg font-medium text-green-800">Quiz Paper Ready!</h3>
-          <p class="text-sm text-green-700 mt-1">Your quiz has been generated successfully with {getQuestionsFromResponse().length} questions.</p>
+          <p class="text-sm text-green-700 mt-1">
+            Your quiz has been generated successfully with {getQuestionsFromResponse()
+              .length} questions.
+          </p>
         </div>
       </div>
 
@@ -391,7 +420,7 @@
         </div>
         <div class="bg-white rounded-lg p-4 border border-green-200">
           <div class="text-center">
-            <div class="text-2xl font-bold text-blue-600 mb-1">
+            <div class="text-2xl font-bold text-primary mb-1">
               {getQuestionsFromResponse().length}
             </div>
             <div class="text-sm text-blue-700">Questions</div>
@@ -417,10 +446,14 @@
                 <div class="font-medium text-gray-900 text-sm mb-2">
                   {index + 1}. {question.text}
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600">
+                <div
+                  class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-600"
+                >
                   {#each question.options as option, optIndex}
                     <div class="flex items-center space-x-1">
-                      <span class="font-medium">{String.fromCharCode(65 + optIndex)}.</span>
+                      <span class="font-medium"
+                        >{String.fromCharCode(65 + optIndex)}.</span
+                      >
                       <span class="truncate">{option.text}</span>
                       {#if option.is_correct}
                         <span class="text-green-600 text-xs ml-1">(✓)</span>
@@ -441,17 +474,28 @@
     </div>
   {:else}
     <!-- 23 -->
-   
   {/if}
 
   <!-- Action Buttons -->
-  <div class="flex justify-between items-center pt-6 border-t border-gray-200 mt-8">
+  <div
+    class="flex justify-between items-center pt-6 border-t border-gray-200 mt-8"
+  >
     <button
       on:click={handleBack}
       class="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 flex items-center"
     >
-      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      <svg
+        class="w-4 h-4 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M15 19l-7-7 7-7"
+        />
       </svg>
       Back to Setup
     </button>
@@ -461,35 +505,59 @@
         <button
           on:click={createQuizPaper}
           disabled={generating}
-          class="px-6 py-2 text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 disabled:opacity-50"
+          class="px-6 py-2 text-primary bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 disabled:opacity-50"
         >
           {#if generating}
-            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2 inline-block"></div>
+            <div
+              class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2 inline-block"
+            ></div>
           {/if}
           Regenerate Quiz
         </button>
       {/if}
-      
-     <button
-  on:click={handleStartQuiz}
-  disabled={generating || loading}
-  class="px-8 py-3 bg-green-600 text-white text-lg font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
->
-  {#if generating}
-    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-    Creating Quiz...
-  {:else if quizPaperResponse}
-    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-    Start Quiz
-  {:else}
-    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-    </svg>
-    Create & Start Quiz
-  {/if}
-</button>
+
+      <button
+        on:click={handleStartQuiz}
+        disabled={generating || loading}
+        class="px-8 py-3 bg-green-600 text-white text-lg font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+      >
+        {#if generating}
+          <div
+            class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"
+          ></div>
+          Creating Quiz...
+        {:else if quizPaperResponse}
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Start Quiz
+        {:else}
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Create & Start Quiz
+        {/if}
+      </button>
     </div>
   </div>
 </div>

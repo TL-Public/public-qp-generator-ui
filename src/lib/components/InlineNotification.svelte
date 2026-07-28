@@ -151,6 +151,7 @@
   bind:this={notificationElement}
   class="relative w-full transform transition-all duration-200 ease-in-out rounded-md border shadow-sm {containerClasses}"
   class:pointer-events-none={!visible}
+  class:hidden={!visible}
   role="alert"
   aria-live="polite"
   aria-atomic="true"

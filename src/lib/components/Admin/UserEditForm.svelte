@@ -2,7 +2,10 @@
   import { createEventDispatcher } from "svelte";
   import { api } from "$lib/utils/api.js";
   import { authStore } from "$lib/stores/authStore.js";
-  import { generateStrongPassword, validatePassword as validatePasswordHelper } from "$lib/utils/helper.js";
+  import {
+    generateStrongPassword,
+    validatePassword as validatePasswordHelper,
+  } from "$lib/utils/helper.js";
   import LoadingSpinner from "../LoadingSpinner.svelte";
   import RadioGroup from "$lib/components/RadioGroup.svelte";
   import Input from "$lib/components/Input.svelte";
@@ -579,7 +582,7 @@ project/my-app/src/lib/components/Admin/UserEditForm.svelte -->
               <span class="text-blue-900">
                 {user.username} → {formData.username}
                 {#if formData.username === user.username}
-                  <span class="text-blue-600">(unchanged)</span>
+                  <span class="text-primary">(unchanged)</span>
                 {/if}
               </span>
             </div>
@@ -588,7 +591,7 @@ project/my-app/src/lib/components/Admin/UserEditForm.svelte -->
               <span class="text-blue-900">
                 {user.role_name} → {getRoleName(formData.role_code)}
                 {#if (user.role_code || (user.role_name === "admin" ? "100" : "101")) === formData.role_code}
-                  <span class="text-blue-600">(unchanged)</span>
+                  <span class="text-primary">(unchanged)</span>
                 {/if}
               </span>
             </div>
@@ -599,7 +602,7 @@ project/my-app/src/lib/components/Admin/UserEditForm.svelte -->
                   ? "Active"
                   : "Inactive"}
                 {#if formData.is_active === user.is_active}
-                  <span class="text-blue-600">(unchanged)</span>
+                  <span class="text-primary">(unchanged)</span>
                 {/if}
               </span>
             </div>

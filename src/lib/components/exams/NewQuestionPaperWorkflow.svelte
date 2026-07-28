@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
+  import { page } from "$app/stores";
   import Dropdown from "$lib/components/Dropdown.svelte";
   import Input from "$lib/components/Input.svelte";
   import Button from "$lib/components/Button.svelte";
@@ -14,6 +15,8 @@
   import Tab from "$lib/components/TabTable/Tab.svelte";
   import TabPanel from "$lib/components/TabTable/TabPanel.svelte";
   import { apiClient } from "$lib/utils/api.js";
+  import InlineNotification from "$lib/components/InlineNotification.svelte";
+  import GeneratePapers from "$lib/components/GeneratePapers.svelte";
   import {
     X,
     Plus,
@@ -25,10 +28,10 @@
   } from "@lucide/svelte";
 
   // Reusability Props for Add / Edit Mode
-  export let examId = null;
+
   export let examCode = null;
 
-  $: activeExamCode = examId || examCode;
+  $: activeExamCode = examCode;
   $: isEditMode = !!activeExamCode;
 
   // Form State (Default ADD mode settings: empty class dropdown, default sets = 1)
@@ -54,11 +57,15 @@
   let mediumOptions = [];
   let allSubjects = [];
   let classSubjectLoading = { mediums: false, subjects: false };
+  let classSubjectError = { mediums: null, subjects: null };
 
   let examLoading = false;
   let examError = null;
 
   let isSavingDraft = false;
+  let isGeneratingPaper = false;
+  let isPaperGenerated = false;
+  let generatedPapersData = null;
   let saveDraftError = "";
 
   let isAutoAllocation = true;
@@ -176,6 +183,7 @@
   // Fetch Mediums API
   async function fetchMediums() {
     classSubjectLoading.mediums = true;
+    classSubjectError.mediums = null;
     try {
       const res = await apiClient({ url: "/apis/mediums" });
       if (res.ok) {
@@ -189,9 +197,15 @@
         if (!isEditMode && mediumOptions.length > 0 && !selectedMedium) {
           selectedMedium = mediumOptions[0].value;
         }
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail || `Server error (${res.status}) loading mediums.`,
+        );
       }
     } catch (err) {
       console.error("Error fetching mediums:", err);
+      classSubjectError.mediums = err.message || "Failed to load mediums.";
     } finally {
       classSubjectLoading.mediums = false;
     }
@@ -200,6 +214,7 @@
   // Fetch Subjects API
   async function fetchSubjects() {
     classSubjectLoading.subjects = true;
+    classSubjectError.subjects = null;
     try {
       const res = await apiClient({ url: "/apis/subjects" });
       if (res.ok) {
@@ -211,9 +226,15 @@
           standard: s.standard,
           mediumCode: s.medium_code,
         }));
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail || `Server error (${res.status}) loading subjects.`,
+        );
       }
     } catch (err) {
       console.error("Error fetching subjects:", err);
+      classSubjectError.subjects = err.message || "Failed to load subjects.";
     } finally {
       classSubjectLoading.subjects = false;
     }
@@ -249,16 +270,21 @@
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(
-          errorData.detail || `HTTP error! status: ${res.status}`,
+          errorData.detail ||
+            `Failed to load draft paper! status: ${res.status}`,
         );
       }
       const data = await res.json();
-      const examData = data.data || data;
+      const examData = data.design;
+
+      if (!examData) {
+        throw new Error("No exam design data found in API response.");
+      }
 
       examTitle = examData.exam_name || "";
-      selectedClass = examData.standard || "";
-      setsCount = examData.number_of_sets || 1;
-      versionsCount = examData.number_of_versions || 1;
+      selectedClass = String(examData.standard || "");
+      setsCount = Number(examData.number_of_sets) || 1;
+      versionsCount = Number(examData.number_of_versions) || 1;
 
       const loadedCount = Number(examData.total_questions) || 40;
       questionCount = loadedCount;
@@ -275,28 +301,29 @@
       }
 
       // Find and set medium
-      if (examData.medium || examData.medium_code) {
+      const medCode = examData.medium;
+      if (medCode) {
         const foundMedium = mediumOptions.find(
           (m) =>
-            m.label?.toLowerCase() === examData.medium?.toLowerCase() ||
-            m.value === examData.medium_code,
+            String(m.value) === String(medCode) ||
+            m.label?.toLowerCase() === String(medCode).toLowerCase(),
         );
-        selectedMedium =
-          foundMedium?.value || examData.medium_code || examData.medium || "";
+        selectedMedium = foundMedium
+          ? String(foundMedium.value)
+          : String(medCode);
       }
 
       // Find and set subject
-      if (examData.subject || examData.subject_code) {
+      const subCode = examData.subject;
+      if (subCode) {
         const foundSubject = allSubjects.find(
           (s) =>
-            s.label?.toLowerCase() === examData.subject?.toLowerCase() ||
-            s.value === examData.subject_code,
+            String(s.value) === String(subCode) ||
+            s.label?.toLowerCase() === String(subCode).toLowerCase(),
         );
-        selectedSubject =
-          foundSubject?.value ||
-          examData.subject_code ||
-          examData.subject ||
-          "";
+        selectedSubject = foundSubject
+          ? String(foundSubject.value)
+          : String(subCode);
       }
 
       // Parse excluded question codes
@@ -316,12 +343,36 @@
               code: item.code,
               name: item.name,
               type: groupType,
-              qn_count: item.qn_count,
+              qn_count: item.qn_count ?? null,
             });
           });
         });
         selections = loadedSelections;
         updateSelectedChaptersFromSelections();
+      }
+
+      // Parse question_papers if already generated
+      if (
+        (Array.isArray(examData.question_papers) &&
+          examData.question_papers.length > 0) ||
+        examData.status === 2
+      ) {
+        generatedPapersData = {
+          examInfo: {
+            exam_name: examData.exam_name || "",
+            exam_code: activeExamCode,
+            status: examData.status,
+            number_of_sets: examData.number_of_sets,
+            number_of_versions: examData.number_of_versions,
+            no_of_qns: examData.total_questions,
+            subject: examData.subject,
+            medium: examData.medium,
+          },
+          questionPapers: examData.question_papers || [],
+          generatedAt: new Date().toISOString(),
+          apiResponse: data,
+        };
+        isPaperGenerated = true;
       }
     } catch (err) {
       console.error("Error fetching exam details:", err);
@@ -350,7 +401,7 @@
 
       if (res.ok) {
         const data = await res.json();
-        chaptersData = data.data || data || [];
+        chaptersData = data.data || [];
 
         if (Array.isArray(chaptersData) && chaptersData.length > 0) {
           // Expand first chapter by default
@@ -359,10 +410,16 @@
         } else {
           chaptersData = [];
         }
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail ||
+            `Server error (${res.status}) loading syllabus chapters.`,
+        );
       }
     } catch (err) {
       console.error("Error fetching chapters:", err);
-      chaptersError = err.message || "Failed to load chapters";
+      chaptersError = err.message || "Failed to load syllabus chapters";
     } finally {
       chaptersLoading = false;
     }
@@ -383,9 +440,22 @@
     }
   }
 
+  // Reactive watcher to hydrate exam details in Edit mode as soon as dropdown options are loaded
+  let loadedExamCode = "";
+  $: if (
+    activeExamCode &&
+    activeExamCode !== loadedExamCode &&
+    mediumOptions.length > 0 &&
+    allSubjects.length > 0
+  ) {
+    loadedExamCode = activeExamCode;
+    fetchExamDetails(activeExamCode);
+  }
+
   onMount(async () => {
     await Promise.all([fetchMediums(), fetchSubjects()]);
-    if (activeExamCode) {
+    if (activeExamCode && activeExamCode !== loadedExamCode) {
+      loadedExamCode = activeExamCode;
       await fetchExamDetails(activeExamCode);
     }
   });
@@ -744,7 +814,8 @@
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.detail || `HTTP error! status: ${response.status}`,
+          errorData.detail ||
+            `Failed to save draft paper! status: ${response.status}`,
         );
       }
 
@@ -755,6 +826,134 @@
       saveDraftError = err.message || "Failed to save draft paper.";
     } finally {
       isSavingDraft = false;
+    }
+  }
+
+  // Generate Paper action handler (status = 2)
+  async function handleGeneratePapers() {
+    if (!selectedClass || !selectedMedium || !selectedSubject) {
+      saveDraftError =
+        "Please select Class, Medium, and Subject before generating paper.";
+      return;
+    }
+
+    if (selections.length === 0) {
+      saveDraftError =
+        "Please select at least one chapter or topic before generating paper.";
+      return;
+    }
+
+    // If manual allocation mode, check if total allocated matches total required questions (setsCount * questionCount)
+    if (!isAutoAllocation) {
+      const targetTotal = parseInt(questionCount) * parseInt(setsCount);
+      const totalAllocated = selections.reduce(
+        (sum, item) => sum + (Number(item.qn_count) || 0),
+        0,
+      );
+      if (totalAllocated !== targetTotal) {
+        saveDraftError = `Manual allocation mismatch: Target is ${targetTotal} questions (${setsCount} set${setsCount > 1 ? "s" : ""} × ${questionCount} questions), but ${totalAllocated} are currently allocated. Click "Configure allocation" to balance.`;
+        showManualAllocationModal = true;
+        return;
+      }
+    }
+
+    isGeneratingPaper = true;
+    saveDraftError = "";
+
+    const payload = {
+      is_ai_selected: isAutoAllocation,
+      exam_name: examTitle.trim() || `Exam Paper - Class ${selectedClass}`,
+      exam_type_code: "1000",
+      subject_code: selectedSubject,
+      medium_code: selectedMedium,
+      exam_mode: "online",
+      total_time: Math.round(questionCount * 2),
+      total_questions: parseInt(questionCount),
+      no_of_versions: parseInt(versionsCount),
+      no_of_sets: parseInt(setsCount),
+      standard: selectedClass,
+      chapters_topics: buildChaptersTopicsPayload(selections),
+      ...(qtn_codes_to_exclude.length > 0 && { qtn_codes_to_exclude }),
+      status: 2,
+    };
+
+    try {
+      let response;
+      if (activeExamCode) {
+        response = await apiClient({
+          url: `/apis/exams/${activeExamCode}`,
+          options: {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        });
+      } else {
+        response = await apiClient({
+          url: "/apis/exams",
+          options: {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          },
+        });
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail ||
+            `Failed to generate paper! status: ${response.status}`,
+        );
+      }
+
+      const responseDataRaw = await response.json();
+      const responseData = responseDataRaw.data || responseDataRaw;
+
+      generatedPapersData = {
+        examInfo: {
+          exam_name: responseData.exam_name || examTitle,
+          exam_code: responseData.exam_code || activeExamCode,
+          status: responseData.status || 2,
+          number_of_sets: responseData.number_of_sets || setsCount,
+          number_of_versions: responseData.number_of_versions || versionsCount,
+          no_of_qns: responseData.total_questions || questionCount,
+          subject: currentSubjectName,
+          medium: currentMediumName,
+        },
+        questionPapers:
+          responseData.question_papers || responseData.questionPapers || [],
+        shortfallInfo: responseData.shortfall_info || {},
+        chapterTopics: responseData.chapter_topics || [],
+        questionsToExclude: responseData.qtn_codes_to_exclude || [],
+        generatedAt: new Date().toISOString(),
+        apiResponse: responseDataRaw,
+      };
+
+      // Update apiPayloadStore with generated paper data if available
+      if (
+        typeof apiPayloadStore !== "undefined" &&
+        apiPayloadStore?.updateGeneratedPapers
+      ) {
+        apiPayloadStore.updateGeneratedPapers(generatedPapersData);
+      }
+
+      // Display generated papers view and sync URL query parameter
+      isPaperGenerated = true;
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("step", "2");
+        goto(url.pathname + url.search, {
+          replaceState: true,
+          keepFocus: true,
+          noScroll: true,
+        });
+      }
+    } catch (err) {
+      console.error("Error generating paper:", err);
+      saveDraftError = err.message || "Failed to generate paper.";
+    } finally {
+      isGeneratingPaper = false;
     }
   }
 
@@ -779,9 +978,35 @@
   $: availableQuestionCount = chaptersData.reduce((acc, ch) => {
     return acc + (ch.question_count || ch.qn_count || 0);
   }, 0);
+
+  // Step state driven by URL search params or isPaperGenerated flag
+  $: stepFromUrl = Number($page.url.searchParams.get("step")) || 1;
+  $: currentStep = isPaperGenerated ? 2 : stepFromUrl;
+
+  function getPageHeaderTitle(step, editMode) {
+    if (step === 2) return "Generated Question Papers";
+    return editMode ? "Edit Question Paper" : "Create Question Paper";
+  }
+
+  function getPageHeaderSubtitle(step, editMode) {
+    if (step === 2) {
+      return "Review, view, or print your generated question paper sets.";
+    }
+    return editMode
+      ? "Update your question paper syllabus, setup, and allocation settings"
+      : "Create the paper in 3 steps - choose the syllabus, set up the paper, and pick how many sets you need";
+  }
+
+  $: pageTitle = getPageHeaderTitle(currentStep, isEditMode);
+  $: pageSubtitle = getPageHeaderSubtitle(currentStep, isEditMode);
 </script>
 
 <div class="min-h-screen text-slate-800">
+  <div class="mb-6">
+    <h1 class="text-xl font-bold text-dark">{pageTitle}</h1>
+    <p class="text-sm text-slate-500">{pageSubtitle}</p>
+  </div>
+
   {#if examLoading}
     <div class="flex flex-col items-center justify-center py-20 space-y-3">
       <Loader2 class="w-10 h-10 text-primary animate-spin" />
@@ -801,13 +1026,33 @@
         Retry Loading
       </Button>
     </div>
+  {:else if currentStep === 2}
+    <div class="max-w-6xl mx-auto space-y-6">
+      <div
+        class="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200"
+      >
+        <GeneratePapers
+          examData={{
+            examTitle: examTitle,
+            examClass: selectedClass,
+            examMediumName: currentMediumName,
+            examSubjectName: currentSubjectName,
+          }}
+          {generatedPapersData}
+          generationResult={{
+            message: `Successfully generated question papers for "${examTitle}"!`,
+            type: "success",
+          }}
+        />
+      </div>
+    </div>
   {:else}
     <div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 items-start">
       <!-- LEFT FORM COLUMN -->
       <div class="flex-1 w-full space-y-6">
         <!-- STEP 1: What are you testing? -->
         <div
-          class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-[#eee9dc] transition-all"
+          class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 transition-all"
         >
           <!-- Step Header -->
           <div class="flex items-center gap-3 mb-6">
@@ -817,11 +1062,38 @@
               1
             </span>
             <h2 class="text-lg font-bold text-slate-900 tracking-tight">
-              What are you testing?
+              Exam syllabus
             </h2>
           </div>
 
           <div class="space-y-6">
+            <!-- Full-width Notifications for Mediums/Subjects API failure -->
+            {#if classSubjectError.mediums}
+              <InlineNotification
+                kind="error"
+                title="Failed to load mediums"
+                subtitle={classSubjectError.mediums}
+                action={{
+                  text: "Retry",
+                  handler: fetchMediums,
+                }}
+                hideCloseButton={true}
+              />
+            {/if}
+
+            {#if classSubjectError.subjects}
+              <InlineNotification
+                kind="error"
+                title="Failed to load subjects"
+                subtitle={classSubjectError.subjects}
+                action={{
+                  text: "Retry",
+                  handler: fetchSubjects,
+                }}
+                hideCloseButton={true}
+              />
+            {/if}
+
             <!-- Class, Medium & Subject Row -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
@@ -849,7 +1121,9 @@
                   disabled={classSubjectLoading.mediums}
                   placeholder={classSubjectLoading.mediums
                     ? "Loading..."
-                    : "Select Medium"}
+                    : classSubjectError.mediums
+                      ? "Error loading mediums"
+                      : "Select Medium"}
                 />
               </div>
 
@@ -866,7 +1140,9 @@
                     subjectOptions.length === 0}
                   placeholder={classSubjectLoading.subjects
                     ? "Loading..."
-                    : "Select Subject"}
+                    : classSubjectError.subjects
+                      ? "Error loading subjects"
+                      : "Select Subject"}
                 />
               </div>
             </div>
@@ -877,13 +1153,19 @@
                 <label
                   class="block text-xs font-bold text-slate-500 uppercase tracking-wider"
                 >
-                  CHAPTERS
+                  EXAM SYLLABUS
                 </label>
                 <span
                   class="text-xs text-slate-500 font-medium flex items-center"
                 >
                   {#if chaptersLoading}
                     Loading syllabus chapters...
+                  {:else if chaptersError}
+                    <span
+                      class="text-red-600 font-semibold flex items-center gap-1.5"
+                    >
+                      Failed to load chapters
+                    </span>
                   {:else if !selectedClass || !selectedMedium || !selectedSubject}
                     Select Class, Medium & Subject to load chapters
                   {:else}
@@ -907,6 +1189,18 @@
                   {/if}
                 </span>
               </div>
+
+              {#if chaptersError}
+                <div class="mb-3">
+                  <InlineNotification
+                    kind="error"
+                    title="Failed to load syllabus chapters"
+                    subtitle={chaptersError}
+                    action={{ text: "Retry", handler: fetchChaptersTopics }}
+                    hideCloseButton={true}
+                  />
+                </div>
+              {/if}
 
               <div
                 class="bg-blue-100 border border-gray-200 rounded-xl p-4 sm:p-5"
@@ -971,7 +1265,7 @@
 
         <!-- STEP 2: Set up the paper -->
         <div
-          class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-[#eee9dc] transition-all space-y-6"
+          class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 transition-all space-y-6"
         >
           <!-- Step Header -->
           <div class="flex items-center gap-3">
@@ -1013,7 +1307,7 @@
               {#each questionCountOptions as count}
                 <Button
                   btnType={!isCustomQuestionCount && questionCount === count
-                    ? "dark"
+                    ? "primary"
                     : "secondary"}
                   customClass="!px-5 !py-2.5 rounded-xl text-sm font-bold min-w-[54px]"
                   on:click={() => selectPresetQuestionCount(count)}
@@ -1023,7 +1317,7 @@
               {/each}
 
               <Button
-                btnType={isCustomQuestionCount ? "dark" : "secondary"}
+                btnType={isCustomQuestionCount ? "primary" : "secondary"}
                 customClass="!px-5 !py-2.5 rounded-xl text-sm font-semibold capitalize"
                 on:click={selectCustomQuestionCount}
               >
@@ -1062,7 +1356,7 @@
 
             <div class="flex flex-wrap items-center gap-2.5 mb-2.5">
               <Button
-                btnType={isAutoAllocation ? "dark" : "secondary"}
+                btnType={isAutoAllocation ? "primary" : "secondary"}
                 customClass="!px-5 !py-2.5 rounded-xl text-sm font-semibold"
                 on:click={() => (isAutoAllocation = true)}
               >
@@ -1070,7 +1364,7 @@
               </Button>
 
               <Button
-                btnType={!isAutoAllocation ? "dark" : "secondary"}
+                btnType={!isAutoAllocation ? "primary" : "secondary"}
                 customClass="!px-5 !py-2.5 rounded-xl text-sm font-semibold"
                 on:click={() => {
                   isAutoAllocation = false;
@@ -1083,8 +1377,8 @@
 
             <p class="text-xs text-slate-500 font-medium leading-relaxed">
               {#if isAutoAllocation}
-                Questions are spread across your selected chapters
-                automatically, in proportion to their size.
+                Questions are spread across your selected chapters and/or topics
+                automatically.
               {:else}
                 Manually set question count from each chapter/topic.
                 <button
@@ -1112,7 +1406,9 @@
             <div class="flex flex-wrap items-center gap-2.5 mb-4">
               {#each ["balanced", "easier", "harder", "custom"] as preset}
                 <Button
-                  btnType={difficultyPreset === preset ? "dark" : "secondary"}
+                  btnType={difficultyPreset === preset
+                    ? "primary"
+                    : "secondary"}
                   customClass="!px-5 !py-2 rounded-full text-sm font-semibold capitalize"
                   on:click={() => selectDifficultyPreset(preset)}
                 >
@@ -1242,7 +1538,7 @@
               <div class="flex flex-wrap items-center gap-2">
                 {#each setsOptions as setNum}
                   <Button
-                    btnType={setsCount === setNum ? "dark" : "secondary"}
+                    btnType={setsCount === setNum ? "primary" : "secondary"}
                     customClass="!px-4 !py-2 rounded-xl text-sm font-bold min-w-[46px]"
                     on:click={() => (setsCount = setNum)}
                   >
@@ -1266,7 +1562,7 @@
               <div class="flex flex-wrap items-center gap-2">
                 {#each versionsOptions as verNum}
                   <Button
-                    btnType={versionsCount === verNum ? "dark" : "secondary"}
+                    btnType={versionsCount === verNum ? "primary" : "secondary"}
                     customClass="!px-4 !py-2 rounded-xl text-sm font-bold min-w-[46px]"
                     on:click={() => (versionsCount = verNum)}
                   >
@@ -1294,7 +1590,9 @@
             YOUR PAPER
           </div>
 
-          <h3 class="text-lg font-bold leading-snug text-dark mb-6">
+          <h3
+            class={`text-lg  leading-snug  mb-6 ${examTitle ? "font-bold text-dark" : "font-bold text-subtext/80"}`}
+          >
             {examTitle || "Untitled Paper"}
           </h3>
 
@@ -1352,30 +1650,36 @@
           <!-- Generate Action Button -->
           <Button
             btnType="primary"
-            customClass="w-full mt-6 py-3 px-4 font-bold rounded-xl shadow-xs text-sm group flex items-center justify-center gap-2"
+            disabled={isGeneratingPaper || isSavingDraft}
+            customClass="w-full mt-6 py-3 px-4 font-bold rounded-xl shadow-xs text-sm group flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            on:click={handleGeneratePapers}
           >
-            <span>Generate paper</span>
-            <ArrowRight
-              class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
-            />
+            {#if isGeneratingPaper}
+              <Loader2 class="w-4 h-4 text-white animate-spin" />
+              <span>Generating Paper...</span>
+            {:else}
+              <span>Generate paper</span>
+              <ArrowRight
+                class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
+              />
+            {/if}
           </Button>
 
-          <!-- Save as Draft Button (In ADD mode) -->
-          {#if !isEditMode}
-            <Button
-              btnType="secondary"
-              disabled={isSavingDraft}
-              customClass="w-full mt-2.5 py-3 px-4 font-semibold rounded-xl text-sm border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2"
-              on:click={handleSaveDraft}
-            >
-              {#if isSavingDraft}
-                <Loader2 class="w-4 h-4 text-slate-600 animate-spin" />
-                <span>Saving Draft...</span>
-              {:else}
-                <span>Save as Draft</span>
-              {/if}
-            </Button>
-          {/if}
+          <!-- Save / Update Draft Button -->
+          <Button
+            btnType="secondary"
+            disabled={isSavingDraft || isGeneratingPaper}
+            customClass="w-full mt-2.5 py-3 px-4 font-semibold rounded-xl text-sm border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            on:click={handleSaveDraft}
+          >
+            {#if isSavingDraft}
+              <Loader2 class="w-4 h-4 text-slate-600 animate-spin" />
+              <span>{isEditMode ? "Updating Draft..." : "Saving Draft..."}</span
+              >
+            {:else}
+              <span>{isEditMode ? "Update Draft" : "Save as Draft"}</span>
+            {/if}
+          </Button>
 
           {#if saveDraftError}
             <p class="text-xs text-red-600 font-medium text-center mt-2.5">
@@ -1387,9 +1691,9 @@
         </div>
 
         <!-- Secondary Question Pool Card -->
-        <div
+        <!-- <div
           on:click={openQuestionPoolModal}
-          class="bg-white border border-[#eee9dc] rounded-2xl p-5 shadow-xs text-xs text-slate-600 hover:border-slate-300 transition cursor-pointer"
+          class="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs text-xs text-slate-600 hover:border-slate-300 transition cursor-pointer"
         >
           <p class="leading-relaxed font-medium">
             <span class="font-bold text-blue-700 hover:underline"
@@ -1398,7 +1702,7 @@
             — see the {availableQuestionCount} questions that match your syllabus
             (optional)
           </p>
-        </div>
+        </div> -->
       </div>
     </div>
   {/if}
@@ -1531,10 +1835,14 @@
             </p>
           </div>
         {:else if questionPoolError}
-          <div
-            class="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-200"
-          >
-            {questionPoolError}
+          <div class="py-6">
+            <InlineNotification
+              kind="error"
+              title="Failed to load question pool"
+              subtitle={questionPoolError}
+              action={{ text: "Retry", handler: loadQuestionPool }}
+              hideCloseButton={true}
+            />
           </div>
         {:else}
           <Tabs bind:active={poolActiveTab}>
@@ -1684,10 +1992,13 @@
         class="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between"
       >
         <span class="text-xs font-semibold text-slate-600">
-          Target: {questionCount} questions · Allocated: {selections.reduce(
+          Target: {questionCount * setsCount} questions ({setsCount} set{setsCount >
+          1
+            ? "s"
+            : ""} × {questionCount}) · Allocated: {selections.reduce(
             (sum, s) => sum + (Number(s.qn_count) || 0),
             0,
-          )} / {questionCount}
+          )} / {questionCount * setsCount}
         </span>
         <Button
           btnType="primary"

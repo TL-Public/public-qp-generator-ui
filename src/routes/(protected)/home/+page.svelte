@@ -80,7 +80,7 @@
       <h1 class="text-2xl tracking-tight font-extrabold text-gray-900">
         <p class="leading-tight">
           Welcome back,
-          <span class="text-blue-600 block sm:inline">
+          <span class="text-primary block sm:inline">
             {userNameFromStore || "User"}
           </span>
         </p>
@@ -153,7 +153,7 @@
                                     <div class="flex items-start space-x-3">
                                         <span class="text-lg sm:text-xl flex-shrink-0">{feature.icon}</span>
                                         <div class="flex-1 min-w-0">
-                                            <h3 class="text-xs sm:text-sm font-medium text-gray-900 group-hover:text-blue-600">
+                                            <h3 class="text-xs sm:text-sm font-medium text-gray-900 group-hover:text-primary">
                                                 {feature.title}
                                             </h3>
                                             <p class="text-xs text-gray-500 mt-1 leading-relaxed hidden sm:block lg:block">

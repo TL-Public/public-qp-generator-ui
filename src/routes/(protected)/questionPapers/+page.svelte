@@ -407,7 +407,7 @@
 
   function handleEdit(paperId) {
     if (paperId) {
-      goto(`/questionPapers/${paperId}/edit?step=1`);
+      goto(`/questionPapers/new/${paperId}/edit?step=1`);
     }
   }
 

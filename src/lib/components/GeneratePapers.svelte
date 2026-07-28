@@ -291,15 +291,17 @@
   function handleBack() {
     goto("/create-paper?step=2");
   }
+  let showNotification = true;
 </script>
 
 <!-- <Card>
 </Card> -->
-{#if generationResult.message}
+{#if generationResult.message && showNotification}
   <div class="mb-3">
     <InlineNotification
       title={generationResult.message}
       kind={generationResult.type}
+      on:close={() => (showNotification = false)}
     />
   </div>
 {/if}

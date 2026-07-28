@@ -497,7 +497,7 @@
                     type="button"
                     on:click={generatePassword}
                     disabled={loading}
-                    class="text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400 px-1"
+                    class="text-xs text-primary hover:text-blue-800 disabled:text-gray-400 px-1"
                     title="Generate strong password"
                   >
                     Gen

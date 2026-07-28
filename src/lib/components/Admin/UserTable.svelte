@@ -158,7 +158,7 @@
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-2">
         <svg
-          class="w-4 h-4 text-blue-600"
+          class="w-4 h-4 text-primary"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -174,7 +174,7 @@
           Showing {filteredUsers.length} of {users.length} users
         </span>
       </div>
-      <span class="text-xs text-blue-600">Filters applied</span>
+      <span class="text-xs text-primary">Filters applied</span>
     </div>
   </div>
 {/if}

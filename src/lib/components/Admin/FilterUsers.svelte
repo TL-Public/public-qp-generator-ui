@@ -324,7 +324,7 @@
                           block.value,
                           e.target.checked,
                         )}
-                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-blue-500"
                     />
                     <span class="ml-3 text-sm text-gray-700">{block.name}</span>
                   </label>
@@ -386,7 +386,7 @@
                           school.value,
                           e.target.checked,
                         )}
-                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-blue-500"
                     />
                     <span class="ml-3 text-sm text-gray-700">{school.name}</span
                     >
@@ -449,7 +449,7 @@
                           subject.value,
                           e.target.checked,
                         )}
-                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-blue-500"
                     />
                     <span class="ml-3 text-sm text-gray-700"
                       >{subject.name}</span
@@ -513,7 +513,7 @@
                           class_option.value,
                           e.target.checked,
                         )}
-                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-blue-500"
                     />
                     <span class="ml-3 text-sm text-gray-700"
                       >{class_option.name}</span
