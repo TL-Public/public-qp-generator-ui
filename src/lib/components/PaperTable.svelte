@@ -83,7 +83,7 @@
       {#if selectedPaperId}
         <button
           on:click={handleEdit}
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+          class="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-md flex items-center space-x-2"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

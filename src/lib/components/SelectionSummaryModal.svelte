@@ -43,7 +43,7 @@
     {/if}
 
     <div class="flex justify-end mt-6">
-      <button class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" on:click={closeModal}>
+      <button class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" on:click={closeModal}>
         Close
       </button>
     </div>

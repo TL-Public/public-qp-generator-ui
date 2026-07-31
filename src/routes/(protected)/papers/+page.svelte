@@ -96,7 +96,7 @@
           <!-- Step 1 -->
           <div class="relative">
             <div
-              class="absolute flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white text-xl font-bold -left-2"
+              class="absolute flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white text-xl font-bold -left-2"
             >
               1
             </div>
@@ -111,7 +111,7 @@
           <!-- Step 2 -->
           <div class="relative">
             <div
-              class="absolute flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white text-xl font-bold -left-2"
+              class="absolute flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white text-xl font-bold -left-2"
             >
               2
             </div>
@@ -128,7 +128,7 @@
           <!-- Step 3 -->
           <div class="relative">
             <div
-              class="absolute flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 text-white text-xl font-bold -left-2"
+              class="absolute flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white text-xl font-bold -left-2"
             >
               3
             </div>
@@ -147,7 +147,7 @@
   </div>
 
   <!-- Call to Action -->
-  <div class="bg-blue-600 mt-12">
+  <div class="bg-primary mt-12">
     <div class="max-w-7xl mx-auto text-center py-12 px-4 sm:px-6 lg:px-8">
       <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
         <span class="block">Ready to transform your assessment process?</span>

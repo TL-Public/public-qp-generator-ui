@@ -54,7 +54,7 @@
         darkTheme: "bg-blue-800 border-blue-600 text-blue-100",
         icon: "text-blue-500",
         iconContrast: "text-blue-200",
-        button: "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500",
+        button: "bg-primary hover:bg-primary-hover focus:ring-blue-500",
       },
     };
 

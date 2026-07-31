@@ -389,7 +389,7 @@
                     on:click|preventDefault={() => goToPage(pageNum)}
                     class="px-3 py-1 text-sm border rounded-md {currentPage ===
                     pageNum
-                      ? 'bg-blue-600 text-white border-blue-600'
+                      ? 'bg-primary text-white border-blue-600'
                       : 'border-gray-300 hover:bg-gray-100'}"
                     type="button"
                   >
@@ -425,7 +425,7 @@
               />
               <button
                 type="submit"
-                class="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                class="px-3 py-1 text-sm bg-primary text-white rounded-md hover:bg-primary-hover"
               >
                 Go
               </button>

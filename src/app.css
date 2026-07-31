@@ -5,10 +5,9 @@
   --font-scale: 1;
 }
 
-@theme{
-
-  --color-primary:#143cb8; /* Tailwind's blue-700 */
-  --color-primary-hover: #2563eb; /* Tailwind's blue-600 */
+@theme {
+  --color-primary: #143cb8; /* Tailwind's blue-700 */
+  --color-primary-hover: #1447e6; /* Tailwind's blue-600 */
   --color-dark: #1d293d; /* Tailwind's gray-500 */
   --color-stroke: #e5e7eb; /* Tailwind's gray-200 */
   --color-background: #ffffff; /* Tailwind's white */
@@ -18,10 +17,9 @@
   --color-light-red: #fef2f2; /* Tailwind's red-50 */
   --color-light-yellow: #fefce8; /* Tailwind's yellow-50 */
   --color-danger: #e7000b; /* Tailwind's red-600 */
-  
+
   --color-dark: #101828; /* Tailwind's gray-900 */
   --color-subtext: #6a7282; /* Tailwind's gray-500 */
- 
 }
 
 /* Apply scaling to all text elements */
@@ -80,39 +78,38 @@ html[data-font-size="small"] .question-card {
   padding: calc(2rem * 0.9);
 } */
 
-
-.input-label{
+.input-label {
   @apply block text-sm font-medium text-gray-700 mb-1;
 }
 
-.input-field{
+.input-field {
   @apply w-full border border-gray-300  text-sm rounded-md p-2 focus:outline-none focus:ring focus:ring-blue-500 focus:border-blue-500;
 }
 
-.primary-btn{
-  @apply px-6 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center;
+.primary-btn {
+  @apply px-6 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary-hover flex items-center;
 }
-.secondary-btn{
+.secondary-btn {
   @apply px-6 py-2 bg-white text-sm  text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 flex items-center;
 }
 
-.large-header{
+.large-header {
   @apply text-xl text-gray-700 font-bold;
 }
 
-.sub-heading{
+.sub-heading {
   @apply text-gray-700 text-sm;
 }
 
-.divider-line{
+.divider-line {
   @apply border-t border-t-stroke;
 }
-.input-error-msg{
+.input-error-msg {
   @apply text-xs text-danger;
 }
-.table-header-cell{
+.table-header-cell {
   @apply px-1 py-2 text-left text-xs font-medium text-subtext uppercase tracking-wider;
 }
-.table-data-cell-light{
+.table-data-cell-light {
   @apply px-1 py-2 whitespace-nowrap text-sm text-subtext;
 }
