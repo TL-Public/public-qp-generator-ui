@@ -17,14 +17,25 @@
   import { apiClient } from "$lib/utils/api.js";
   import InlineNotification from "$lib/components/InlineNotification.svelte";
   import GeneratePapers from "$lib/components/GeneratePapers.svelte";
+  import DraftSavedModal from "$lib/components/exams/v2/DraftSavedModal.svelte";
+  import FeasibilityWarningModal from "$lib/components/exams/v2/FeasibilityWarningModal.svelte";
+  import ChapterSelectionModal from "$lib/components/exams/v2/ChapterSelectionModal.svelte";
+  import ManualAllocationModal from "$lib/components/exams/v2/ManualAllocationModal.svelte";
+  import QuestionPoolModal from "$lib/components/exams/v2/QuestionPoolModal.svelte";
+  import PaperSummarySidebar from "$lib/components/exams/v2/PaperSummarySidebar.svelte";
+  import SyllabusSelectionStep from "$lib/components/exams/v2/SyllabusSelectionStep.svelte";
+  import PaperSetupStep from "$lib/components/exams/v2/PaperSetupStep.svelte";
+  import PaperQuantityStep from "$lib/components/exams/v2/PaperQuantityStep.svelte";
   import {
     X,
     Plus,
+    Pencil,
     ArrowRight,
     BookOpen,
     Check,
     SlidersHorizontal,
     Loader2,
+    AlertTriangle,
   } from "@lucide/svelte";
 
   // Reusability Props for Add / Edit Mode
@@ -98,6 +109,31 @@
   let allFetchedQuestions = [];
   let qtn_codes_to_exclude = [];
 
+  // Feasibility check modal state
+  let showFeasibilityModal = false;
+  let feasibilityWarningMessage = "";
+  let feasibilityWarningData = null;
+
+  // Computed totals for feasibility requested vs proposed question counts
+  $: requestedTotalCount = feasibilityWarningData
+    ? (Number(feasibilityWarningData.requested?.Easy?.count) || 0) +
+      (Number(feasibilityWarningData.requested?.Medium?.count) || 0) +
+      (Number(feasibilityWarningData.requested?.Hard?.count) || 0)
+    : 0;
+
+  $: proposedTotalCount = feasibilityWarningData
+    ? (Number(feasibilityWarningData.proposed?.Easy?.count) || 0) +
+      (Number(feasibilityWarningData.proposed?.Medium?.count) || 0) +
+      (Number(feasibilityWarningData.proposed?.Hard?.count) || 0)
+    : 0;
+
+  $: isTotalInsufficient =
+    feasibilityWarningData &&
+    proposedTotalCount < requestedTotalCount;
+
+  // Save Draft Success modal state
+  let showSaveDraftSuccessModal = false;
+
   // Question Pool Pagination State
   let availableCurrentPage = 1;
   let excludedCurrentPage = 1;
@@ -147,6 +183,7 @@
   let selectedChapters = [];
 
   let examTitle = "";
+  let isTitleUserEdited = false;
 
   // Question Count Options
   let questionCount = 40;
@@ -258,7 +295,7 @@
     !subjectOptions.some((s) => s.value === selectedSubject)
   ) {
     selectedSubject = subjectOptions[0].value;
-  }
+  } 
 
   // Fetch Exam Details in EDIT mode
   async function fetchExamDetails(code) {
@@ -296,34 +333,14 @@
 
       if (typeof examData.is_ai_selected === "boolean") {
         isAutoAllocation = examData.is_ai_selected;
-      } else if (typeof examData.ai_is_selected === "boolean") {
-        isAutoAllocation = examData.ai_is_selected;
+      } 
+
+      if (examData.medium_code) {
+        selectedMedium = String(examData.medium_code);
       }
 
-      // Find and set medium
-      const medCode = examData.medium;
-      if (medCode) {
-        const foundMedium = mediumOptions.find(
-          (m) =>
-            String(m.value) === String(medCode) ||
-            m.label?.toLowerCase() === String(medCode).toLowerCase(),
-        );
-        selectedMedium = foundMedium
-          ? String(foundMedium.value)
-          : String(medCode);
-      }
-
-      // Find and set subject
-      const subCode = examData.subject;
-      if (subCode) {
-        const foundSubject = allSubjects.find(
-          (s) =>
-            String(s.value) === String(subCode) ||
-            s.label?.toLowerCase() === String(subCode).toLowerCase(),
-        );
-        selectedSubject = foundSubject
-          ? String(foundSubject.value)
-          : String(subCode);
+      if (examData.subject_code) {
+        selectedSubject = String(examData.subject_code);
       }
 
       // Parse excluded question codes
@@ -406,6 +423,15 @@
         if (Array.isArray(chaptersData) && chaptersData.length > 0) {
           // Expand first chapter by default
           expandedChapters = new Set([chaptersData[0].code]);
+
+          // By default, keep all chapters selected (unless custom draft selections exist)
+          if (!isEditMode || selections.length === 0) {
+            selections = chaptersData.map((ch) => ({
+              code: ch.code,
+              name: ch.name,
+              type: "chapter",
+            }));
+          }
           updateSelectedChaptersFromSelections();
         } else {
           chaptersData = [];
@@ -544,12 +570,70 @@
   }
 
   function updateSelectedChaptersFromSelections() {
-    const chapterSelections = selections.filter((s) => s.type === "chapter");
-    selectedChapters = chapterSelections.map((s, idx) => ({
-      id: s.code,
-      code: s.code.startsWith("Ch") ? s.code : `Ch ${idx + 1}`,
-      name: s.name,
-    }));
+    if (!chaptersData || chaptersData.length === 0) {
+      selectedChapters = [];
+      return;
+    }
+
+    const items = [];
+
+    chaptersData.forEach((ch) => {
+      const isFullChapterSelected = selections.some(
+        (s) => s.code === ch.code && s.type === "chapter",
+      );
+
+      if (isFullChapterSelected) {
+        items.push({
+          id: ch.code,
+          code: ch.code,
+          name: ch.name,
+          displayText: `Ch. ${ch.name}`,
+          isFullChapter: true,
+        });
+      } else {
+        const topicCodes = new Set((ch.topics || []).map((t) => t.code));
+        const selectedTopicsCount = selections.filter(
+          (s) =>
+            (s.type === "topic" || s.type === "subtopic") &&
+            topicCodes.has(s.code),
+        ).length;
+
+        if (selectedTopicsCount > 0) {
+          items.push({
+            id: ch.code,
+            code: ch.code,
+            name: ch.name,
+            displayText: `Ch. ${ch.name} - ${selectedTopicsCount} topic${selectedTopicsCount > 1 ? "s" : ""}`,
+            isFullChapter: false,
+          });
+        }
+      }
+    });
+
+    selectedChapters = items;
+  }
+
+  $: areAllChaptersSelected =
+    chaptersData.length > 0 &&
+    chaptersData.length === selectedChapters.length &&
+    selectedChapters.every((c) => c.isFullChapter);
+
+  $: isAllModalChaptersSelected =
+    chaptersData.length > 0 &&
+    chaptersData.every((ch) =>
+      selections.some((s) => s.code === ch.code && s.type === "chapter"),
+    );
+
+  function toggleSelectAllModalChapters() {
+    if (isAllModalChaptersSelected) {
+      selections = [];
+    } else {
+      selections = chaptersData.map((ch) => ({
+        code: ch.code,
+        name: ch.name,
+        type: "chapter",
+      }));
+    }
   }
 
   function applyChapterSelections() {
@@ -557,8 +641,12 @@
     showChapterModal = false;
   }
 
-  function removeChapter(chapterId) {
-    selections = selections.filter((s) => s.code !== chapterId);
+  function removeChapter(chapterCode) {
+    const targetCh = chaptersData.find((c) => c.code === chapterCode);
+    const topicCodes = new Set((targetCh?.topics || []).map((t) => t.code));
+    selections = selections.filter(
+      (s) => s.code !== chapterCode && !topicCodes.has(s.code),
+    );
     updateSelectedChaptersFromSelections();
   }
 
@@ -732,6 +820,11 @@
 
   // Construct payload for API calls
   function buildChaptersTopicsPayload(selectionsArray) {
+    // If all chapters are selected, chapters_topics payload should be []
+    if (areAllChaptersSelected) {
+      return [];
+    }
+
     const chaptersMap = new Map();
     const topicsMap = new Map();
 
@@ -785,6 +878,11 @@
       no_of_sets: parseInt(setsCount),
       standard: selectedClass,
       chapters_topics: buildChaptersTopicsPayload(selections),
+      difficulty_distribution: {
+        Easy: Number(easyPercent),
+        Medium: Number(mediumPercent),
+        Hard: Number(hardPercent),
+      },
       ...(qtn_codes_to_exclude.length > 0 && { qtn_codes_to_exclude }),
       status: 1,
     };
@@ -793,7 +891,7 @@
       let response;
       if (activeExamCode) {
         response = await apiClient({
-          url: `/apis/exams/${activeExamCode}`,
+          url: `/apis/exams/v2/${activeExamCode}`,
           options: {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -802,7 +900,7 @@
         });
       } else {
         response = await apiClient({
-          url: "/apis/exams",
+          url: "/apis/exams/v2",
           options: {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -812,21 +910,95 @@
       }
 
       if (!response.ok) {
+        if (response.status === 409) {
+          throw new Error("An exam with this name already exists.");
+        }
+        if (response.status === 422) {
+          throw new Error("Unprocessable request. Please contact support. HTTP Status: 422.");
+        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           errorData.detail ||
+            errorData.message ||
             `Failed to save draft paper! status: ${response.status}`,
         );
       }
 
-      // Navigate to /questionPapers page after successful save
-      goto("/questionPapers");
+      const resDataRaw = await response.json().catch(() => ({}));
+      const resData = resDataRaw.data || resDataRaw;
+      if (resData?.code && !activeExamCode) {
+        activeExamCode = resData.code;
+      }
+
+      showSaveDraftSuccessModal = true;
     } catch (err) {
       console.error("Error saving draft:", err);
       saveDraftError = err.message || "Failed to save draft paper.";
     } finally {
       isSavingDraft = false;
     }
+  }
+
+  // Separate helper function to execute design feasibility check
+  async function checkDesignFeasibility() {
+    const feasibilityPayload = {
+      exam_name: examTitle.trim() || `Exam Paper - Class ${selectedClass}`,
+      exam_type_code: "1000",
+      subject_code: selectedSubject,
+      medium_code: selectedMedium,
+      exam_mode: "online",
+      total_time: Math.round(questionCount * 2),
+      total_questions: parseInt(questionCount),
+      standard: selectedClass,
+      qtn_codes_to_exclude: qtn_codes_to_exclude || [],
+      chapters_topics: buildChaptersTopicsPayload(selections),
+      difficulty_distribution: {
+        Easy: Number(easyPercent),
+        Medium: Number(mediumPercent),
+        Hard: Number(hardPercent),
+      },
+    };
+
+    const feasibilityRes = await apiClient({
+      url: "/apis/exams/v2/designs/feasibility",
+      options: {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(feasibilityPayload),
+      },
+    });
+
+    if (!feasibilityRes.ok) {
+      if (feasibilityRes.status === 409) {
+        throw new Error("An exam with this name already exists.");
+      }
+      if (feasibilityRes.status === 422) {
+        throw new Error("Unprocessable entity. Please contact support");
+      }
+      const errorData = await feasibilityRes.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail ||
+          errorData.message ||
+          `Feasibility check failed with status: ${feasibilityRes.status}`,
+      );
+    }
+
+    const feasibilityData = await feasibilityRes.json();
+    return feasibilityData;
+  }
+
+  function applyProposedDistribution() {
+    if (feasibilityWarningData?.proposed) {
+      const p = feasibilityWarningData.proposed;
+      if (p.Easy && typeof p.Easy.pct === "number") {
+        easyPercent = Math.round(p.Easy.pct);
+      }
+      if (p.Medium && typeof p.Medium.pct === "number") {
+        mediumPercent = Math.round(p.Medium.pct);
+      }
+      difficultyPreset = "custom";
+    }
+    showFeasibilityModal = false;
   }
 
   // Generate Paper action handler (status = 2)
@@ -860,6 +1032,32 @@
     isGeneratingPaper = true;
     saveDraftError = "";
 
+    // 1. Run separate feasibility check
+    try {
+      const feasibilityData = await checkDesignFeasibility();
+
+      // Check name availability
+      if (feasibilityData?.name_available === false) {
+        saveDraftError = "An exam with this name already exists.";
+        isGeneratingPaper = false;
+        return;
+      }
+
+      // Check feasible and exact_match (only proceed to generate paper if feasible is true and exact_match is true)
+      if (feasibilityData?.feasible === false || !feasibilityData?.exact_match) {
+        feasibilityWarningData = feasibilityData;
+        showFeasibilityModal = true;
+        isGeneratingPaper = false;
+        return;
+      }
+    } catch (err) {
+      console.error("Feasibility check error:", err);
+      saveDraftError = err.message || "Failed feasibility check.";
+      isGeneratingPaper = false;
+      return;
+    }
+
+    // 3. Proceed with paper generation if feasible
     const payload = {
       is_ai_selected: isAutoAllocation,
       exam_name: examTitle.trim() || `Exam Paper - Class ${selectedClass}`,
@@ -873,6 +1071,11 @@
       no_of_sets: parseInt(setsCount),
       standard: selectedClass,
       chapters_topics: buildChaptersTopicsPayload(selections),
+      difficulty_distribution: {
+        Easy: Number(easyPercent),
+        Medium: Number(mediumPercent),
+        Hard: Number(hardPercent),
+      },
       ...(qtn_codes_to_exclude.length > 0 && { qtn_codes_to_exclude }),
       status: 2,
     };
@@ -881,7 +1084,7 @@
       let response;
       if (activeExamCode) {
         response = await apiClient({
-          url: `/apis/exams/${activeExamCode}`,
+          url: `/apis/exams/v2/${activeExamCode}`,
           options: {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -890,7 +1093,7 @@
         });
       } else {
         response = await apiClient({
-          url: "/apis/exams",
+          url: "/apis/exams/v2",
           options: {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -900,9 +1103,16 @@
       }
 
       if (!response.ok) {
+        if (response.status === 409) {
+          throw new Error("An exam with this name already exists.");
+        }
+        if (response.status === 422) {
+          throw new Error("Unprocessable entity. Please contact support");
+        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
           errorData.detail ||
+            errorData.message ||
             `Failed to generate paper! status: ${response.status}`,
         );
       }
@@ -965,19 +1175,53 @@
   $: currentMediumName =
     mediumOptions.find((m) => m.value === selectedMedium)?.label || "English";
 
-  // Auto-generate exam title dynamically if user has not customized it or when in add mode
-  $: if (!isEditMode && selectedClass) {
-    const chapPart =
-      selectedChapters.length > 0
-        ? ` · Ch ${selectedChapters.map((c) => (c.code || "").replace("Ch ", "")).join("–")}`
-        : "";
-    examTitle = `${currentSubjectName} · Class ${selectedClass}${chapPart} · Unit Test 1`;
+  // Helper function to format default dynamic exam title
+  function generateDefaultExamTitle(subjectName, className) {
+    if (!className) return "";
+    return `${subjectName} · Class ${className} · Unit Test 1`;
   }
 
-  // Calculate available question count
-  $: availableQuestionCount = chaptersData.reduce((acc, ch) => {
-    return acc + (ch.question_count || ch.qn_count || 0);
-  }, 0);
+  // Auto-generate exam title dynamically when in add mode (unless user has typed custom title)
+  $: if (!isEditMode && selectedClass && !isTitleUserEdited) {
+    examTitle = generateDefaultExamTitle(currentSubjectName, selectedClass);
+  }
+
+  // Calculate available question count based on selected chapters/topics minus excluded questions
+  $: availableQuestionCount = (() => {
+    if (!chaptersData || chaptersData.length === 0 || !selections || selections.length === 0) {
+      return 0;
+    }
+
+    const selectedCodes = new Set(selections.map((s) => s.code));
+    let total = 0;
+
+    for (const ch of chaptersData) {
+      if (selectedCodes.has(ch.code)) {
+        total += Number(ch.question_count || ch.qn_count || 0);
+        continue;
+      }
+
+      if (Array.isArray(ch.topics)) {
+        for (const t of ch.topics) {
+          if (selectedCodes.has(t.code)) {
+            total += Number(t.question_count || t.qn_count || t.count || 0);
+            continue;
+          }
+
+          if (Array.isArray(t.subtopics)) {
+            for (const st of t.subtopics) {
+              if (selectedCodes.has(st.code)) {
+                total += Number(st.question_count || st.qn_count || st.count || 0);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const excludedCount = Array.isArray(qtn_codes_to_exclude) ? qtn_codes_to_exclude.length : 0;
+    return Math.max(0, total - excludedCount);
+  })();
 
   // Step state driven by URL search params or isPaperGenerated flag
   $: stepFromUrl = Number($page.url.searchParams.get("step")) || 1;
@@ -996,6 +1240,26 @@
       ? "Update your question paper syllabus, setup, and allocation settings"
       : "Create the paper in 3 steps - choose the syllabus, set up the paper, and pick how many sets you need";
   }
+
+  $: requiredTotalQuestions = (Number(setsCount) || 1) * (Number(questionCount) || 0);
+
+  // Derived state: Show pool error only after syllabus finishes loading and selections exist
+  $: hasQuestionPoolExceededError = Boolean(
+    !chaptersLoading &&
+      chaptersData?.length > 0 &&
+      selections?.length > 0 &&
+      requiredTotalQuestions > availableQuestionCount,
+  );
+
+  // Form validity check for disabling Generate Paper button
+  $: isFormValid = Boolean(
+    selectedSubject &&
+      selectedMedium &&
+      selectedClass &&
+      examTitle &&
+      examTitle.trim() &&
+      !hasQuestionPoolExceededError,
+  );
 
   $: pageTitle = getPageHeaderTitle(currentStep, isEditMode);
   $: pageSubtitle = getPageHeaderSubtitle(currentStep, isEditMode);
@@ -1050,964 +1314,168 @@
     <div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-8 items-start">
       <!-- LEFT FORM COLUMN -->
       <div class="flex-1 w-full space-y-6">
-        <!-- STEP 1: What are you testing? -->
-        <div
-          class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 transition-all"
-        >
-          <!-- Step Header -->
-          <div class="flex items-center gap-3 mb-6">
-            <span
-              class="w-8 h-8 rounded-full bg-primary/20 text-slate-700 font-bold text-sm flex items-center justify-center"
-            >
-              1
-            </span>
-            <h2 class="text-lg font-bold text-slate-900 tracking-tight">
-              Exam syllabus
-            </h2>
-          </div>
-
-          <div class="space-y-6">
-            <!-- Full-width Notifications for Mediums/Subjects API failure -->
-            {#if classSubjectError.mediums}
-              <InlineNotification
-                kind="error"
-                title="Failed to load mediums"
-                subtitle={classSubjectError.mediums}
-                action={{
-                  text: "Retry",
-                  handler: fetchMediums,
-                }}
-                hideCloseButton={true}
-              />
-            {/if}
-
-            {#if classSubjectError.subjects}
-              <InlineNotification
-                kind="error"
-                title="Failed to load subjects"
-                subtitle={classSubjectError.subjects}
-                action={{
-                  text: "Retry",
-                  handler: fetchSubjects,
-                }}
-                hideCloseButton={true}
-              />
-            {/if}
-
-            <!-- Class, Medium & Subject Row -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
-                >
-                  CLASS
-                </label>
-                <Dropdown
-                  options={classOptions}
-                  bind:value={selectedClass}
-                  placeholder="Select Class"
-                />
-              </div>
-
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
-                >
-                  MEDIUM
-                </label>
-                <Dropdown
-                  options={mediumOptions}
-                  bind:value={selectedMedium}
-                  disabled={classSubjectLoading.mediums}
-                  placeholder={classSubjectLoading.mediums
-                    ? "Loading..."
-                    : classSubjectError.mediums
-                      ? "Error loading mediums"
-                      : "Select Medium"}
-                />
-              </div>
-
-              <div>
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
-                >
-                  SUBJECT
-                </label>
-                <Dropdown
-                  options={subjectOptions}
-                  bind:value={selectedSubject}
-                  disabled={classSubjectLoading.subjects ||
-                    subjectOptions.length === 0}
-                  placeholder={classSubjectLoading.subjects
-                    ? "Loading..."
-                    : classSubjectError.subjects
-                      ? "Error loading subjects"
-                      : "Select Subject"}
-                />
-              </div>
-            </div>
-
-            <!-- Chapters Container -->
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <label
-                  class="block text-xs font-bold text-slate-500 uppercase tracking-wider"
-                >
-                  EXAM SYLLABUS
-                </label>
-                <span
-                  class="text-xs text-slate-500 font-medium flex items-center"
-                >
-                  {#if chaptersLoading}
-                    Loading syllabus chapters...
-                  {:else if chaptersError}
-                    <span
-                      class="text-red-600 font-semibold flex items-center gap-1.5"
-                    >
-                      Failed to load chapters
-                    </span>
-                  {:else if !selectedClass || !selectedMedium || !selectedSubject}
-                    Select Class, Medium & Subject to load chapters
-                  {:else}
-                    <span>
-                      {selectedChapters.length} chapters selected · {availableQuestionCount}
-                      questions available
-                      {#if qtn_codes_to_exclude.length > 0}
-                        · <span class="text-red-600 font-semibold"
-                          >{qtn_codes_to_exclude.length} excluded</span
-                        >
-                      {/if}
-                    </span>
-
-                    <button
-                      type="button"
-                      on:click={openQuestionPoolModal}
-                      class="font-bold text-blue-700 hover:underline cursor-pointer ml-2 bg-transparent border-0 p-0 text-xs inline-block"
-                    >
-                      Review question pool
-                    </button>
-                  {/if}
-                </span>
-              </div>
-
-              {#if chaptersError}
-                <div class="mb-3">
-                  <InlineNotification
-                    kind="error"
-                    title="Failed to load syllabus chapters"
-                    subtitle={chaptersError}
-                    action={{ text: "Retry", handler: fetchChaptersTopics }}
-                    hideCloseButton={true}
-                  />
-                </div>
-              {/if}
-
-              <div
-                class="bg-blue-100 border border-gray-200 rounded-xl p-4 sm:p-5"
-              >
-                <div class="flex flex-wrap items-center gap-2 mb-3">
-                  {#if selectedChapters.length > 0}
-                    {#each selectedChapters as chapter}
-                      <span
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white text-slate-700 border border-slate-200 shadow-xs"
-                      >
-                        {chapter.code} · {chapter.name}
-                        <button
-                          type="button"
-                          on:click={() => removeChapter(chapter.id)}
-                          class="text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                          aria-label="Remove chapter"
-                        >
-                          <X class="w-3.5 h-3.5" />
-                        </button>
-                      </span>
-                    {/each}
-                  {:else}
-                    <span class="text-xs text-slate-400 italic"
-                      >No chapters selected yet</span
-                    >
-                  {/if}
-                </div>
-
-                <div class="flex flex-wrap items-center gap-2">
-                  <!-- Add or Edit Chapters Button -->
-                  <Button
-                    btnType="secondary"
-                    customClass="!rounded-full !px-4 !py-1.5 !text-xs text-blue-700 bg-white border border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition shadow-2xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!selectedClass ||
-                      !selectedMedium ||
-                      !selectedSubject ||
-                      chaptersLoading}
-                    on:click={() => (showChapterModal = true)}
-                  >
-                    <Plus class="w-3.5 h-3.5 mr-1" />
-                    Add or edit chapters
-                  </Button>
-
-                  <!-- {#if !isAutoAllocation}
-                    <Button
-                      btnType="secondary"
-                      customClass="!rounded-full !px-4 !py-1.5 !text-xs text-amber-800  border transition shadow-2xs font-semibold"
-                      on:click={() => (showManualAllocationModal = true)}
-                    >
-                      <SlidersHorizontal class="w-3.5 h-3.5 mr-1" />
-                      Configure manual allocation ({selections.reduce(
-                        (sum, s) => sum + (Number(s.qn_count) || 0),
-                        0,
-                      )} / {questionCount})
-                    </Button>
-                  {/if} -->
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- STEP 1: Choose Syllabus -->
+        <SyllabusSelectionStep
+          {classOptions}
+          bind:selectedClass
+          {mediumOptions}
+          bind:selectedMedium
+          {subjectOptions}
+          bind:selectedSubject
+          {classSubjectLoading}
+          {classSubjectError}
+          {chaptersLoading}
+          {chaptersError}
+          {selectedChapters}
+          {areAllChaptersSelected}
+          {availableQuestionCount}
+          {qtn_codes_to_exclude}
+          retryMediumsHandler={fetchMediums}
+          retrySubjectsHandler={fetchSubjects}
+          retryChaptersHandler={fetchChaptersTopics}
+          on:openQuestionPoolModal={openQuestionPoolModal}
+          on:openChapterModal={() => (showChapterModal = true)}
+          on:removeChapter={(e) => removeChapter(e.detail)}
+        />
 
         <!-- STEP 2: Set up the paper -->
-        <div
-          class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 transition-all space-y-6"
-        >
-          <!-- Step Header -->
-          <div class="flex items-center gap-3">
-            <span
-              class="w-8 h-8 rounded-full bg-primary/20 text-slate-700 font-bold text-sm flex items-center justify-center"
-            >
-              2
-            </span>
-            <h2 class="text-lg font-bold text-slate-900 tracking-tight">
-              Set up the paper
-            </h2>
-          </div>
-
-          <!-- Exam Title -->
-          <div>
-            <div class="flex items-center gap-2 mb-2">
-              <label class="block text-xs font-bold text-slate-500 uppercase">
-                EXAM TITLE
-              </label>
-              <span class="text-xs text-slate-400 font-normal italic">
-                filled in for you — edit if you like
-              </span>
-            </div>
-            <Input
-              type="text"
-              bind:value={examTitle}
-              placeholder="Exam Title"
-            />
-          </div>
-
-          <!-- Number of Questions -->
-          <div>
-            <label
-              class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"
-            >
-              NUMBER OF QUESTIONS
-            </label>
-            <div class="flex flex-wrap items-center gap-2.5">
-              {#each questionCountOptions as count}
-                <Button
-                  btnType={!isCustomQuestionCount && questionCount === count
-                    ? "primary"
-                    : "secondary"}
-                  customClass="!px-5 !py-2.5 rounded-xl text-sm font-bold min-w-[54px]"
-                  on:click={() => selectPresetQuestionCount(count)}
-                >
-                  {count}
-                </Button>
-              {/each}
-
-              <Button
-                btnType={isCustomQuestionCount ? "primary" : "secondary"}
-                customClass="!px-5 !py-2.5 rounded-xl text-sm font-semibold capitalize"
-                on:click={selectCustomQuestionCount}
-              >
-                Custom...
-              </Button>
-
-              {#if isCustomQuestionCount}
-                <div class="w-32">
-                  <Input
-                    type="number"
-                    min="1"
-                    max="500"
-                    bind:value={questionCount}
-                    placeholder="Questions"
-                  />
-                </div>
-              {/if}
-            </div>
-            <p class="text-xs text-slate-500 mt-2 font-medium">
-              {questionCount || 0} questions · {marksPerQuestion} mark each = {(questionCount ||
-                0) * marksPerQuestion} marks · about {Math.round(
-                (questionCount || 0) * 2,
-              )} minutes
-            </p>
-          </div>
-
-          <div class="border-t border-slate-100 my-4"></div>
-
-          <!-- Question Allocation -->
-          <div>
-            <label
-              class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"
-            >
-              QUESTION ALLOCATION
-            </label>
-
-            <div class="flex flex-wrap items-center gap-2.5 mb-2.5">
-              <Button
-                btnType={isAutoAllocation ? "primary" : "secondary"}
-                customClass="!px-5 !py-2.5 rounded-xl text-sm font-semibold"
-                on:click={() => (isAutoAllocation = true)}
-              >
-                Auto (recommended)
-              </Button>
-
-              <Button
-                btnType={!isAutoAllocation ? "primary" : "secondary"}
-                customClass="!px-5 !py-2.5 rounded-xl text-sm font-semibold"
-                on:click={() => {
-                  isAutoAllocation = false;
-                  showManualAllocationModal = true;
-                }}
-              >
-                Manual
-              </Button>
-            </div>
-
-            <p class="text-xs text-slate-500 font-medium leading-relaxed">
-              {#if isAutoAllocation}
-                Questions are spread across your selected chapters and/or topics
-                automatically.
-              {:else}
-                Manually set question count from each chapter/topic.
-                <button
-                  type="button"
-                  on:click={() => (showManualAllocationModal = true)}
-                  class="font-bold text-primary hover:underline cursor-pointer ml-1 bg-transparent border-0 p-0 text-xs inline-block"
-                >
-                  Configure allocation
-                </button>
-              {/if}
-            </p>
-          </div>
-
-          <div class="border-t border-slate-100 my-4"></div>
-
-          <!-- Difficulty -->
-          <div>
-            <label
-              class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"
-            >
-              DIFFICULTY
-            </label>
-
-            <!-- Difficulty Preset Pills -->
-            <div class="flex flex-wrap items-center gap-2.5 mb-4">
-              {#each ["balanced", "easier", "harder", "custom"] as preset}
-                <Button
-                  btnType={difficultyPreset === preset
-                    ? "primary"
-                    : "secondary"}
-                  customClass="!px-5 !py-2 rounded-full text-sm font-semibold capitalize"
-                  on:click={() => selectDifficultyPreset(preset)}
-                >
-                  {preset === "custom" ? "Custom..." : preset}
-                </Button>
-              {/each}
-            </div>
-
-            <!-- Difficulty Distribution Bar -->
-            <div class="space-y-2">
-              <div
-                class="h-3 w-full rounded-full overflow-hidden flex bg-slate-100"
-              >
-                <div
-                  style="width: {easyPercent}%"
-                  class="bg-[#86efac] transition-all duration-300"
-                  title="Easy: {easyPercent}%"
-                ></div>
-                <div
-                  style="width: {mediumPercent}%"
-                  class="bg-[#fde047] transition-all duration-300"
-                  title="Medium: {mediumPercent}%"
-                ></div>
-                <div
-                  style="width: {hardPercent}%"
-                  class="bg-[#fca5a5] transition-all duration-300"
-                  title="Hard: {hardPercent}%"
-                ></div>
-              </div>
-
-              <!-- Legend Dots -->
-              <div
-                class="flex items-center gap-5 text-xs font-semibold text-slate-600"
-              >
-                <span class="inline-flex items-center gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#86efac]"></span>
-                  Easy
-                  <span class="text-slate-900 font-bold">{easyPercent} %</span>
-                </span>
-                <span class="inline-flex items-center gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#fde047]"></span>
-                  Medium
-                  <span class="text-slate-900 font-bold">{mediumPercent} %</span
-                  >
-                </span>
-                <span class="inline-flex items-center gap-1.5">
-                  <span class="w-2.5 h-2.5 rounded-full bg-[#fca5a5]"></span>
-                  Hard
-                  <span class="text-slate-900 font-bold">{hardPercent} %</span>
-                </span>
-              </div>
-            </div>
-
-            <!-- Custom Sliders Box -->
-            {#if difficultyPreset === "custom"}
-              <div
-                class="mt-4 bg-[#fdfcf7] border border-[#f2eae0] rounded-xl p-5 space-y-4"
-              >
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <!-- Easy Slider -->
-                  <div>
-                    <div
-                      class="flex justify-between items-center text-xs font-bold text-slate-800 mb-1.5"
-                    >
-                      <span>Easy — {easyPercent}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={easyPercent}
-                      on:input={handleEasyChange}
-                      class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#223972]"
-                    />
-                  </div>
-
-                  <!-- Medium Slider -->
-                  <div>
-                    <div
-                      class="flex justify-between items-center text-xs font-bold text-slate-800 mb-1.5"
-                    >
-                      <span>Medium — {mediumPercent}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={mediumPercent}
-                      on:input={handleMediumChange}
-                      class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#223972]"
-                    />
-                  </div>
-                </div>
-
-                <p class="text-xs text-slate-400 font-medium italic pt-1">
-                  Hard fills in the rest automatically.
-                </p>
-              </div>
-            {/if}
-          </div>
-        </div>
+        <PaperSetupStep
+          bind:examTitle
+          bind:isTitleUserEdited
+          bind:questionCount
+          {questionCountOptions}
+          bind:isCustomQuestionCount
+          {marksPerQuestion}
+          bind:isAutoAllocation
+          {difficultyPreset}
+          {easyPercent}
+          {mediumPercent}
+          {hardPercent}
+          {handleEasyChange}
+          {handleMediumChange}
+          on:selectPresetQuestionCount={(e) => selectPresetQuestionCount(e.detail)}
+          on:selectCustomQuestionCount={selectCustomQuestionCount}
+          on:openManualAllocationModal={() => (showManualAllocationModal = true)}
+          on:selectDifficultyPreset={(e) => selectDifficultyPreset(e.detail)}
+        />
 
         <!-- STEP 3: How many papers? -->
-        <div
-          class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 transition-all space-y-6"
-        >
-          <!-- Step Header -->
-          <div class="flex items-center gap-3">
-            <span
-              class="w-8 h-8 rounded-full bg-primary/20 text-slate-700 font-bold text-sm flex items-center justify-center"
-            >
-              3
-            </span>
-            <h2 class="text-lg font-bold text-slate-900 tracking-tight">
-              How many papers?
-            </h2>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            <!-- SETS -->
-            <div>
-              <label
-                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"
-              >
-                SETS
-              </label>
-              <div class="flex flex-wrap items-center gap-2">
-                {#each setsOptions as setNum}
-                  <Button
-                    btnType={setsCount === setNum ? "primary" : "secondary"}
-                    customClass="!px-4 !py-2 rounded-xl text-sm font-bold min-w-[46px]"
-                    on:click={() => (setsCount = setNum)}
-                  >
-                    {setNum}
-                  </Button>
-                {/each}
-              </div>
-              <p class="text-xs text-slate-500 mt-2.5 leading-relaxed">
-                Each set has different questions — for different sections or
-                rows.
-              </p>
-            </div>
-
-            <!-- VERSIONS PER SET -->
-            <div>
-              <label
-                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3"
-              >
-                VERSIONS PER SET
-              </label>
-              <div class="flex flex-wrap items-center gap-2">
-                {#each versionsOptions as verNum}
-                  <Button
-                    btnType={versionsCount === verNum ? "primary" : "secondary"}
-                    customClass="!px-4 !py-2 rounded-xl text-sm font-bold min-w-[46px]"
-                    on:click={() => (versionsCount = verNum)}
-                  >
-                    {verNum}
-                  </Button>
-                {/each}
-              </div>
-              <p class="text-xs text-slate-500 mt-2.5 leading-relaxed">
-                Same questions, shuffled order — helps prevent copying.
-              </p>
-            </div>
-          </div>
-        </div>
+        <PaperQuantityStep
+          bind:setsCount
+          {setsOptions}
+          bind:versionsCount
+          {versionsOptions}
+        />
       </div>
 
       <!-- RIGHT STICKY PREVIEW COLUMN -->
-      <div class="w-full lg:w-80 xl:w-96 lg:sticky lg:top-8 space-y-4">
-        <!-- Primary Summary Card -->
-        <div
-          class="bg-white text-dark rounded-2xl p-6 shadow-sm border border-gray-200"
-        >
-          <div
-            class="text-[10px] font-bold tracking-widest text-primary uppercase mb-2"
-          >
-            YOUR PAPER
-          </div>
-
-          <h3
-            class={`text-lg  leading-snug  mb-6 ${examTitle ? "font-bold text-dark" : "font-bold text-subtext/80"}`}
-          >
-            {examTitle || "Untitled Paper"}
-          </h3>
-
-          <!-- Key Specs List -->
-          <div class="space-y-3.5 text-xs">
-            <div class="flex justify-between items-center">
-              <span class="text-primary">Questions</span>
-              <span class="font-semibold text-dark"
-                >{questionCount} MCQs · {questionCount * marksPerQuestion} marks</span
-              >
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-primary">Allocation</span>
-              <div class="flex items-center gap-1.5 font-semibold text-dark">
-                <span>{isAutoAllocation ? "Auto" : "Manual"}</span>
-                {#if !isAutoAllocation}
-                  <button
-                    type="button"
-                    on:click={() => (showManualAllocationModal = true)}
-                    class="text-[11px] font-bold text-blue-700 hover:underline cursor-pointer bg-transparent border-0 p-0 ml-1"
-                  >
-                    (Configure)
-                  </button>
-                {/if}
-              </div>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-primary">Time</span>
-              <span class="font-semibold text-dark"
-                >~{Math.round(questionCount * 2)} min</span
-              >
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-primary">Difficulty</span>
-              <span class="font-semibold text-dark">
-                {difficultyPreset === "custom"
-                  ? "Custom"
-                  : difficultyPreset.charAt(0).toUpperCase() +
-                    difficultyPreset.slice(1)} · {easyPercent}/{mediumPercent}/{hardPercent}
-              </span>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-primary">Papers to print</span>
-              <span class="font-semibold text-dark"
-                >{setsCount} sets × {versionsCount} version{versionsCount > 1
-                  ? "s"
-                  : ""}</span
-              >
-            </div>
-          </div>
-
-          <!-- Generate Action Button -->
-          <Button
-            btnType="primary"
-            disabled={isGeneratingPaper || isSavingDraft}
-            customClass="w-full mt-6 py-3 px-4 font-bold rounded-xl shadow-xs text-sm group flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            on:click={handleGeneratePapers}
-          >
-            {#if isGeneratingPaper}
-              <Loader2 class="w-4 h-4 text-white animate-spin" />
-              <span>Generating Paper...</span>
-            {:else}
-              <span>Generate paper</span>
-              <ArrowRight
-                class="w-4 h-4 group-hover:translate-x-0.5 transition-transform"
-              />
-            {/if}
-          </Button>
-
-          <!-- Save / Update Draft Button -->
-          <Button
-            btnType="secondary"
-            disabled={isSavingDraft || isGeneratingPaper}
-            customClass="w-full mt-2.5 py-3 px-4 font-semibold rounded-xl text-sm border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            on:click={handleSaveDraft}
-          >
-            {#if isSavingDraft}
-              <Loader2 class="w-4 h-4 text-slate-600 animate-spin" />
-              <span>{isEditMode ? "Updating Draft..." : "Saving Draft..."}</span
-              >
-            {:else}
-              <span>{isEditMode ? "Update Draft" : "Save as Draft"}</span>
-            {/if}
-          </Button>
-
-          {#if saveDraftError}
-            <p class="text-xs text-red-600 font-medium text-center mt-2.5">
-              {saveDraftError}
-            </p>
-          {/if}
-
-          <!-- Subtext -->
-        </div>
-
-        <!-- Secondary Question Pool Card -->
-        <!-- <div
-          on:click={openQuestionPoolModal}
-          class="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs text-xs text-slate-600 hover:border-slate-300 transition cursor-pointer"
-        >
-          <p class="leading-relaxed font-medium">
-            <span class="font-bold text-blue-700 hover:underline"
-              >Review question pool</span
-            >
-            — see the {availableQuestionCount} questions that match your syllabus
-            (optional)
-          </p>
-        </div> -->
-      </div>
+      <PaperSummarySidebar
+        {examTitle}
+        {questionCount}
+        {marksPerQuestion}
+        {isAutoAllocation}
+        {difficultyPreset}
+        {easyPercent}
+        {mediumPercent}
+        {hardPercent}
+        {setsCount}
+        {versionsCount}
+        {hasQuestionPoolExceededError}
+        {requiredTotalQuestions}
+        {availableQuestionCount}
+        {isGeneratingPaper}
+        {isSavingDraft}
+        {isFormValid}
+        {isEditMode}
+        {saveDraftError}
+        on:configureManualAllocation={() => (showManualAllocationModal = true)}
+        on:generate={handleGeneratePapers}
+        on:saveDraft={handleSaveDraft}
+      />
     </div>
   {/if}
 </div>
 
 <!-- CHAPTERS & TOPICS SELECTION POPUP MODAL -->
-{#if showChapterModal}
-  <PortalModal>
-    <div
-      class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150"
-    >
-      <!-- Modal Header -->
-      <div
-        class="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50"
-      >
-        <div>
-          <h3 class="text-lg font-bold text-slate-900">
-            Select Chapters & Topics
-          </h3>
-          <p class="text-xs text-slate-500 mt-0.5">
-            Choose chapters and topics for {currentSubjectName} (Class {selectedClass}
-            - {currentMediumName})
-          </p>
-        </div>
-        <button
-          type="button"
-          on:click={() => (showChapterModal = false)}
-          class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition cursor-pointer"
-        >
-          <X class="w-5 h-5" />
-        </button>
-      </div>
-
-      <!-- Modal Body -->
-      <div class="p-6 overflow-y-auto flex-1">
-        {#if chaptersLoading}
-          <div
-            class="flex flex-col items-center justify-center py-12 space-y-3"
-          >
-            <Loader2 class="w-8 h-8 text-primary animate-spin" />
-            <p class="text-sm font-medium text-slate-600">
-              Loading syllabus chapters & topics...
-            </p>
-          </div>
-        {:else if chaptersError}
-          <div
-            class="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-200"
-          >
-            {chaptersError}
-          </div>
-        {:else if !chaptersData || chaptersData.length === 0}
-          <div class="text-center py-12 text-slate-500 text-sm">
-            No content available for Class {selectedClass}, {currentSubjectName}
-            ({currentMediumName}).
-          </div>
-        {:else}
-          <ContentHierarchyTable
-            {chaptersData}
-            {selections}
-            {expandedChapters}
-            {expandedTopics}
-            on:toggleChapter={(e) => handleToggleChapter(e.detail)}
-            on:toggleTopic={(e) => handleToggleTopic(e.detail)}
-            on:checkboxChange={(e) =>
-              handleCheckboxChange(
-                e.detail.event,
-                e.detail.item,
-                e.detail.type,
-              )}
-          />
-        {/if}
-      </div>
-
-      <!-- Modal Footer -->
-      <div
-        class="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between"
-      >
-        <span class="text-xs font-semibold text-slate-600">
-          {selections.filter((s) => s.type === "chapter").length} chapters, {selections.filter(
-            (s) => s.type === "topic",
-          ).length} topics selected
-        </span>
-        <Button
-          btnType="primary"
-          customClass="!px-6 !py-2.5 rounded-xl font-bold text-xs"
-          on:click={applyChapterSelections}
-        >
-          Apply Selection
-        </Button>
-      </div>
-    </div>
-  </PortalModal>
-{/if}
+<ChapterSelectionModal
+  bind:open={showChapterModal}
+  subjectName={currentSubjectName}
+  {selectedClass}
+  mediumName={currentMediumName}
+  loading={chaptersLoading}
+  error={chaptersError}
+  {chaptersData}
+  {selections}
+  {expandedChapters}
+  {expandedTopics}
+  {isAllModalChaptersSelected}
+  on:close={() => (showChapterModal = false)}
+  on:toggleChapter={(e) => handleToggleChapter(e.detail)}
+  on:toggleTopic={(e) => handleToggleTopic(e.detail)}
+  on:checkboxChange={(e) =>
+    handleCheckboxChange(e.detail.event, e.detail.item, e.detail.type)}
+  on:toggleSelectAll={toggleSelectAllModalChapters}
+  on:apply={applyChapterSelections}
+/>
 
 <!-- QUESTION POOL REVIEW MODAL -->
-{#if showQuestionPoolModal}
-  <PortalModal>
-    <div
-      class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150"
-    >
-      <!-- Modal Header -->
-      <div
-        class="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50"
-      >
-        <div>
-          <h3 class="text-lg font-bold text-slate-900">Review Question Pool</h3>
-          <p class="text-xs text-slate-500 mt-0.5">
-            Syllabus question pool for {currentSubjectName} (Class {selectedClass}
-            - {currentMediumName})
-          </p>
-        </div>
-        <button
-          type="button"
-          on:click={() => (showQuestionPoolModal = false)}
-          class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition cursor-pointer"
-        >
-          <X class="w-5 h-5" />
-        </button>
-      </div>
-
-      <!-- Modal Body with Tabs -->
-      <div class="p-6 overflow-y-auto flex-1">
-        {#if questionPoolLoading}
-          <div
-            class="flex flex-col items-center justify-center py-16 space-y-3"
-          >
-            <Loader2 class="w-8 h-8 text-primary animate-spin" />
-            <p class="text-sm font-medium text-slate-600">
-              Loading questions from selected chapters...
-            </p>
-          </div>
-        {:else if questionPoolError}
-          <div class="py-6">
-            <InlineNotification
-              kind="error"
-              title="Failed to load question pool"
-              subtitle={questionPoolError}
-              action={{ text: "Retry", handler: loadQuestionPool }}
-              hideCloseButton={true}
-            />
-          </div>
-        {:else}
-          <Tabs bind:active={poolActiveTab}>
-            <div class="border-b border-slate-200 bg-white">
-              <nav class="flex space-x-0">
-                <Tab
-                  name="available"
-                  title={`Available Questions (${availableQuestions.length})`}
-                />
-                <Tab
-                  name="excluded"
-                  title={`Excluded Questions (${qtn_codes_to_exclude.length})`}
-                />
-              </nav>
-            </div>
-
-            <TabPanel name="available">
-              <DataTable
-                tableHeadersDisplay={poolTableHeaders}
-                tableData={paginatedAvailableQuestions}
-                showPagination={false}
-                serverSidePagination={true}
-                apiCurrentPage={availableCurrentPage}
-                apiTotalItems={availableQuestions.length}
-                apiPageSize={poolItemsPerPage}
-                actionConfigObject={availableActionConfig}
-                customRenderers={questionCustomRenderers}
-                notFoundMessage="No available questions remaining in pool."
-                on:tableActionClick={handleQuestionTableAction}
-              />
-
-              {#if availableQuestions.length > poolItemsPerPage}
-                <Pagination
-                  currentPage={availableCurrentPage}
-                  totalPages={availableTotalPages}
-                  on:pageChange={(e) => (availableCurrentPage = e.detail)}
-                />
-              {/if}
-            </TabPanel>
-
-            <TabPanel name="excluded">
-              <div class="space-y-4">
-                {#if excludedQuestionsList.length > 0}
-                  <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs text-slate-500 font-medium">
-                      {excludedQuestionsList.length} question(s) excluded
-                    </span>
-                    <Button
-                      btnType="secondary"
-                      customClass="!px-3 !py-1.5 !text-xs rounded-lg"
-                      on:click={restoreAllQuestions}
-                    >
-                      Restore All
-                    </Button>
-                  </div>
-                {/if}
-
-                <DataTable
-                  tableHeadersDisplay={poolTableHeaders}
-                  tableData={paginatedExcludedQuestions}
-                  showPagination={false}
-                  serverSidePagination={true}
-                  apiCurrentPage={excludedCurrentPage}
-                  apiTotalItems={excludedQuestionsList.length}
-                  apiPageSize={poolItemsPerPage}
-                  actionConfigObject={excludedActionConfig}
-                  customRenderers={questionCustomRenderers}
-                  notFoundMessage="No questions excluded yet."
-                  on:tableActionClick={handleQuestionTableAction}
-                />
-
-                {#if excludedQuestionsList.length > poolItemsPerPage}
-                  <Pagination
-                    currentPage={excludedCurrentPage}
-                    totalPages={excludedTotalPages}
-                    on:pageChange={(e) => (excludedCurrentPage = e.detail)}
-                  />
-                {/if}
-              </div>
-            </TabPanel>
-          </Tabs>
-        {/if}
-      </div>
-
-      <!-- Modal Footer -->
-      <div
-        class="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between"
-      >
-        <span class="text-xs font-semibold text-slate-600">
-          {availableQuestions.length} Available · {qtn_codes_to_exclude.length}
-          Excluded
-        </span>
-        <Button
-          btnType="primary"
-          customClass="!px-6 !py-2.5 rounded-xl font-bold text-xs"
-          on:click={() => (showQuestionPoolModal = false)}
-        >
-          Done
-        </Button>
-      </div>
-    </div>
-  </PortalModal>
-{/if}
+<QuestionPoolModal
+  bind:open={showQuestionPoolModal}
+  subjectName={currentSubjectName}
+  {selectedClass}
+  mediumName={currentMediumName}
+  {questionPoolLoading}
+  {questionPoolError}
+  bind:poolActiveTab
+  {availableQuestions}
+  {qtn_codes_to_exclude}
+  {excludedQuestionsList}
+  {paginatedAvailableQuestions}
+  {paginatedExcludedQuestions}
+  {availableCurrentPage}
+  {availableTotalPages}
+  {excludedCurrentPage}
+  {excludedTotalPages}
+  {poolItemsPerPage}
+  {poolTableHeaders}
+  {availableActionConfig}
+  {excludedActionConfig}
+  {questionCustomRenderers}
+  retryHandler={loadQuestionPool}
+  on:close={() => (showQuestionPoolModal = false)}
+  on:restoreAll={restoreAllQuestions}
+  on:tableActionClick={(e) => handleQuestionTableAction(e.detail)}
+  on:availablePageChange={(e) => (availableCurrentPage = e.detail)}
+  on:excludedPageChange={(e) => (excludedCurrentPage = e.detail)}
+/>
 
 <!-- MANUAL QUESTION ALLOCATION POPUP MODAL -->
-{#if showManualAllocationModal}
-  <PortalModal>
-    <div
-      class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150"
-    >
-      <!-- Modal Header -->
-      <div
-        class="p-5 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50"
-      >
-        <div>
-          <h3 class="text-lg font-bold text-slate-900">
-            Manual Question Allocation
-          </h3>
-          <p class="text-xs text-slate-500 mt-0.5">
-            Specify question allocation across selected chapters and topics for {currentSubjectName}
-            (Class {selectedClass} - {currentMediumName})
-          </p>
-        </div>
-        <button
-          type="button"
-          on:click={() => (showManualAllocationModal = false)}
-          class="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition cursor-pointer"
-        >
-          <X class="w-5 h-5" />
-        </button>
-      </div>
+<ManualAllocationModal
+  bind:open={showManualAllocationModal}
+  subjectName={currentSubjectName}
+  {selectedClass}
+  mediumName={currentMediumName}
+  bind:selections
+  {chaptersData}
+  questionCount={questionCount}
+  {isAutoAllocation}
+  {setsCount}
+  on:close={() => (showManualAllocationModal = false)}
+  on:remove={(e) => removeChapter(e.detail.code)}
+/>
 
-      <!-- Modal Body -->
-      <div class="p-6 overflow-y-auto flex-1">
-        <ManualAllocationTable
-          bind:selections
-          {chaptersData}
-          totalQuestions={questionCount}
-          {isAutoAllocation}
-          {setsCount}
-          on:remove={(e) => removeChapter(e.detail.code)}
-        />
-      </div>
+<!-- FEASIBILITY WARNING POPUP MODAL -->
+<FeasibilityWarningModal
+  bind:open={showFeasibilityModal}
+  warningData={feasibilityWarningData}
+  {isTotalInsufficient}
+  on:close={() => (showFeasibilityModal = false)}
+  on:proceed={applyProposedDistribution}
+/>
 
-      <!-- Modal Footer -->
-      <div
-        class="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between"
-      >
-        <span class="text-xs font-semibold text-slate-600">
-          Target: {questionCount * setsCount} questions ({setsCount} set{setsCount >
-          1
-            ? "s"
-            : ""} × {questionCount}) · Allocated: {selections.reduce(
-            (sum, s) => sum + (Number(s.qn_count) || 0),
-            0,
-          )} / {questionCount * setsCount}
-        </span>
-        <Button
-          btnType="primary"
-          customClass="!px-6 !py-2.5 rounded-xl font-bold text-xs"
-          on:click={() => (showManualAllocationModal = false)}
-        >
-          Done
-        </Button>
-      </div>
-    </div>
-  </PortalModal>
-{/if}
+<!-- SAVE DRAFT SUCCESS POPUP MODAL -->
+<DraftSavedModal
+  bind:open={showSaveDraftSuccessModal}
+  on:close={() => (showSaveDraftSuccessModal = false)}
+  on:leave={() => goto("/questionPapers")}
+/>
