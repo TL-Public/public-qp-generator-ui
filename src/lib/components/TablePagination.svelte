@@ -68,7 +68,7 @@
       <button
         type="button"
         class="px-3 py-2 text-sm font-medium rounded-md {currentPage === page
-          ? 'bg-blue-600 text-white'
+          ? 'bg-primary text-white'
           : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'} transition-colors duration-150"
         on:click={() => handleGoToPage(page)}
       >
@@ -115,7 +115,7 @@
       />
       <button
         type="submit"
-        class="px-3 py-1 text-sm font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-150"
+        class="px-3 py-1 text-sm font-medium bg-primary text-white rounded-md hover:bg-primary-hover focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors duration-150"
       >
         Go
       </button>

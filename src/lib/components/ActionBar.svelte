@@ -41,7 +41,7 @@
 
       <button
         on:click={onGenerate}
-        class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        class="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-hover"
       >
         Generate Papers
       </button>

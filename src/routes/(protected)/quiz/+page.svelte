@@ -41,8 +41,6 @@
     const unsubscribe = authStore.subscribe((auth) => {
       isAuthenticated = auth.isAuthenticated;
       userRole = auth.role;
-
-     
     });
 
     return unsubscribe;
@@ -162,7 +160,7 @@
         <!-- Step indicator -->
         <div class="">
           <div class="flex items-center text-sm text-gray-600">
-            <!-- <span class="font-medium text-blue-600">{getCurrentStepName()}</span
+            <!-- <span class="font-medium text-primary">{getCurrentStepName()}</span
             > -->
             {#if quizConfig.standard && quizConfig.subject_code}
               <span class="mx-2">•</span>

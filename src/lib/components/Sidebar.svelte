@@ -136,7 +136,7 @@
   <div class="px-6 py-4 border-b border-slate-700 mb-4">
     <a href="/home" class="flex items-center space-x-3">
       <div
-        class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center"
+        class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"
       >
         <BookOpen size={20} class="text-white" />
       </div>
@@ -154,7 +154,7 @@
           class="p-2 rounded-md font-medium text-primary text-sm 2xl:text-base {isItemActive(
             item,
           )
-            ? 'bg-indigo-600 text-white hover:none'
+            ? 'bg-primary text-white hover:none'
             : 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
         >
           <button
@@ -208,7 +208,7 @@
           item.link,
           route,
         )
-          ? 'bg-indigo-600 text-white hover:none'
+          ? 'bg-primary text-white hover:none'
           : 'text-slate-300 hover:bg-slate-700 hover:text-white'}"
       >
         <a href={item.link} class="flex items-center gap-3 w-full">
@@ -225,7 +225,7 @@
         <div
           class="h-10 w-10 rounded-full ring-2 ring-slate-600 bg-slate-700 flex items-center justify-center"
         >
-          <User size={20} class="text-indigo-400" />
+          <User size={20} class="text-white" />
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-sm text-white truncate">

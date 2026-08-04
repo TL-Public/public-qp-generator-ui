@@ -45,7 +45,7 @@
       
       <button
         type="button"
-        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+        class="px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary-hover"
         on:click={handleCreatePaper}
       >
         Create Question Paper

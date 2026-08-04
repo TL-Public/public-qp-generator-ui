@@ -34,7 +34,7 @@
         throw new Error("Login failed. Please check your credentials.");
       }
 
-         // Redirect on success
+      // Redirect on success
       goto("/home", { invalidateAll: true });
     } catch (err) {
       error = err.message;
@@ -52,7 +52,7 @@
     <!-- Logo/Header Section -->
     <div class="text-center mb-8">
       <div
-        class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-6 shadow-lg"
+        class="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-6 shadow-lg"
       >
         <svg
           class="w-8 h-8 text-white"
@@ -173,7 +173,7 @@
         <button
           type="submit"
           disabled={loading}
-          class="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02]"
+          class="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02]"
         >
           {#if loading}
             <svg
@@ -208,7 +208,7 @@
           Don't have an account?
           <a
             href="/register"
-            class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200"
+            class="font-medium text-primary hover:text-blue-500 transition-colors duration-200"
           >
             Register Now
           </a>

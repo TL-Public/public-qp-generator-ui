@@ -1,5 +1,11 @@
-<script>
+<!-- <script>
   import QuestionPaperWizard from "$lib/components/exams/QuestionPaperWizard.svelte";
 </script>
 
-<QuestionPaperWizard />
+<QuestionPaperWizard /> -->
+
+<script>
+    import NewQuestionPaperWorkflow from "$lib/components/exams/NewQuestionPaperWorkflow.svelte";
+</script>
+
+<NewQuestionPaperWorkflow />

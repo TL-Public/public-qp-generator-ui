@@ -988,7 +988,7 @@
                       {#if row.item.isSelected}
                         <span class="text-xs text-green-600">Selected</span>
                       {:else if row.item.children && row.item.children.length > 0}
-                        <span class="text-xs text-blue-600">
+                        <span class="text-xs text-primary">
                           {row.item.children.filter((child) => child.isSelected)
                             .length} of {row.item.children.length}
                           {row.item.type === "chapter" ? "topics" : "subtopics"}

@@ -114,7 +114,7 @@
                       <input
                         type="checkbox"
                         bind:checked={hideAnswers}
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        class="rounded border-gray-300 text-primary focus:ring-blue-500"
                       />
                       <span>Questions Only</span>
                     </label> -->

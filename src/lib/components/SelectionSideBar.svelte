@@ -53,7 +53,7 @@
     <!-- Toggle button -->
     <button 
       type="button"
-      class="bg-blue-600 text-white px-3 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+      class="bg-primary text-white px-3 py-2 rounded-full shadow-lg hover:bg-primary-hover transition-colors"
       on:click={toggleSidebar}
     >
       <div class="flex items-center space-x-1">

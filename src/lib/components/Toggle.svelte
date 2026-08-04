@@ -1,15 +1,16 @@
 <script>
-
 	let {
 		checked = $bindable(false),
 		onToggle,
 		disabled = false,
-		size = 'sm',
-		variant = 'secondary',
-		ariaLabel = 'Toggle'
+		size = "sm",
+		variant = "secondary",
+		ariaLabel = "Toggle",
 	} = $props();
 
-	const trackColorOn = $derived(variant === 'secondary' ? 'bg-dark' : 'bg-primary');
+	const trackColorOn = $derived(
+		variant === "secondary" ? "bg-dark" : "bg-primary",
+	);
 
 	function handleClick() {
 		if (disabled) return;
@@ -19,29 +20,34 @@
 	}
 
 	function handleKeydown(e) {
-		if (e.key === ' ' || e.key === 'Enter') {
+		if (e.key === " " || e.key === "Enter") {
 			e.preventDefault();
 			handleClick();
 		}
 	}
 
 	const sizeConfig = $derived(
-		({
+		{
+			xs: {
+				track: "w-7 h-4",
+				handle: "size-3",
+				translateOn: "translate-x-3",
+			},
 			sm: {
-				track: 'w-9 h-5',
-				handle: 'size-4',
-				translateOn: 'translate-x-4'
+				track: "w-9 h-5",
+				handle: "size-4",
+				translateOn: "translate-x-4",
 			},
 			md: {
-				track: 'w-11 h-6',
-				handle: 'size-5',
-				translateOn: 'translate-x-5'
-			}
-		})[size] ?? {
-			track: 'w-11 h-6',
-			handle: 'size-5',
-			translateOn: 'translate-x-5'
-		}
+				track: "w-11 h-6",
+				handle: "size-5",
+				translateOn: "translate-x-5",
+			},
+		}[size] ?? {
+			track: "w-11 h-6",
+			handle: "size-5",
+			translateOn: "translate-x-5",
+		},
 	);
 </script>
 
@@ -50,7 +56,7 @@
 	type="button"
 	aria-checked={checked}
 	aria-label={ariaLabel}
-	disabled={disabled}
+	{disabled}
 	class="
 		relative inline-flex shrink-0 cursor-pointer rounded-full
 		transition duration-(--motion-fast) ease-(--ease-standard)

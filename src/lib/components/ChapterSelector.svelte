@@ -171,7 +171,7 @@ export const mockData = {
         <div class="flex justify-end">
           <button
             type="button"
-            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
             on:click={handleCreateGroup}
           >
             Create Group
