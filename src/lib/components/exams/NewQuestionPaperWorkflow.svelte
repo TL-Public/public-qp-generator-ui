@@ -925,9 +925,9 @@
       }
 
       const resDataRaw = await response.json().catch(() => ({}));
-      const resData = resDataRaw.data || resDataRaw;
-      if (resData?.code && !activeExamCode) {
-        activeExamCode = resData.code;
+      const resData = resDataRaw.data ;
+      if (resData?.exam_code && !activeExamCode) {
+        activeExamCode = resData.exam_code;
       }
 
       showSaveDraftSuccessModal = true;
@@ -1476,6 +1476,11 @@
 <!-- SAVE DRAFT SUCCESS POPUP MODAL -->
 <DraftSavedModal
   bind:open={showSaveDraftSuccessModal}
-  on:close={() => (showSaveDraftSuccessModal = false)}
+  on:close={() => {
+    showSaveDraftSuccessModal = false;
+    if (activeExamCode) {
+      goto(`/questionPapers/${activeExamCode}/edit?step=1`);
+    }
+  }}
   on:leave={() => goto("/questionPapers")}
 />
